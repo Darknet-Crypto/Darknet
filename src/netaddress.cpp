@@ -108,6 +108,16 @@ unsigned int CNetAddr::GetByte(int n) const
     return ip[15-n];
 }
 
+bool CNetAddr::IsBindAny() const
+{
+    const int cmplen = IsIPv4() ? 4 : 16;
+    for (int i = 0; i < cmplen; ++i) {
+        if (GetByte(i)) return false;
+    }
+
+    return true;
+}
+
 bool CNetAddr::IsIPv4() const { return m_net == NET_IPV4; }
 
 bool CNetAddr::IsIPv6() const { return m_net == NET_IPV6; }
