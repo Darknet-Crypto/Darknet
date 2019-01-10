@@ -160,7 +160,7 @@ bool IsPeerAddrLocalGood(CNode* pnode)
 {
     CService addrLocal = pnode->GetAddrLocal();
     return fDiscover && pnode->addr.IsRoutable() && addrLocal.IsRoutable() &&
-           !IsLimited(addrLocal.GetNetwork());
+           IsReachable(addrLocal.GetNetwork());
 }
 
 // pushes our own address to a peer
@@ -192,7 +192,7 @@ bool AddLocal(const CService& addr, int nScore)
     if (!fDiscover && nScore < LOCAL_MANUAL)
         return false;
 
-    if (IsLimited(addr))
+    if (!IsReachable(addr))
         return false;
 
     LogPrintf("AddLocal(%s,%i)\n", addr.ToString(), nScore);
@@ -223,24 +223,23 @@ bool RemoveLocal(const CService& addr)
     return true;
 }
 
-/** Make a particular network entirely off-limits (no automatic connects to it) */
-void SetLimited(enum Network net, bool fLimited)
+void SetReachable(enum Network net, bool reachable)
 {
     if (net == NET_UNROUTABLE || net == NET_INTERNAL)
         return;
     LOCK(cs_mapLocalHost);
-    vfLimited[net] = fLimited;
+    vfLimited[net] = !reachable;
 }
 
-bool IsLimited(enum Network net)
+bool IsReachable(enum Network net)
 {
     LOCK(cs_mapLocalHost);
-    return vfLimited[net];
+    return !vfLimited[net];
 }
 
-bool IsLimited(const CNetAddr& addr)
+bool IsReachable(const CNetAddr& addr)
 {
-    return IsLimited(addr.GetNetwork());
+    return IsReachable(addr.GetNetwork());
 }
 
 /** vote for a local address */
@@ -262,19 +261,6 @@ bool IsLocal(const CService& addr)
     LOCK(cs_mapLocalHost);
     return mapLocalHost.count(addr) > 0;
 }
-
-/** check whether a given network is one we can probably connect to */
-bool IsReachable(enum Network net)
-{
-    return !IsLimited(net);
-}
-
-/** check whether a given address is in a network we can probably connect to */
-bool IsReachable(const CNetAddr& addr)
-{
-    return IsReachable(addr.GetNetwork());
-}
-
 
 CNode* CConnman::FindNode(const CNetAddr& ip)
 {
@@ -1579,7 +1565,7 @@ void CConnman::ThreadOpenConnections()
             if (nTries > 100)
                 break;
 
-            if (IsLimited(addr))
+            if (!IsReachable(addr))
                 continue;
 
             // only connect to full nodes
