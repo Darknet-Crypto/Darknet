@@ -471,6 +471,7 @@ public:
     double dPingTime;
     double dPingWait;
     std::string addrLocal;
+    uint32_t m_mapped_as;
 };
 
 
@@ -782,7 +783,7 @@ public:
     void CloseSocketDisconnect();
     bool DisconnectOldProtocol(int nVersionIn, int nVersionRequired, std::string strLastCommand = "");
 
-    void copyStats(CNodeStats& stats);
+    void copyStats(CNodeStats& stats, std::vector<bool>& m_asmap);
 
     ServiceFlags GetLocalServices() const
     {
