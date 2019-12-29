@@ -1987,14 +1987,14 @@ bool AppInitMain()
         }
         std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
         if (asmap.size() == 0) {
-            UIError(strprintf(_("Could not parse asmap file '%s'"), asmap_path));
+            UIError(strprintf(_("Could not parse asmap file %s"), asmap_path));
             return false;
         }
         const uint256 asmap_version = SerializeHash(asmap);
         connman.SetAsmap(std::move(asmap));
-        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
+        LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
     } else {
-        LogPrintf("Using /16 prefix for IP bucketing.\n");
+        LogPrintf("Using /16 prefix for IP bucketing\n");
     }
 
     // ********************************************************* Step 12: finished
