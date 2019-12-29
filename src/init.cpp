@@ -1981,9 +1981,13 @@ bool AppInitMain()
         if (!asmap_path.is_absolute()) {
             asmap_path = GetDataDir() / asmap_path;
         }
+        if (!fs::exists(asmap_path)) {
+            UIError(strprintf(_("Could not find asmap file %s"), asmap_path));
+            return false;
+        }
         std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
         if (asmap.size() == 0) {
-            UIError(strprintf(_("Could not find or parse specified asmap: '%s'"), asmap_path));
+            UIError(strprintf(_("Could not parse asmap file '%s'"), asmap_path));
             return false;
         }
         const uint256 asmap_version = SerializeHash(asmap);
