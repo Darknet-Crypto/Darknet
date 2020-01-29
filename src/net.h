@@ -271,7 +271,7 @@ public:
 
     unsigned int GetReceiveFloodSize() const;
 
-    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = asmap; }
+    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 private:
     struct ListenSocket {
         SOCKET socket;
