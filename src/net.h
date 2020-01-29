@@ -781,7 +781,7 @@ public:
     void CloseSocketDisconnect();
     bool DisconnectOldProtocol(int nVersionIn, int nVersionRequired, std::string strLastCommand = "");
 
-    void copyStats(CNodeStats& stats, std::vector<bool>& m_asmap);
+    void copyStats(CNodeStats& stats, const std::vector<bool>& m_asmap);
 
     ServiceFlags GetLocalServices() const
     {
