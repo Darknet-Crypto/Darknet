@@ -63,7 +63,7 @@ public:
     void setShowZcTxes(bool fOnlyZc);
 
     /** Only stakes txes **/
-    void setOnlyStakes(bool fOnlyStakes);
+    void setOnlyStakes(const bool& fOnlyStakes, const bool& fIncludeZPIV = false, const bool& fShowColdStakes = false, const bool& fIncludeMNReward = false);
 
     /** Shows only p2cs-p2cs && xxx-p2cs **/
     void setOnlyColdStakes(bool fOnlyColdStakes);
@@ -88,11 +88,15 @@ private:
     bool fHideOrphans = true;
     bool fOnlyZc = false;
     bool fOnlyStakes = false;
+    bool fShowOwnColdStakes = false;
+    bool fShowZpivStakes = true;
+    bool fIncludeMNReward = true;
     bool fOnlyColdStaking = false;
 
     bool isZcTx(int type) const;
     bool isStakeTx(int type) const;
     bool isColdStake(int type) const;
+    bool isColdStakeMine(int type) const;
 };
 
 #endif // BITCOIN_QT_TRANSACTIONFILTERPROXY_H

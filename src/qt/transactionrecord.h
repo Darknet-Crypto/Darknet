@@ -173,6 +173,9 @@ public:
      */
     bool isCoinStake() const;
 
+    /** Return true if the tx is a MN reward */
+    bool isMNReward() const;
+
     /** Return true if the tx is a any cold staking type tx.
      */
     bool isAnyColdStakingType() const;

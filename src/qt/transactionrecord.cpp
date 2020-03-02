@@ -538,6 +538,11 @@ bool TransactionRecord::isCoinStake() const
     return (type == TransactionRecord::StakeMint || type == TransactionRecord::Generated || type == TransactionRecord::StakeZPIV);
 }
 
+bool TransactionRecord::isMNReward() const
+{
+    return type == TransactionRecord::MNReward;
+}
+
 bool TransactionRecord::isAnyColdStakingType() const
 {
     return (type == TransactionRecord::P2CSDelegation || type == TransactionRecord::P2CSDelegationSent
