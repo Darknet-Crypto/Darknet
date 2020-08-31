@@ -10,9 +10,10 @@
 
 #include "netaddress.h"
 #include "hash.h"
-#include "utilstrencodings.h"
-#include "util/asmap.h"
 #include "tinyformat.h"
+#include "util/asmap.h"
+#include "util/string.h"
+#include "utilstrencodings.h"
 
 #include <algorithm>
 #include <array>
@@ -52,13 +53,6 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
 
     m_net = ipIn.m_net;
     m_addr = ipIn.m_addr;
-}
-
-template <typename T1, size_t PREFIX_LEN>
-inline bool HasPrefix(const T1& obj, const std::array<uint8_t, PREFIX_LEN>& prefix)
-{
-    return obj.size() >= PREFIX_LEN &&
-           std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
 }
 
 void CNetAddr::SetLegacyIPv6(Span<const uint8_t> ipv6)
