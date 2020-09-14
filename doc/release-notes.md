@@ -284,6 +284,19 @@ It enforces the same rules as the legacy cold-staking opcode, but without allowi
 The new opcode takes the name of `OP_CHECKCOLDSTAKEVERIFY`, and the legacy opcode (`0xd1`) is renamed to `OP_CHECKCOLDSTAKEVERIFY_LOF` (last-output-free).
 Scripts with the old opcode are still accepted on the network (the restriction on the last-output is enforced after the script validation in this case), but the client creates new delegations with the new opcode, by default, after the upgrade enforcement.
 
+P2P and network changes
+-----------------------
+
+- The Tor onion service that is automatically created by setting the
+  `-listenonion` configuration parameter will now be created as a Tor v3 service
+  instead of Tor v2. The private key that was used for Tor v2 (if any) will be
+  left untouched in the `onion_private_key` file in the data directory (see
+  `-datadir`) and can be removed if not needed. Bitcoin Core will no longer
+  attempt to read it. The private key for the Tor v3 service will be saved in a
+  file named `onion_v3_private_key`. To use the deprecated Tor v2 service (not
+  recommended), then `onion_private_key` can be copied over
+  `onion_v3_private_key`, e.g.
+  `cp -f onion_private_key onion_v3_private_key`. (#19954)
 
 Multi-wallet support
 --------------------
