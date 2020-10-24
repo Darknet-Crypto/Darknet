@@ -12,6 +12,7 @@
 #include "masternodeman.h"
 #include "netmessagemaker.h"
 #include "spork.h"
+#include "tiertwo_networksync.h"
 #include "util.h"
 #include "addrman.h"
 // clang-format on
@@ -21,6 +22,7 @@ CMasternodeSync masternodeSync;
 
 CMasternodeSync::CMasternodeSync()
 {
+    syncManager = MakeUnique<TierTwoSyncMan>(this);
     Reset();
 }
 
@@ -133,9 +135,9 @@ void CMasternodeSync::AddedMasternodeWinner(const uint256& hash)
 
 void CMasternodeSync::AddedBudgetItem(const uint256& hash)
 {
-    if (budget.HaveSeenProposal(hash) ||
+    if (budget.HaveProposal(hash) ||
             budget.HaveSeenProposalVote(hash) ||
-            budget.HaveSeenFinalizedBudget(hash) ||
+            budget.HaveFinalizedBudget(hash) ||
             budget.HaveSeenFinalizedBudgetVote(hash)) {
         if (mapSeenSyncBudget[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastBudgetItem = GetTime();
@@ -283,17 +285,14 @@ void CMasternodeSync::Process()
     if (!isRegTestNet && !IsBlockchainSynced() &&
         RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
 
-    CMasternodeSync* sync = this;
-
     // New sync architecture, regtest only for now.
     if (isRegTestNet) {
-        g_connman->ForEachNode([sync](CNode* pnode){
-            return sync->SyncRegtest(pnode);
-        });
+        syncManager->Process();
         return;
     }
 
     // Mainnet sync
+    CMasternodeSync* sync = this;
     g_connman->ForEachNodeContinueIf([sync](CNode* pnode){
         return sync->SyncWithNode(pnode);
     });
@@ -414,4 +413,16 @@ bool CMasternodeSync::SyncWithNode(CNode* pnode)
     return true;
 }
 
+bool CMasternodeSync::MessageDispatcher(CNode* pfrom, std::string& strCommand, CDataStream& vRecv) {
+    return syncManager->MessageDispatcher(pfrom, strCommand, vRecv);
+}
+
+bool CMasternodeSync::AlreadyHave(const uint256& hash, int type)
+{
+    return syncManager->AlreadyHave(hash, type);
+}
+bool CMasternodeSync::TryAppendItem(const uint256& hash, int type)
+{
+    return syncManager->TryAppendItem(hash, type);
+}
 

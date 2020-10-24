@@ -6,6 +6,7 @@
 #ifndef MASTERNODE_SYNC_H
 #define MASTERNODE_SYNC_H
 
+#include "util/memory.h"
 #include "net.h"    // for NodeId
 #include "uint256.h"
 
@@ -27,12 +28,8 @@
 #define MASTERNODE_SYNC_THRESHOLD 2
 
 class CMasternodeSync;
+class TierTwoSyncMan;
 extern CMasternodeSync masternodeSync;
-
-struct TierTwoPeerData {
-    // map of message --> last request timestamp, bool hasResponseArrived.
-    std::map<const char*, std::pair<int64_t, bool>> mapMsgData;
-};
 
 //
 // CMasternodeSync : Sync masternode assets in stages
@@ -72,6 +69,9 @@ public:
     // Time when current masternode asset sync started
     int64_t nAssetSyncStarted;
 
+    // New tier two sync manager
+    std::unique_ptr<TierTwoSyncMan> syncManager;
+
     CMasternodeSync();
 
     void AddedMasternodeList(const uint256& hash);
@@ -100,26 +100,8 @@ public:
 
     // Sync message dispatcher
     bool MessageDispatcher(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
-
-private:
-
-    // Tier two sync node state
-    // map of nodeID --> TierTwoPeerData
-    std::map<NodeId, TierTwoPeerData> peersSyncState;
-
-    void SyncRegtest(CNode* pnode);
-
-    template <typename... Args>
-    void RequestDataTo(CNode* pnode, const char* msg, bool forceRequest, Args&&... args);
-
-    template <typename... Args>
-    void PushMessage(CNode* pnode, const char* msg, Args&&... args);
-
-    // update peer sync state data
-    bool UpdatePeerSyncState(const NodeId& id, const char* msg, const int nextSyncStatus);
-
-    // Check if an update is needed
-    void CheckAndUpdateSyncStatus();
+    bool AlreadyHave(const uint256& hash, int type);
+    bool TryAppendItem(const uint256& hash, int type);
 };
 
 #endif

@@ -211,6 +211,7 @@ BITCOIN_CORE_H = \
   masternode-sync.h \
   masternodeman.h \
   masternodeconfig.h \
+  tiertwo_networksync.h \
   merkleblock.h \
   messagesigner.h \
   miner.h \

@@ -18,10 +18,8 @@
 #include <univalue.h>
 
 class CBudgetManager;
-class CFinalizedBudgetBroadcast;
 class CFinalizedBudget;
 class CBudgetProposal;
-class CBudgetProposalBroadcast;
 class CTxBudgetPayment;
 
 enum class TrxValidationStatus {
@@ -208,8 +206,6 @@ private:
     std::map<uint256, CBudgetProposal> mapProposals;                        // guarded by cs_proposals
     std::map<uint256, CFinalizedBudget> mapFinalizedBudgets;                // guarded by cs_budgets
 
-    std::map<uint256, CBudgetProposalBroadcast> mapSeenProposals;           // guarded by cs_proposals
-    std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;   // guarded by cs_budgets
     std::map<uint256, CBudgetVote> mapSeenProposalVotes;                    // guarded by cs_votes
     std::map<uint256, CBudgetVote> mapOrphanProposalVotes;                  // guarded by cs_votes
     std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;    // guarded by cs_finalizedvotes
@@ -242,20 +238,16 @@ public:
 
     void ClearSeen()
     {
-        WITH_LOCK(cs_proposals, mapSeenProposals.clear(); );
         WITH_LOCK(cs_votes, mapSeenProposalVotes.clear(); );
-        WITH_LOCK(cs_budgets, mapSeenFinalizedBudgets.clear(); );
         WITH_LOCK(cs_finalizedvotes, mapSeenFinalizedBudgetVotes.clear(); );
     }
 
-    bool HaveSeenProposal(const uint256& propHash) const { LOCK(cs_proposals); return mapSeenProposals.count(propHash); }
+    bool HaveProposal(const uint256& propHash) const { LOCK(cs_proposals); return mapProposals.count(propHash); }
     bool HaveSeenProposalVote(const uint256& voteHash) const { LOCK(cs_votes); return mapSeenProposalVotes.count(voteHash); }
-    bool HaveSeenFinalizedBudget(const uint256& budgetHash) const { LOCK(cs_budgets); return mapSeenFinalizedBudgets.count(budgetHash); }
+    bool HaveFinalizedBudget(const uint256& budgetHash) const { LOCK(cs_budgets); return mapFinalizedBudgets.count(budgetHash); }
     bool HaveSeenFinalizedBudgetVote(const uint256& voteHash) const { LOCK(cs_finalizedvotes); return mapSeenFinalizedBudgetVotes.count(voteHash); }
 
-    void AddSeenProposal(const CBudgetProposalBroadcast& prop);
     void AddSeenProposalVote(const CBudgetVote& vote);
-    void AddSeenFinalizedBudget(const CFinalizedBudgetBroadcast& bud);
     void AddSeenFinalizedBudgetVote(const CFinalizedBudgetVote& vote);
 
     // Use const operator std::map::at(), thus existence must be checked before calling.
@@ -281,6 +273,10 @@ public:
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock(int height);
+
+    // Processing methods
+    int ProcessProposalMsg(CBudgetProposal& proposal);
+    int ProcessBudgetFinalizationMsg(CFinalizedBudget& finalbudget);
 
     // functions returning a pointer in the map. Need cs_proposals/cs_budgets locked from the caller
     CBudgetProposal* FindProposal(const uint256& nHash);
@@ -310,16 +306,8 @@ public:
     void CheckOrphanVotes();
     void Clear()
     {
-        {
-            LOCK(cs_proposals);
-            mapProposals.clear();
-            mapSeenProposals.clear();
-        }
-        {
-            LOCK(cs_budgets);
-            mapFinalizedBudgets.clear();
-            mapSeenFinalizedBudgets.clear();
-        }
+        WITH_LOCK(cs_proposals, mapProposals.clear(); );
+        WITH_LOCK(cs_budgets, mapFinalizedBudgets.clear(); );
         {
             LOCK(cs_votes);
             mapSeenProposalVotes.clear();
@@ -339,21 +327,13 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        {
-            LOCK(cs_proposals);
-            READWRITE(mapProposals);
-            READWRITE(mapSeenProposals);
-        }
+        WITH_LOCK(cs_proposals, READWRITE(mapProposals); );
         {
             LOCK(cs_votes);
             READWRITE(mapSeenProposalVotes);
             READWRITE(mapOrphanProposalVotes);
         }
-        {
-            LOCK(cs_budgets);
-            READWRITE(mapFinalizedBudgets);
-            READWRITE(mapSeenFinalizedBudgets);
-        }
+        WITH_LOCK(cs_budgets, READWRITE(mapFinalizedBudgets); );
         {
             LOCK(cs_finalizedvotes);
             READWRITE(mapSeenFinalizedBudgetVotes);
@@ -423,7 +403,7 @@ public:
     int64_t nTime;
 
     CFinalizedBudget();
-    CFinalizedBudget(const CFinalizedBudget& other);
+    CFinalizedBudget(const std::string& name, int blockstart, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, const uint256& nfeetxhash);
 
     void CleanAndRemove();
     bool AddOrUpdateVote(const CFinalizedBudgetVote& vote, std::string& strError);
@@ -471,6 +451,7 @@ public:
         return ss.GetHash();
     }
 
+    // Serialization for local DB
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
@@ -485,53 +466,15 @@ public:
         READWRITE(strProposals);
     }
 
+    // Serialization for network messages.
+    bool LoadBroadcast(CDataStream& broadcast);
+    CDataStream GetBroadcast() const;
+    void Relay();
+
     // compare finalized budget by votes (sort tie with feeHash)
     bool operator>(const CFinalizedBudget& other) const;
     // compare finalized budget pointers
     static bool PtrGreater(CFinalizedBudget* a, CFinalizedBudget* b) { return *a > *b; }
-};
-
-// FinalizedBudget are cast then sent to peers with this object, which leaves the votes out
-class CFinalizedBudgetBroadcast : public CFinalizedBudget
-{
-public:
-    CFinalizedBudgetBroadcast();
-    CFinalizedBudgetBroadcast(const CFinalizedBudget& other);
-    CFinalizedBudgetBroadcast(std::string strBudgetNameIn, int nBlockStartIn, const std::vector<CTxBudgetPayment>& vecBudgetPaymentsIn, uint256 nFeeTXHashIn);
-
-    void swap(CFinalizedBudgetBroadcast& first, CFinalizedBudgetBroadcast& second) // nothrow
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
-        // by swapping the members of two classes,
-        // the two classes are effectively swapped
-        swap(first.strBudgetName, second.strBudgetName);
-        swap(first.nBlockStart, second.nBlockStart);
-        first.mapVotes.swap(second.mapVotes);
-        first.vecBudgetPayments.swap(second.vecBudgetPayments);
-        swap(first.nFeeTXHash, second.nFeeTXHash);
-        swap(first.nTime, second.nTime);
-        swap(first.strProposals, second.strProposals);
-    }
-
-    CFinalizedBudgetBroadcast& operator=(CFinalizedBudgetBroadcast from)
-    {
-        swap(*this, from);
-        return *this;
-    }
-
-    void Relay();
-
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        //for syncing with other clients
-        READWRITE(LIMITED_STRING(strBudgetName, 20));
-        READWRITE(nBlockStart);
-        READWRITE(vecBudgetPayments);
-        READWRITE(nFeeTXHash);
-    }
 };
 
 
@@ -559,8 +502,8 @@ protected:
     std::string strURL;
     int nBlockStart;
     int nBlockEnd;
-    CAmount nAmount;
     CScript address;
+    CAmount nAmount;
     uint256 nFeeTXHash;
 
 public:
@@ -568,8 +511,7 @@ public:
     int64_t nTime;
 
     CBudgetProposal();
-    CBudgetProposal(const CBudgetProposal& other);
-    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn);
+    CBudgetProposal(const std::string& name, const std::string& url, int paycount, const CScript& payee, const CAmount& amount, int blockstart, const uint256& nfeetxhash);
 
     bool AddOrUpdateVote(const CBudgetVote& vote, std::string& strError);
     UniValue GetVotesArray() const;
@@ -623,23 +565,26 @@ public:
         return ss.GetHash();
     }
 
+    // Serialization for local DB
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        //for syncing with other clients
         READWRITE(LIMITED_STRING(strProposalName, 20));
         READWRITE(LIMITED_STRING(strURL, 64));
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
         READWRITE(*(CScriptBase*)(&address));
-        READWRITE(nTime);
         READWRITE(nFeeTXHash);
-
-        //for saving to the serialized db
+        READWRITE(nTime);
         READWRITE(mapVotes);
     }
+
+    // Serialization for network messages.
+    bool LoadBroadcast(CDataStream& broadcast);
+    CDataStream GetBroadcast() const;
+    void Relay();
 
     // compare proposals by proposal hash
     inline bool operator>(const CBudgetProposal& other) const { return GetHash() > other.GetHash(); }
@@ -649,56 +594,5 @@ public:
     static bool PtrHigherYes(CBudgetProposal* a, CBudgetProposal* b);
 
 };
-
-// Proposals are cast then sent to peers with this object, which leaves the votes out
-class CBudgetProposalBroadcast : public CBudgetProposal
-{
-public:
-    CBudgetProposalBroadcast() : CBudgetProposal() {}
-    CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other) {}
-    CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other) : CBudgetProposal(other) {}
-    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
-
-    void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
-        // by swapping the members of two classes,
-        // the two classes are effectively swapped
-        swap(first.strProposalName, second.strProposalName);
-        swap(first.nBlockStart, second.nBlockStart);
-        swap(first.strURL, second.strURL);
-        swap(first.nBlockEnd, second.nBlockEnd);
-        swap(first.nAmount, second.nAmount);
-        swap(first.address, second.address);
-        swap(first.nTime, second.nTime);
-        swap(first.nFeeTXHash, second.nFeeTXHash);
-        first.mapVotes.swap(second.mapVotes);
-    }
-
-    CBudgetProposalBroadcast& operator=(CBudgetProposalBroadcast from)
-    {
-        swap(*this, from);
-        return *this;
-    }
-
-    void Relay();
-
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        //for syncing with other clients
-        READWRITE(LIMITED_STRING(strProposalName, 20));
-        READWRITE(LIMITED_STRING(strURL, 64));
-        READWRITE(nTime);
-        READWRITE(nBlockStart);
-        READWRITE(nBlockEnd);
-        READWRITE(nAmount);
-        READWRITE(*(CScriptBase*)(&address));
-        READWRITE(nFeeTXHash);
-    }
-};
-
 
 #endif

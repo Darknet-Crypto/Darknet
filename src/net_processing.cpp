@@ -711,7 +711,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         }
         return false;
     case MSG_BUDGET_PROPOSAL:
-        if (budget.HaveSeenProposal(inv.hash)) {
+        if (masternodeSync.AlreadyHave(inv.hash, inv.type)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
@@ -723,7 +723,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         }
         return false;
     case MSG_BUDGET_FINALIZED:
-        if (budget.HaveSeenFinalizedBudget(inv.hash)) {
+        if (masternodeSync.AlreadyHave(inv.hash, inv.type)) {
             masternodeSync.AddedBudgetItem(inv.hash);
             return true;
         }
@@ -919,7 +919,7 @@ void static ProcessGetData(CNode* pfrom, CConnman& connman, std::atomic<bool>& i
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if (budget.HaveSeenProposal(inv.hash)) {
+                    if (masternodeSync.AlreadyHave(inv.hash, inv.type)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::BUDGETPROPOSAL, budget.GetProposalSerialized(inv.hash)));
                         pushed = true;
                     }
@@ -933,7 +933,7 @@ void static ProcessGetData(CNode* pfrom, CConnman& connman, std::atomic<bool>& i
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_FINALIZED) {
-                    if (budget.HaveSeenFinalizedBudget(inv.hash)) {
+                    if (masternodeSync.AlreadyHave(inv.hash, inv.type)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::FINALBUDGET, budget.GetFinalizedBudgetSerialized(inv.hash)));
                         pushed = true;
                     }

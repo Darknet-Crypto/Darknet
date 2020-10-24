@@ -28,6 +28,7 @@
 #include "key.h"
 #include "masternode-budget.h"
 #include "masternode-payments.h"
+#include "masternode-sync.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
@@ -42,6 +43,7 @@
 #include "spork.h"
 #include "sporkdb.h"
 #include "txdb.h"
+#include "tiertwo_networksync.h"
 #include "torcontrol.h"
 #include "guiinterface.h"
 #include "guiinterfaceutil.h"
@@ -238,6 +240,7 @@ void PrepareShutdown()
     DumpBudgets();
     DumpMasternodePayments();
     UnregisterNodeSignals(GetNodeSignals());
+    masternodeSync.syncManager->UnregisterNodeSignals(GetNodeSignals());
 
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue threadGroup
@@ -1883,6 +1886,7 @@ bool AppInit2()
     LogPrintf("nSwiftTXDepth %d\n", nSwiftTXDepth);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
+    masternodeSync.syncManager->RegisterNodeSignals(GetNodeSignals());
     threadGroup.create_thread(boost::bind(&ThreadCheckMasternodes));
 
     if (ShutdownRequested()) {

@@ -133,15 +133,16 @@ UniValue preparebudget(const JSONRPCRequest& request)
     CScript scriptPubKey = GetScriptForDestination(address);
 
     // create transaction 15 minutes into the future, to allow for confirmation time
-    CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, UINT256_ZERO);
-    if (!budgetProposalBroadcast.IsWellFormed(budget.GetTotalBudget(budgetProposalBroadcast.GetBlockStart())))
-        throw std::runtime_error("Proposal is not valid " + budgetProposalBroadcast.IsInvalidReason());
+    CBudgetProposal proposal(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, UINT256_ZERO);
+    const uint256& nHash = proposal.GetHash();
+    if (!proposal.IsWellFormed(budget.GetTotalBudget(proposal.GetBlockStart())))
+        throw std::runtime_error("Proposal is not valid " + proposal.IsInvalidReason());
 
     bool useIX = false;
     CWalletTx wtx;
     // make our change address
     CReserveKey keyChange(pwalletMain);
-    if (!pwalletMain->CreateBudgetFeeTX(wtx, budgetProposalBroadcast.GetHash(), keyChange, false)) { // 50 PIV collateral for proposal
+    if (!pwalletMain->CreateBudgetFeeTX(wtx, nHash, keyChange, false)) { // 50 PIV collateral for proposal
         throw std::runtime_error("Error making collateral transaction for proposal. Please check your wallet balance.");
     }
 
@@ -187,25 +188,21 @@ UniValue submitbudget(const JSONRPCRequest& request)
 
     // Parse PIVX address
     CScript scriptPubKey = GetScriptForDestination(address);
-
-    uint256 hash = ParseHashV(request.params[6], "parameter 1");
+    const uint256& hash = ParseHashV(request.params[6], "parameter 1");
 
     if (!masternodeSync.IsBlockchainSynced()) {
         throw std::runtime_error("Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
 
-    //create the proposal incase we're the first to make it
-    CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
-
-    if(!budget.AddProposal(budgetProposalBroadcast)) {
-        std::string strError = strprintf("invalid budget proposal - %s", budgetProposalBroadcast.IsInvalidReason());
+    // create the proposal in case we're the first to make it
+    CBudgetProposal proposal(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
+    if(!budget.AddProposal(proposal)) {
+        std::string strError = strprintf("invalid budget proposal - %s", proposal.IsInvalidReason());
         throw std::runtime_error(strError);
     }
+    proposal.Relay();
 
-    budget.AddSeenProposal(budgetProposalBroadcast);
-    budgetProposalBroadcast.Relay();
-
-    return budgetProposalBroadcast.GetHash().ToString();
+    return proposal.GetHash().ToString();
 }
 
 UniValue mnbudgetvote(const JSONRPCRequest& request)
