@@ -337,7 +337,7 @@ UniValue mnbudgetvote(const JSONRPCRequest& request)
 
             UniValue statusObj(UniValue::VOBJ);
 
-            if (!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)) {
+            if (!CMessageSigner::GetKeysFromSecret(mne.getPrivKeyStr(), keyMasternode, pubKeyMasternode)) {
                 failed++;
                 statusObj.pushKV("node", mne.getAlias());
                 statusObj.pushKV("result", "failed");
@@ -408,7 +408,7 @@ UniValue mnbudgetvote(const JSONRPCRequest& request)
 
             UniValue statusObj(UniValue::VOBJ);
 
-            if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)){
+            if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKeyStr(), keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.pushKV("node", mne.getAlias());
                 statusObj.pushKV("result", "failed");
@@ -755,7 +755,7 @@ UniValue mnfinalbudget(const JSONRPCRequest& request)
 
             UniValue statusObj(UniValue::VOBJ);
 
-            if (!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)) {
+            if (!CMessageSigner::GetKeysFromSecret(mne.getPrivKeyStr(), keyMasternode, pubKeyMasternode)) {
                 failed++;
                 statusObj.pushKV("result", "failed");
                 statusObj.pushKV("errorMessage", "Masternode signing error, could not set key correctly.");

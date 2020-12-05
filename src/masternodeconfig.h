@@ -6,6 +6,7 @@
 #ifndef SRC_MASTERNODECONFIG_H_
 #define SRC_MASTERNODECONFIG_H_
 
+#include "key.h"
 #include "sync.h"
 #include <string>
 #include <vector>
@@ -21,27 +22,39 @@ public:
     private:
         std::string alias;
         std::string ip;
-        std::string privKey;
+        std::string privkeyStr;
+        std::string pubkeyStr;
         std::string txHash;
         std::string outputIndex;
 
     public:
-        CMasternodeEntry(std::string& _alias, std::string& _ip, std::string& _privKey, std::string& _txHash, std::string& _outputIndex) :
-            alias(_alias), ip(_ip), privKey(_privKey), txHash(_txHash), outputIndex(_outputIndex) { }
+        CMasternodeEntry(std::string& _alias,
+                         std::string& _ip,
+                         std::string& _privkeyStr,
+                         std::string& _pubkeyStr,
+                         std::string& _txHash,
+                         std::string& _outputIndex) :
+            alias(_alias), ip(_ip), privkeyStr(_privkeyStr), pubkeyStr(_pubkeyStr), txHash(_txHash), outputIndex(_outputIndex) { }
 
-        const std::string& getAlias() const { return alias; }
-        const std::string& getOutputIndex() const { return outputIndex; }
+        std::string getAlias() const { return alias; }
+        std::string getOutputIndex() const { return outputIndex; }
         bool castOutputIndex(int& n) const;
-        const std::string& getPrivKey() const { return privKey; }
-        const std::string& getTxHash() const { return txHash; }
-        const std::string& getIp() const { return ip; }
+        std::string getPrivKeyStr() const { return privkeyStr; }
+        std::string getPubKeyStr() const { return pubkeyStr; }
+        std::string getTxHash() const { return txHash; }
+        std::string getIp() const { return ip; }
     };
 
     CMasternodeConfig() { entries = std::vector<CMasternodeEntry>(); }
 
     void clear() { LOCK(cs_entries); entries.clear(); }
     bool read(std::string& strErr);
-    CMasternodeConfig::CMasternodeEntry* add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
+    CMasternodeConfig::CMasternodeEntry* add(std::string alias,
+                                             std::string ip,
+                                             std::string privKeyStr,
+                                             std::string pubKeyStr,
+                                             std::string txHash,
+                                             std::string outputIndex);
     void remove(std::string alias);
 
     std::vector<CMasternodeEntry> getEntries() { LOCK(cs_entries); return entries; }

@@ -358,7 +358,12 @@ bool MasterNodeWizardDialog::createMN()
     fs::path pathNewConfFile = AbsPathForConfigVal(fs::path("masternode.conf"));
     rename(pathConfigFile, pathNewConfFile);
 
-    mnEntry = masternodeConfig.add(alias, ipAddress+":"+port, mnKeyString, txID, indexOutStr);
+    mnEntry = masternodeConfig.add(alias,
+                                   ipAddress+":"+port,
+                                   mnKeyString,
+                                   secret.GetPubKey().GetHash().GetHex(),
+                                   txID,
+                                   indexOutStr);
 
     // Lock collateral output
     walletModel->lockCoin(collateralOut);

@@ -247,7 +247,7 @@ void MasterNodesWidget::updateModelAndInform(QString informText)
 bool MasterNodesWidget::startMN(CMasternodeConfig::CMasternodeEntry mne, std::string& strError)
 {
     CMasternodeBroadcast mnb;
-    if (!CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb))
+    if (!CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKeyStr(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb))
         return false;
 
     mnodeman.UpdateMasternodeList(mnb);

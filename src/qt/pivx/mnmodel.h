@@ -9,6 +9,8 @@
 #include "masternode.h"
 #include "masternodeconfig.h"
 
+class MasternodeWrapper;
+
 class MNModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -36,7 +38,6 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    QModelIndex index(int row, int column, const QModelIndex& parent) const override;
     bool removeMn(const QModelIndex& index);
     bool addMn(CMasternodeConfig::CMasternodeEntry* entry);
     void updateMNList();
@@ -56,9 +57,33 @@ public:
 
 
 private:
-    // alias mn node ---> pair <ip, master node>
-    QMap<QString, std::pair<QString, CMasternode*>> nodes;
+    // alias mn node ---> <ip, master node>
+    QList<MasternodeWrapper> nodes;
     QMap<std::string, bool> collateralTxAccepted;
+
+    const MasternodeWrapper* getMNWrapper(QString mnAlias);
+};
+
+class MasternodeWrapper
+{
+public:
+    explicit MasternodeWrapper(
+            QString _label,
+            QString _ipPortStr,
+            CMasternode* _masternode,
+            COutPoint& _collateralId,
+            Optional<QString> _mnPubKey) :
+            label(_label), ipPort(_ipPortStr), masternode(_masternode), collateralId(_collateralId), mnPubKey(_mnPubKey) { };
+
+    QString label;
+    QString ipPort;
+    CMasternode* masternode{nullptr};
+    // Cache collateral id to be used if 'masternode' is null.
+    // Denoting masternodes that were never initialized (appear on the conf file only)
+    // or expired ones that were removed from the network list.
+    // when masternode isn't null, the collateralId is directly pointing to masternode.vin.prevout.
+    Optional<COutPoint> collateralId{nullopt};
+    Optional<QString> mnPubKey{nullopt};
 };
 
 #endif // MNMODEL_H
