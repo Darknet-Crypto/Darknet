@@ -117,7 +117,7 @@ UniValue getinfo(const JSONRPCRequest& request)
     if (pwalletMain) {
         obj.pushKV("walletversion", pwalletMain->GetVersion());
         obj.pushKV("balance", ValueFromAmount(pwalletMain->GetAvailableBalance()));
-        obj.pushKV("staking status", (pwalletMain->pStakerStatus->IsActive() ? "Staking Active" : "Staking Not Active"));
+        obj.pushKV("staking status", (pwalletMain->IsStakingActive() ? "Staking Active" : "Staking Not Active"));
     }
 #endif
     obj.pushKV("blocks", (int)chainActive.Height());

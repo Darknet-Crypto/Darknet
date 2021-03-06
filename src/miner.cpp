@@ -95,13 +95,14 @@ bool fStakeableCoins = false;
 
 void CheckForCoins(CWallet* pwallet, std::vector<CStakeableOutput>* availableCoins)
 {
-    if (!pwallet || !pwallet->pStakerStatus)
+    if (!pwallet || !pwallet->HasStakingStatus())
         return;
 
     // control the amount of times the client will check for mintable coins (every block)
     {
         WAIT_LOCK(g_best_block_mutex, lock);
-        if (g_best_block == pwallet->pStakerStatus->GetLastHash())
+        Optional<uint256> opLastHash = pwallet->GetStakingStatusLastHash();
+        if (!opLastHash || g_best_block == *opLastHash)
             return;
     }
     fStakeableCoins = pwallet->StakeableCoins(availableCoins);
@@ -149,9 +150,9 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
             }
 
             //search our map of hashed blocks, see if bestblock has been hashed yet
-            if (pwallet->pStakerStatus &&
-                    pwallet->pStakerStatus->GetLastHash() == pindexPrev->GetBlockHash() &&
-                    pwallet->pStakerStatus->GetLastTime() >= GetCurrentTimeSlot()) {
+            if (pwallet->HasStakingStatus() &&
+                    *pwallet->GetStakingStatusLastHash() == pindexPrev->GetBlockHash() &&
+                    *pwallet->GetStakingStatusLastTime() >= GetCurrentTimeSlot()) {
                 MilliSleep(2000);
                 continue;
             }

@@ -3800,7 +3800,7 @@ UniValue getstakingstatus(const JSONRPCRequest& request)
     {
         LOCK2(cs_main, &pwalletMain->cs_wallet);
         UniValue obj(UniValue::VOBJ);
-        obj.pushKV("staking_status", pwalletMain->pStakerStatus->IsActive());
+        obj.pushKV("staking_status", pwalletMain->IsStakingActive());
         obj.pushKV("staking_enabled", gArgs.GetBoolArg("-staking", DEFAULT_STAKING));
         bool fColdStaking = gArgs.GetBoolArg("-coldstaking", true);
         obj.pushKV("coldstaking_enabled", fColdStaking);
@@ -3812,7 +3812,7 @@ UniValue getstakingstatus(const JSONRPCRequest& request)
         obj.pushKV("stakeablecoins", (int)vCoins.size());
         obj.pushKV("stakingbalance", ValueFromAmount(pwalletMain->GetStakingBalance(fColdStaking)));
         obj.pushKV("stakesplitthreshold", ValueFromAmount(pwalletMain->nStakeSplitThreshold));
-        CStakerStatus* ss = pwalletMain->pStakerStatus;
+        CStakerStatus* ss = pwalletMain->GetStakingStatus();
         if (ss) {
             obj.pushKV("lastattempt_age", (int)(GetTime() - ss->GetLastTime()));
             obj.pushKV("lastattempt_depth", (chainActive.Height() - ss->GetLastHeight()));

@@ -183,29 +183,25 @@ private:
     int64_t nTime{0};
     int nTries{0};
     int nCoins{0};
+    RecursiveMutex cs_stakerStatus;
 
 public:
+    explicit CStakerStatus() {}
     // Get
-    const CBlockIndex* GetLastTip() const { return tipBlock; }
-    uint256 GetLastHash() const { return (GetLastTip() == nullptr ? UINT256_ZERO : GetLastTip()->GetBlockHash()); }
-    int GetLastHeight() const { return (GetLastTip() == nullptr ? 0 : GetLastTip()->nHeight); }
-    int GetLastCoins() const { return nCoins; }
-    int GetLastTries() const { return nTries; }
-    int64_t GetLastTime() const { return nTime; }
+    const CBlockIndex* GetLastTip();
+    uint256 GetLastHash();
+    int GetLastHeight();
+    int GetLastCoins();
+    int GetLastTries();
+    int64_t GetLastTime();
     // Set
-    void SetLastCoins(const int coins) { nCoins = coins; }
-    void SetLastTries(const int tries) { nTries = tries; }
-    void SetLastTip(const CBlockIndex* lastTip) { tipBlock = lastTip; }
-    void SetLastTime(const uint64_t lastTime) { nTime = lastTime; }
-    void SetNull()
-    {
-        SetLastCoins(0);
-        SetLastTries(0);
-        SetLastTip(nullptr);
-        SetLastTime(0);
-    }
+    void SetLastCoins(const int coins);
+    void SetLastTries(const int tries);
+    void SetLastTip(const CBlockIndex* lastTip);
+    void SetLastTime(const uint64_t lastTime);
+    void SetNull();
     // Check whether staking status is active (last attempt earlier than 30 seconds ago)
-    bool IsActive() const { return (nTime + 30) >= GetTime(); }
+    bool IsActive();
 };
 
 struct CRecipient
@@ -534,6 +530,9 @@ private:
     int64_t nNextResend;
     int64_t nLastResend;
 
+    // Staker status (last hashed block and time)
+    std::unique_ptr<CStakerStatus> pStakerStatus;
+
     /**
      * Used to keep track of spent outpoints, and
      * detect and report conflicts (double-spends or
@@ -617,8 +616,6 @@ public:
     CAmount nStakeSplitThreshold;
     // minimum value allowed for nStakeSplitThreshold (customizable with -minstakesplit flag)
     static CAmount minStakeSplitThreshold;
-    // Staker status (last hashed block and time)
-    CStakerStatus* pStakerStatus = nullptr;
 
     // User-defined fee PIV/kb
     bool fUseCustomFee;
@@ -1030,6 +1027,13 @@ public:
 
     /* Wallets parameter interaction */
     static bool ParameterInteraction();
+
+    // Staking status getters
+    bool HasStakingStatus();
+    bool IsStakingActive();
+    Optional<uint256> GetStakingStatusLastHash();
+    Optional<int64_t> GetStakingStatusLastTime();
+    CStakerStatus* GetStakingStatus();
 
     /**
      * Wallet post-init setup

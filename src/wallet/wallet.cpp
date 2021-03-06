@@ -4381,7 +4381,6 @@ CWallet::CWallet(std::unique_ptr<CWalletDBWrapper> dbw_in)
 CWallet::~CWallet()
 {
     delete pwalletdbEncryption;
-    delete pStakerStatus;
 }
 
 void CWallet::SetNull()
@@ -4400,7 +4399,7 @@ void CWallet::SetNull()
     if (pStakerStatus) {
         pStakerStatus->SetNull();
     } else {
-        pStakerStatus = new CStakerStatus();
+        pStakerStatus = MakeUnique<CStakerStatus>();
     }
     // Stake split threshold
     nStakeSplitThreshold = DEFAULT_STAKE_SPLIT_THRESHOLD;
@@ -4828,3 +4827,57 @@ const CWDestination* CAddressBookIterator::GetDestKey()
 CStakeableOutput::CStakeableOutput(const CWalletTx* txIn, int iIn, int nDepthIn, bool fSpendableIn, bool fSolvableIn,
                                    const CBlockIndex*& _pindex) : COutput(txIn, iIn, nDepthIn, fSpendableIn, fSolvableIn),
                                                                 pindex(_pindex) {}
+
+
+//////////////// Staking status getters  ////////////////
+
+bool CWallet::HasStakingStatus()
+{
+    return pStakerStatus != nullptr;
+}
+
+bool CWallet::IsStakingActive()
+{
+    return HasStakingStatus() ? pStakerStatus->IsActive() : false;
+}
+
+Optional<uint256> CWallet::GetStakingStatusLastHash()
+{
+    return HasStakingStatus() ? Optional<uint256>(pStakerStatus->GetLastHash()) : nullopt;
+}
+
+Optional<int64_t> CWallet::GetStakingStatusLastTime()
+{
+    return HasStakingStatus() ? Optional<int64_t>(pStakerStatus->GetLastTime()) : nullopt;
+}
+
+CStakerStatus* CWallet::GetStakingStatus()
+{
+    return HasStakingStatus() ? pStakerStatus.get() : nullptr;
+}
+
+const CBlockIndex* CStakerStatus::GetLastTip() { LOCK(cs_stakerStatus); return tipBlock; }
+uint256 CStakerStatus::GetLastHash() { LOCK(cs_stakerStatus); return (GetLastTip() == nullptr ? UINT256_ZERO : GetLastTip()->GetBlockHash()); }
+int CStakerStatus::GetLastHeight() { LOCK(cs_stakerStatus); return (GetLastTip() == nullptr ? 0 : GetLastTip()->nHeight); }
+int CStakerStatus::GetLastCoins() { LOCK(cs_stakerStatus); return nCoins; }
+int CStakerStatus::GetLastTries() { LOCK(cs_stakerStatus); return nTries; }
+int64_t CStakerStatus::GetLastTime() { LOCK(cs_stakerStatus); return nTime; }
+// Set
+void CStakerStatus::SetLastCoins(const int coins) { LOCK(cs_stakerStatus); nCoins = coins; }
+void CStakerStatus::SetLastTries(const int tries) { LOCK(cs_stakerStatus); nTries = tries; }
+void CStakerStatus::SetLastTip(const CBlockIndex* lastTip) { LOCK(cs_stakerStatus); tipBlock = lastTip; }
+void CStakerStatus::SetLastTime(const uint64_t lastTime) { LOCK(cs_stakerStatus); nTime = lastTime; }
+void CStakerStatus::SetNull()
+{
+    LOCK(cs_stakerStatus);
+    nCoins = 0;
+    nTries = 0;
+    SetLastCoins(0);
+    SetLastTries(0);
+    tipBlock = nullptr;
+    nTime = 0;
+}
+// Check whether staking status is active (last attempt earlier than 30 seconds ago)
+bool CStakerStatus::IsActive() { LOCK(cs_stakerStatus); return (nTime + 30) >= GetTime(); }
+
+//////////////// End staking status getters  ////////////////
