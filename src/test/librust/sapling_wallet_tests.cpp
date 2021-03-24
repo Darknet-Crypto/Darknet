@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(GetConflictedSaplingNotes) {
     BOOST_CHECK(std::set<uint256>({hash2, hash3}) == c3);
 
     // Tear down
-    chainActive.SetTip(NULL);
+    chainActive.SetTip(nullptr);
     mapBlockIndex.erase(blockHash);
 
     // Revert to default
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(SaplingNullifierIsSpent) {
     BOOST_CHECK(wallet.GetSaplingScriptPubKeyMan()->IsSaplingSpent(nullifier));
 
     // Tear down
-    chainActive.SetTip(NULL);
+    chainActive.SetTip(nullptr);
     mapBlockIndex.erase(blockHash);
 
     // Revert to default
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(NavigateFromSaplingNullifierToNote) {
     }
 
     // Tear down
-    chainActive.SetTip(NULL);
+    chainActive.SetTip(nullptr);
     mapBlockIndex.erase(blockHash);
 
     // Revert to default
@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(SpentSaplingNoteIsFromMe) {
     BOOST_CHECK(wallet.GetSaplingScriptPubKeyMan()->mapSaplingNullifiersToNotes.count(nullifier2));
 
     // Tear down
-    chainActive.SetTip(NULL);
+    chainActive.SetTip(nullptr);
     mapBlockIndex.erase(blockHash);
     mapBlockIndex.erase(blockHash2);
 
@@ -1029,7 +1029,7 @@ BOOST_AUTO_TEST_CASE(UpdatedSaplingNoteData) {
     BOOST_CHECK(wtx.mapSaplingNoteData[sop1].witnesses.front() == testNote.tree.witness());
 
     // Tear down
-    chainActive.SetTip(NULL);
+    chainActive.SetTip(nullptr);
     mapBlockIndex.erase(blockHash);
 
     // Revert to default
@@ -1141,7 +1141,7 @@ BOOST_AUTO_TEST_CASE(MarkAffectedSaplingTransactionsDirty) {
     BOOST_CHECK(!wallet.mapWallet.at(hash).IsAmountCached(CWalletTx::AmountType::DEBIT, ISMINE_SPENDABLE));
 
     // Tear down
-    chainActive.SetTip(NULL);
+    chainActive.SetTip(nullptr);
     mapBlockIndex.erase(blockHash);
 
     // Revert to default

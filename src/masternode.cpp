@@ -432,7 +432,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     CMasternode* pmn = mnodeman.Find(vin.prevout);
 
     // no such masternode, nothing to update
-    if (pmn == NULL) return true;
+    if (pmn == nullptr) return true;
 
     // this broadcast is older or equal than the one that we already have - it's bad and should never happen
     // unless someone is doing something fishy
@@ -477,7 +477,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int nChainHeight, int& nDoS)
 
     // search existing Masternode list
     CMasternode* pmn = mnodeman.Find(vin.prevout);
-    if (pmn != NULL) {
+    if (pmn != nullptr) {
         // nothing to do here if we already know about this masternode and it's enabled
         if (pmn->IsEnabled()) return true;
         // if it's not enabled, remove old MN first and continue

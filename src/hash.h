@@ -370,9 +370,9 @@ public:
     CBLAKE2bWriter(int nTypeIn, int nVersionIn, const unsigned char* personal) : nType(nTypeIn), nVersion(nVersionIn) {
         assert(crypto_generichash_blake2b_init_salt_personal(
             &state,
-            NULL, 0, // No key.
+            nullptr, 0, // No key.
             32,
-            NULL,    // No salt.
+            nullptr,    // No salt.
             personal) == 0);
     }
 

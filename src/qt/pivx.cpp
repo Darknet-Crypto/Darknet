@@ -277,7 +277,7 @@ void BitcoinCore::initialize()
     } catch (const std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
-        handleRunawayException(NULL);
+        handleRunawayException(nullptr);
     }
 }
 
@@ -298,7 +298,7 @@ void BitcoinCore::restart(QStringList args)
         } catch (const std::exception& e) {
             handleRunawayException(&e);
         } catch (...) {
-            handleRunawayException(NULL);
+            handleRunawayException(nullptr);
         }
     }
 }
@@ -314,7 +314,7 @@ void BitcoinCore::shutdown()
     } catch (const std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
-        handleRunawayException(NULL);
+        handleRunawayException(nullptr);
     }
 }
 
@@ -722,7 +722,7 @@ int main(int argc, char* argv[])
         PrintExceptionContinue(&e, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(GetWarnings("gui")));
     } catch (...) {
-        PrintExceptionContinue(NULL, "Runaway exception");
+        PrintExceptionContinue(nullptr, "Runaway exception");
         app.handleRunawayException(QString::fromStdString(GetWarnings("gui")));
     }
     return app.getReturnValue();

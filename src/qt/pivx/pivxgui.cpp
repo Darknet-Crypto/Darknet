@@ -412,7 +412,7 @@ void PIVXGUI::message(const QString& title, const QString& message, unsigned int
         } else {
             r = openStandardDialog((title.isEmpty() ? strTitle : title), message, "OK");
         }
-        if (ret != NULL)
+        if (ret != nullptr)
             *ret = r;
     } else if (style & CClientUIInterface::MSG_INFORMATION_SNACK) {
         messageInfo(message);

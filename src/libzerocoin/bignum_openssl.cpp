@@ -218,7 +218,7 @@ uint256 CBigNum::getuint256() const
     if(bitSize() > 256) {
             throw std::range_error("cannot convert to uint256, bignum longer than 256 bits");
     }
-    unsigned int nSize = BN_bn2mpi(bn, NULL);
+    unsigned int nSize = BN_bn2mpi(bn, nullptr);
     if (nSize < 4)
         return 0;
     std::vector<unsigned char> vch(nSize);
@@ -248,7 +248,7 @@ void CBigNum::setvch(const std::vector<unsigned char>& vch)
 
 std::vector<unsigned char> CBigNum::getvch() const
 {
-    unsigned int nSize = BN_bn2mpi(bn, NULL);
+    unsigned int nSize = BN_bn2mpi(bn, nullptr);
     if (nSize <= 4)
         return std::vector<unsigned char>();
     std::vector<unsigned char> vch(nSize);
@@ -397,7 +397,7 @@ CBigNum CBigNum::inverse(const CBigNum& m) const
 CBigNum CBigNum::generatePrime(const unsigned int numBits, bool safe)
 {
     CBigNum ret;
-    if(!BN_generate_prime_ex(ret.bn, numBits, (safe == true), NULL, NULL, NULL))
+    if(!BN_generate_prime_ex(ret.bn, numBits, (safe == true), nullptr, nullptr, nullptr))
         throw bignum_error("CBigNum::generatePrime*= :BN_generate_prime_ex");
     return ret;
 }
@@ -425,7 +425,7 @@ CBigNum CBigNum::gcd( const CBigNum& b) const
 bool CBigNum::isPrime(const int checks) const
 {
     CAutoBN_CTX pctx;
-    int ret = BN_is_prime_ex(bn, checks, pctx, NULL);
+    int ret = BN_is_prime_ex(bn, checks, pctx, nullptr);
     if(ret < 0){
         throw bignum_error("CBigNum::isPrime :BN_is_prime");
     }

@@ -72,7 +72,7 @@ bool fListen = true;
 RecursiveMutex cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
-static CNode* pnodeLocalHost = NULL;
+static CNode* pnodeLocalHost = nullptr;
 std::string strSubVersion;
 
 limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
@@ -287,7 +287,7 @@ CNode* CConnman::FindNode(const CNetAddr& ip)
     for (CNode* pnode : vNodes)
         if (static_cast<CNetAddr>(pnode->addr) == ip)
             return (pnode);
-    return NULL;
+    return nullptr;
 }
 
 CNode* CConnman::FindNode(const CSubNet& subNet)
@@ -296,7 +296,7 @@ CNode* CConnman::FindNode(const CSubNet& subNet)
     for (CNode* pnode : vNodes)
     if (subNet.Match(static_cast<CNetAddr>(pnode->addr)))
         return (pnode);
-    return NULL;
+    return nullptr;
 }
 
 CNode* CConnman::FindNode(const std::string& addrName)
@@ -307,7 +307,7 @@ CNode* CConnman::FindNode(const std::string& addrName)
             return (pnode);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 CNode* CConnman::FindNode(const CService& addr)
@@ -324,7 +324,7 @@ CNode* CConnman::FindNode(const CService& addr)
                 return (pnode);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -339,7 +339,7 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
 
 CNode* CConnman::ConnectNode(CAddress addrConnect, const char* pszDest, bool fCountFailure)
 {
-    if (pszDest == NULL) {
+    if (pszDest == nullptr) {
         if (IsLocal(addrConnect)) {
             LogPrintf("%s: cannot connect to local node\n", __func__);
             return nullptr;
@@ -366,7 +366,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char* pszDest, bool fCo
         if (!IsSelectableSocket(hSocket)) {
             LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
             CloseSocket(hSocket);
-            return NULL;
+            return nullptr;
         }
 
         addrman.Attempt(addrConnect, fCountFailure);
@@ -385,7 +385,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char* pszDest, bool fCo
         addrman.Attempt(addrConnect, fCountFailure);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void CConnman::DumpBanlist()
@@ -1997,8 +1997,8 @@ void Discover()
     // Get local host ip
     struct ifaddrs* myaddrs;
     if (getifaddrs(&myaddrs) == 0) {
-        for (struct ifaddrs* ifa = myaddrs; ifa != NULL; ifa = ifa->ifa_next) {
-            if (ifa->ifa_addr == NULL) continue;
+        for (struct ifaddrs* ifa = myaddrs; ifa != nullptr; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr == nullptr) continue;
             if ((ifa->ifa_flags & IFF_UP) == 0) continue;
             if (strcmp(ifa->ifa_name, "lo") == 0) continue;
             if (strcmp(ifa->ifa_name, "lo0") == 0) continue;
@@ -2026,11 +2026,11 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSe
     nLastNodeId = 0;
     nSendBufferMaxSize = 0;
     nReceiveFloodSize = 0;
-    semOutbound = NULL;
+    semOutbound = nullptr;
     nMaxConnections = 0;
     nMaxOutbound = 0;
     nBestHeight = 0;
-    clientInterface = NULL;
+    clientInterface = nullptr;
     flagInterruptMsgProc = false;
 }
 
@@ -2091,11 +2091,11 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
 
     // Initialize random numbers. Even when rand() is only usable for trivial use-cases most nodes should have a different
     // seed after all the file-IO done at this point. Should be good enough even when nodes are started via scripts.
-    srand(time(NULL));
+    srand(time(nullptr));
 
     fAddressesInitialized = true;
 
-    if (semOutbound == NULL) {
+    if (semOutbound == nullptr) {
         // initialize semaphore
         semOutbound = new CSemaphore(std::min((nMaxOutbound + nMaxFeeler), nMaxConnections));
     }
@@ -2224,10 +2224,10 @@ void CConnman::Stop()
     vNodesDisconnected.clear();
     vhListenSocket.clear();
     delete semOutbound;
-    semOutbound = NULL;
+    semOutbound = nullptr;
     if(pnodeLocalHost)
         DeleteNode(pnodeLocalHost);
-    pnodeLocalHost = NULL;
+    pnodeLocalHost = nullptr;
 }
 
 void CConnman::DeleteNode(CNode* pnode)

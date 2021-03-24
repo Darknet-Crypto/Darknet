@@ -13,7 +13,7 @@
  */
 void CChain::SetTip(CBlockIndex* pindex)
 {
-    if (pindex == NULL) {
+    if (pindex == nullptr) {
         vChain.clear();
         return;
     }
@@ -81,7 +81,7 @@ int static inline GetSkipHeight(int height)
 CBlockIndex* CBlockIndex::GetAncestor(int height)
 {
     if (height > nHeight || height < 0)
-        return NULL;
+        return nullptr;
 
     CBlockIndex* pindexWalk = this;
     int heightWalk = nHeight;
@@ -327,7 +327,7 @@ bool CBlockIndex::RaiseValidity(enum BlockStatus nUpTo)
 }
 
 /** Find the last common ancestor two blocks have.
- *  Both pa and pb must be non-NULL. */
+ *  Both pa and pb must be non-nullptr. */
 const CBlockIndex* LastCommonAncestor(const CBlockIndex* pa, const CBlockIndex* pb)
 {
     if (pa->nHeight > pb->nHeight) {
