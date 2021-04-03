@@ -63,7 +63,7 @@ double GetDifficulty(const CBlockIndex* blockindex)
 {
     // Floating point number that is a multiple of the minimum difficulty,
     // minimum difficulty = 1.0.
-    if (blockindex == NULL) {
+    if (blockindex == nullptr) {
         const CBlockIndex* pChainTip = GetChainTip();
         if (!pChainTip)
             return 1.0;

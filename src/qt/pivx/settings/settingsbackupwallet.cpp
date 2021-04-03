@@ -48,7 +48,7 @@ void SettingsBackupWallet::selectFileOutput()
 {
     QString filename = GUIUtil::getSaveFileName(this,
                                         tr("Backup Wallet"), QString(),
-                                        tr("Wallet Data (*.dat)"), NULL);
+                                        tr("Wallet Data (*.dat)"), nullptr);
 
     if (!filename.isEmpty() && walletModel) {
         ui->pushButtonDocuments->setText(filename);

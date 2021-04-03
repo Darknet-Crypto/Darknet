@@ -711,7 +711,7 @@ void TopBar::updateHDState(const bool& upgraded, const QString& upgradeError)
             // backup wallet
             QString filename = GUIUtil::getSaveFileName(this,
                                                 tr("Backup Wallet"), QString(),
-                                                tr("Wallet Data (*.dat)"), NULL);
+                                                tr("Wallet Data (*.dat)"), nullptr);
             if (!filename.isEmpty()) {
                 inform(walletModel->backupWallet(filename) ? tr("Backup created") : tr("Backup creation failed"));
             } else {

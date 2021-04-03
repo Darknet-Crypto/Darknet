@@ -50,7 +50,7 @@ const struct {
         {"cmd-reply", ":/icons/ic-transaction-sent"},
         {"cmd-error", ":/icons/ic-transaction-sent"},
         {"misc", ":/icons/ic-transaction-staked"},
-        {NULL, NULL}};
+        {nullptr, nullptr}};
 
 /* Object for executing console RPC commands in a separate thread.
 */

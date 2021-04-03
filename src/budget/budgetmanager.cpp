@@ -511,7 +511,7 @@ void CBudgetManager::VoteOnFinalizedBudgets()
             continue;
         }
         std::string strError = "";
-        if (!UpdateFinalizedBudget(vote, NULL, strError)) {
+        if (!UpdateFinalizedBudget(vote, nullptr, strError)) {
             LogPrintf("%s: Error submitting vote - %s\n", __func__, strError);
             continue;
         }
@@ -528,7 +528,7 @@ CFinalizedBudget* CBudgetManager::FindFinalizedBudget(const uint256& nHash)
     if (mapFinalizedBudgets.count(nHash))
         return &mapFinalizedBudgets[nHash];
 
-    return NULL;
+    return nullptr;
 }
 
 const CBudgetProposal* CBudgetManager::FindProposalByName(const std::string& strProposalName) const

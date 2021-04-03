@@ -1083,7 +1083,7 @@ bool CWalletDB::Recover(const std::string& filename)
 {
     // recover without a key filter callback
     // results in recovering all record types
-    return CWalletDB::Recover(filename, NULL, NULL);
+    return CWalletDB::Recover(filename, nullptr, nullptr);
 }
 
 bool CWalletDB::RecoverKeysOnlyFilter(void *callbackData, CDataStream ssKey, CDataStream ssValue)

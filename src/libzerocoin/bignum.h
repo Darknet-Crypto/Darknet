@@ -216,20 +216,20 @@ public:
     CAutoBN_CTX()
     {
         pctx = BN_CTX_new();
-        if (pctx == NULL)
-            throw bignum_error("CAutoBN_CTX : BN_CTX_new() returned NULL");
+        if (pctx == nullptr)
+            throw bignum_error("CAutoBN_CTX : BN_CTX_new() returned nullptr");
     }
 
     ~CAutoBN_CTX()
     {
-        if (pctx != NULL)
+        if (pctx != nullptr)
             BN_CTX_free(pctx);
     }
 
     operator BN_CTX*() { return pctx; }
     BN_CTX& operator*() { return *pctx; }
     BN_CTX** operator&() { return &pctx; }
-    bool operator!() { return (pctx == NULL); }
+    bool operator!() { return (pctx == nullptr); }
 };
 
 inline const CBigNum operator+(const CBigNum& a, const CBigNum& b) {
@@ -259,7 +259,7 @@ inline const CBigNum operator*(const CBigNum& a, const CBigNum& b) {
 inline const CBigNum operator/(const CBigNum& a, const CBigNum& b) {
     CAutoBN_CTX pctx;
     CBigNum r;
-    if (!BN_div(r.bn, NULL, a.bn, b.bn, pctx))
+    if (!BN_div(r.bn, nullptr, a.bn, b.bn, pctx))
         throw bignum_error("CBigNum::operator/ : BN_div failed");
     return r;
 }

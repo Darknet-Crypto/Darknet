@@ -702,7 +702,7 @@ int CMasternodeMan::ProcessMNPing(CNode* pfrom, CMasternodePing& mnp)
         // if nothing significant failed, search existing Masternode list
         CMasternode* pmn = Find(mnp.vin.prevout);
         // if it's known, don't ask for the mnb, just return
-        if (pmn != NULL) return 0;
+        if (pmn != nullptr) return 0;
     }
 
     // something significant is broken or mn is unknown,
@@ -824,7 +824,7 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast& mnb)
     LogPrint(BCLog::MASTERNODE,"CMasternodeMan::UpdateMasternodeList() -- masternode=%s\n", mnb.vin.prevout.ToString());
 
     CMasternode* pmn = Find(mnb.vin.prevout);
-    if (pmn == NULL) {
+    if (pmn == nullptr) {
         CMasternode mn(mnb);
         Add(mn);
     } else {
