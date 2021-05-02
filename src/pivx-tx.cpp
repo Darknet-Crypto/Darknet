@@ -430,7 +430,7 @@ static CAmount AmountFromValue(const UniValue& value)
     if (dAmount <= 0.0 || dAmount > 21000000.0)
         throw std::runtime_error("Invalid amount");
     CAmount nAmount = roundint64(dAmount * COIN);
-    if (!Params().GetConsensus().MoneyRange(nAmount))
+    if (!MoneyRange(nAmount))
         throw std::runtime_error("Amount out of range");
     return nAmount;
 }

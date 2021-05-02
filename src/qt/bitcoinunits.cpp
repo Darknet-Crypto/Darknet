@@ -311,5 +311,5 @@ QVariant BitcoinUnits::data(const QModelIndex& index, int role) const
 
 CAmount BitcoinUnits::maxMoney()
 {
-    return Params().GetConsensus().nMaxMoneyOut;
+    return MAX_MONEY;
 }

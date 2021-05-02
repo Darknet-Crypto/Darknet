@@ -90,10 +90,10 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCol
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-empty");
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > consensus.nMaxMoneyOut)
+        if (txout.nValue > MAX_MONEY)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-toolarge");
         nValueOut += txout.nValue;
-        if (!consensus.MoneyRange(nValueOut))
+        if (!MoneyRange(nValueOut))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
         // check cold staking enforcement (for delegations) and value out
         if (txout.scriptPubKey.IsPayToColdStaking()) {

@@ -708,7 +708,7 @@ CAmount SaplingScriptPubKeyMan::GetDebit(const CTransaction& tx, const isminefil
             assert(nd.IsMyNote());        // todo: Add watch only check.
             assert(static_cast<bool>(nd.amount));
             nDebit += *(nd.amount);
-            if (!Params().GetConsensus().MoneyRange(nDebit))
+            if (!MoneyRange(nDebit))
                 throw std::runtime_error("SaplingScriptPubKeyMan::GetDebit() : value out of range");
         }
     }
@@ -730,7 +730,7 @@ CAmount SaplingScriptPubKeyMan::GetShieldedChange(const CWalletTx& wtx) const
         if (!nd.IsMyNote() || !static_cast<bool>(nd.address) || !static_cast<bool>(nd.amount)) continue;
         if (IsNoteSaplingChange(op, *(nd.address))) {
             nChange += *(nd.amount);
-            if (!Params().GetConsensus().MoneyRange(nChange))
+            if (!MoneyRange(nChange))
                 throw std::runtime_error("GetShieldedChange() : value out of range");
         }
     }

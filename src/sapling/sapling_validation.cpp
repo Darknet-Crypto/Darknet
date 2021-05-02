@@ -56,7 +56,7 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
     }
 
     // Check for overflow valueBalance
-    if (tx.sapData->valueBalance > consensus.nMaxMoneyOut || tx.sapData->valueBalance < -consensus.nMaxMoneyOut) {
+    if (tx.sapData->valueBalance > MAX_MONEY || tx.sapData->valueBalance < -MAX_MONEY) {
         return state.DoS(100, error("%s: abs(tx.sapData->valueBalance) too large", __func__),
                          REJECT_INVALID, "bad-txns-valuebalance-toolarge");
     }
@@ -65,19 +65,19 @@ bool CheckTransactionWithoutProofVerification(const CTransaction& tx, CValidatio
         // NB: negative valueBalance "takes" money from the transparent value pool just as outputs do
         nValueOut += -tx.sapData->valueBalance;
 
-        if (!consensus.MoneyRange(nValueOut)) {
+        if (!MoneyRange(nValueOut)) {
             return state.DoS(100, error("%s: txout total out of range", __func__ ),
                              REJECT_INVALID, "bad-txns-txouttotal-toolarge");
         }
     }
 
-    // Ensure input values do not exceed consensus.nMaxMoneyOut
+    // Ensure input values do not exceed MAX_MONEY
     // We have not resolved the txin values at this stage,
     // but we do know what the shielded tx claim to add
     // to the value pool.
 
     // NB: positive valueBalance "adds" money to the transparent value pool, just as inputs do
-    if (tx.sapData->valueBalance > 0 && !consensus.MoneyRange(tx.sapData->valueBalance)) {
+    if (tx.sapData->valueBalance > 0 && !MoneyRange(tx.sapData->valueBalance)) {
         return state.DoS(100, error("%s: txin total out of range", __func__ ),
                          REJECT_INVALID, "bad-txns-txintotal-toolarge");
     }

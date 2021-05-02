@@ -310,8 +310,8 @@ CAmount GetMinRelayFee(unsigned int nBytes, bool fAllowFree)
             nMinFee = 0;
     }
 
-    if (!Params().GetConsensus().MoneyRange(nMinFee))
-        nMinFee = Params().GetConsensus().nMaxMoneyOut;
+    if (!MoneyRange(nMinFee))
+        nMinFee = MAX_MONEY;
     return nMinFee;
 }
 
@@ -320,8 +320,8 @@ CAmount GetShieldedTxMinFee(const CTransaction& tx)
     assert (tx.IsShieldedTx());
     unsigned int K = DEFAULT_SHIELDEDTXFEE_K;   // Fixed (100) for now
     CAmount nMinFee = ::minRelayTxFee.GetFee(tx.GetTotalSize()) * K;
-    if (!Params().GetConsensus().MoneyRange(nMinFee))
-        nMinFee = Params().GetConsensus().nMaxMoneyOut;
+    if (!MoneyRange(nMinFee))
+        nMinFee = MAX_MONEY;
     return nMinFee;
 }
 
@@ -1109,7 +1109,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
-        if (!consensus.MoneyRange(coin.out.nValue) || !consensus.MoneyRange(nValueIn))
+        if (!MoneyRange(coin.out.nValue) || !MoneyRange(nValueIn))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
     }
 
@@ -1126,7 +1126,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
         if (nTxFee < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
         nFees += nTxFee;
-        if (!consensus.MoneyRange(nFees))
+        if (!MoneyRange(nFees))
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-outofrange");
     }
     return true;
