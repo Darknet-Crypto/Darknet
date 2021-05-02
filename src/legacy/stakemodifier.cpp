@@ -117,7 +117,7 @@ bool GetOldStakeModifier(CStakeInput* stake, uint64_t& nStakeModifier)
         const int nHeightStop = std::min(chainActive.Height(), Params().GetConsensus().height_last_ZC_AccumCheckpoint-1);
         while (pindexFrom && pindexFrom->nHeight + 1 <= nHeightStop) {
             if (pindexFrom->GetBlockTime() - nTimeBlockFrom > 60 * 60) {
-                nStakeModifier = pindexFrom->nAccumulatorCheckpoint.GetCheapHash();
+                nStakeModifier = pindexFrom->nAccumulatorCheckpoint->GetCheapHash();
                 return true;
             }
             pindexFrom = chainActive.Next(pindexFrom);

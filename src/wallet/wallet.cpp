@@ -1357,7 +1357,7 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
                                Params().GetConsensus().NetworkUpgradeActive(pprev->nHeight,
                                                                             Consensus::UPGRADE_V5_0);
         if (isSaplingActive) {
-            assert(pcoinsTip->GetSaplingAnchorAt(pprev->hashFinalSaplingRoot, oldSaplingTree));
+            assert(pcoinsTip->GetSaplingAnchorAt(*pprev->hashFinalSaplingRoot, oldSaplingTree));
         } else {
             assert(pcoinsTip->GetSaplingAnchorAt(SaplingMerkleTree::empty_root(), oldSaplingTree));
         }
@@ -1954,7 +1954,7 @@ CBlockIndex* CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, CBlock
                 if (pindex->pprev) {
                     if (Params().GetConsensus().NetworkUpgradeActive(pindex->pprev->nHeight, Consensus::UPGRADE_V5_0)) {
                         SaplingMerkleTree saplingTree;
-                        assert(pcoinsTip->GetSaplingAnchorAt(pindex->pprev->hashFinalSaplingRoot, saplingTree));
+                        assert(pcoinsTip->GetSaplingAnchorAt(*pindex->pprev->hashFinalSaplingRoot, saplingTree));
                         // Increment note witness caches
                         ChainTipAdded(pindex, &block, saplingTree);
                     }

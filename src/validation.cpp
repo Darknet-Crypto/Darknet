@@ -1407,7 +1407,7 @@ DisconnectResult DisconnectBlock(CBlock& block, const CBlockIndex* pindex, CCoin
     // the Sapling activation height. Otherwise, the last anchor was the
     // empty root.
     if (consensus.NetworkUpgradeActive(pindex->pprev->nHeight, Consensus::UPGRADE_V5_0)) {
-        view.PopAnchor(pindex->pprev->hashFinalSaplingRoot);
+        view.PopAnchor(*pindex->pprev->hashFinalSaplingRoot);
     } else {
         view.PopAnchor(SaplingMerkleTree::empty_root());
     }
@@ -1720,7 +1720,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     if (consensus.NetworkUpgradeActive(pindex->nHeight, Consensus::UPGRADE_V5_0)) {
         // If Sapling is active, block.hashFinalSaplingRoot must be the
         // same as the root of the Sapling tree
-        if (block.hashFinalSaplingRoot != sapling_tree.root()) {
+        if (*block.hashFinalSaplingRoot != sapling_tree.root()) {
             return state.DoS(100,
                              error("ConnectBlock(): block's hashFinalSaplingRoot is incorrect (should be Sapling tree root)"),
                              REJECT_INVALID, "bad-sapling-root-in-block");

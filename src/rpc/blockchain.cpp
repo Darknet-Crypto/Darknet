@@ -116,7 +116,7 @@ UniValue blockheaderToJSON(const CBlockIndex* blockindex)
     result.pushKV("bits", strprintf("%08x", blockindex->nBits));
     result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
-    result.pushKV("acc_checkpoint", blockindex->nAccumulatorCheckpoint.GetHex());
+    result.pushKV("acc_checkpoint", blockindex->nAccumulatorCheckpoint->GetHex());
     // Sapling shield pool value
     result.pushKV("shield_pool_value", ValuePoolDesc(blockindex->nChainSaplingValue, blockindex->nSaplingValue));
     if (blockindex->pprev)
@@ -140,8 +140,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.pushKV("height", blockindex->nHeight);
     result.pushKV("version", block.nVersion);
     result.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
-    result.pushKV("acc_checkpoint", block.nAccumulatorCheckpoint.GetHex());
-    result.pushKV("finalsaplingroot", block.hashFinalSaplingRoot.GetHex());
+    result.pushKV("acc_checkpoint", block.nAccumulatorCheckpoint->GetHex());
+    result.pushKV("finalsaplingroot", block.hashFinalSaplingRoot->GetHex());
     UniValue txs(UniValue::VARR);
     for (const auto& txIn : block.vtx) {
         const CTransaction& tx = *txIn;

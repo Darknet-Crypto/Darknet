@@ -64,7 +64,7 @@ const CBlockIndex* CLegacyZPivStake::GetIndexFrom() const
     CBlockIndex* pindex = chainActive[consensus.vUpgrades[Consensus::UPGRADE_ZC].nActivationHeight];
     if (!pindex) return nullptr;
     while (pindex && pindex->nHeight <= consensus.height_last_ZC_AccumCheckpoint) {
-        if (ParseAccChecksum(pindex->nAccumulatorCheckpoint, denom) == nChecksum) {
+        if (ParseAccChecksum(*pindex->nAccumulatorCheckpoint, denom) == nChecksum) {
             // Found. Save to database and return
             zerocoinDB->WriteAccChecksum(nChecksum, denom, pindex->nHeight);
             return pindex;
@@ -101,7 +101,7 @@ bool CLegacyZPivStake::ContextCheck(int nHeight, uint32_t nTime)
     // The checkpoint needs to be from 200 blocks ago
     const int cpHeight = nHeight - 1 - consensus.ZC_MinStakeDepth;
     const libzerocoin::CoinDenomination denom = libzerocoin::AmountToZerocoinDenomination(GetValue());
-    if (ParseAccChecksum(chainActive[cpHeight]->nAccumulatorCheckpoint, denom) != GetChecksum())
+    if (ParseAccChecksum(*chainActive[cpHeight]->nAccumulatorCheckpoint, denom) != GetChecksum())
         return error("%s : accum. checksum at height %d is wrong.", __func__, nHeight);
 
     // All good

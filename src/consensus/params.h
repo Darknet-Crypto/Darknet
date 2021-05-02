@@ -96,9 +96,7 @@ struct Params {
     int nCoinbaseMaturity;
     int nFutureTimeDriftPoW;
     int nFutureTimeDriftPoS;
-    int nMasternodeCountDrift;
     CAmount nMaxMoneyOut;
-    int nPoolMaxTransactions;
     int64_t nProposalEstablishmentTime;
     int nStakeMinAge;
     int nStakeMinDepth;
@@ -118,7 +116,6 @@ struct Params {
     int height_last_invalid_UTXO;
     int height_last_ZC_AccumCheckpoint;
     int height_last_ZC_WrappedSerials;
-    int height_ZC_RecalcAccumulators;
 
     // validation by-pass
     int64_t nPivxBadBlockTime;
@@ -165,8 +162,6 @@ struct Params {
     std::string ZC_Modulus;  // parsed in Zerocoin_Params (either as hex or dec string)
     int ZC_MaxPublicSpendsPerTx;
     int ZC_MaxSpendsPerTx;
-    int ZC_MinMintConfirmations;
-    CAmount ZC_MinMintFee;
     int ZC_MinStakeDepth;
     int ZC_TimeStart;
     int ZC_HeightStart;
