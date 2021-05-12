@@ -159,6 +159,7 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/settings/settingswidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/welcomecontentwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/splash.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/governancemodel.cpp
         )
 
 execute_process(
