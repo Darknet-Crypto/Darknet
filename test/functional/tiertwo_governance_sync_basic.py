@@ -21,6 +21,20 @@ Test checking:
  5) Proposal and vote sync.
 """
 
+class Proposal:
+    def __init__(self,
+                 proposalName,
+                 proposalLink,
+                 proposalCycles,
+                 proposalAddress,
+                 proposalAmountPerCycle):
+        self.proposalName = proposalName
+        self.proposalLink = proposalLink
+        self.proposalCycles = proposalCycles
+        self.proposalAddress = proposalAddress
+        self.proposalAmountPerCycle = proposalAmountPerCycle
+
+
 class MasternodeGovernanceBasicTest(PivxTier2TestFramework):
 
     def check_budget_finalization_sync(self, votesCount, status):
@@ -94,66 +108,103 @@ class MasternodeGovernanceBasicTest(PivxTier2TestFramework):
             assert_equal(self.nodes[i].getbudgetprojection(), expected)
             self.log.info("Budget projection valid for node %d" % i)
 
+    def create_multisig_addr(self, node):
+        addr1 = node.getnewaddress()
+        addr2 = node.getnewaddress()
+        addr3 = node.getnewaddress()
+        sig_address_1 = node.validateaddress(addr1)
+        sig_address_2 = node.validateaddress(addr2)
+        sig_address_3 = node.validateaddress(addr3)
+        return node.addmultisigaddress(2, [sig_address_1['pubkey'], sig_address_2['pubkey'], sig_address_3['pubkey']])
+
     def run_test(self):
         self.enable_mocktime()
         self.setup_2_masternodes_network()
 
-        # Prepare the proposal
-        self.log.info("preparing budget proposal..")
-        firstProposalName = "super-cool"
-        firstProposalLink = "https://forum.pivx.org/t/test-proposal"
-        firstProposalCycles = 2
-        firstProposalAddress = self.miner.getnewaddress()
-        firstProposalAmountPerCycle = 300
-        nextSuperBlockHeight = self.miner.getnextsuperblock()
-
-        proposalFeeTxId = self.miner.preparebudget(
-            firstProposalName,
-            firstProposalLink,
-            firstProposalCycles,
-            nextSuperBlockHeight,
-            firstProposalAddress,
-            firstProposalAmountPerCycle)
-
-        # generate 3 blocks to confirm the tx (and update the mnping)
-        self.stake(3, [self.remoteOne, self.remoteTwo])
-
+        self.log.info("activating sporks..")
         # activate sporks
         self.activate_spork(self.minerPos, "SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT")
         self.activate_spork(self.minerPos, "SPORK_9_MASTERNODE_BUDGET_ENFORCEMENT")
         self.activate_spork(self.minerPos, "SPORK_13_ENABLE_SUPERBLOCKS")
 
+        # Prepare the proposals
+        self.log.info("preparing budget proposal..")
+        firstProposal = Proposal("super-cool", "https://forum.pivx.org/t/test-proposal", 2, self.miner.getnewaddress(), 300)
+        multisigAddr = self.create_multisig_addr(self.miner)
+        multiSigProposal = Proposal("multi-sig", "https://forum.pivx.org/t/test-proposal-multisig", 2, multisigAddr, 300)
+        nextSuperBlockHeight = self.miner.getnextsuperblock()
+
+        proposalFeeTxId = self.miner.preparebudget(
+            firstProposal.proposalName,
+            firstProposal.proposalLink,
+            firstProposal.proposalCycles,
+            nextSuperBlockHeight,
+            firstProposal.proposalAddress,
+            firstProposal.proposalAmountPerCycle)
+
+        # submit second one
+        proposalFeeTxIdMultiSig = self.miner.preparebudget(
+            multiSigProposal.proposalName,
+            multiSigProposal.proposalLink,
+            multiSigProposal.proposalCycles,
+            nextSuperBlockHeight,
+            multiSigProposal.proposalAddress,
+            multiSigProposal.proposalAmountPerCycle)
+
+        # generate 3 blocks to confirm the tx (and update the mnping)
+        self.stake(3, [self.remoteOne, self.remoteTwo])
+
         txinfo = self.miner.gettransaction(proposalFeeTxId)
         assert_equal(txinfo['amount'], -50.00)
 
-        self.log.info("submitting the budget proposal..")
+        txinfo = self.miner.gettransaction(proposalFeeTxIdMultiSig)
+        assert_equal(txinfo['amount'], -50.00)
+        assert(proposalFeeTxId != proposalFeeTxIdMultiSig)
 
+        self.log.info("submitting budget proposals..")
+
+        # submit regular proposal
         proposalHash = self.miner.submitbudget(
-            firstProposalName,
-            firstProposalLink,
-            firstProposalCycles,
+            firstProposal.proposalName,
+            firstProposal.proposalLink,
+            firstProposal.proposalCycles,
             nextSuperBlockHeight,
-            firstProposalAddress,
-            firstProposalAmountPerCycle,
+            firstProposal.proposalAddress,
+            firstProposal.proposalAmountPerCycle,
             proposalFeeTxId)
+
+        # submit multisig proposal
+        proposalHashMultiSig = self.miner.submitbudget(
+            multiSigProposal.proposalName,
+            multiSigProposal.proposalLink,
+            multiSigProposal.proposalCycles,
+            nextSuperBlockHeight,
+            multiSigProposal.proposalAddress,
+            multiSigProposal.proposalAmountPerCycle,
+            proposalFeeTxIdMultiSig)
 
         # let's wait a little bit and see if all nodes are sync
         time.sleep(1)
-        self.check_proposal_existence(firstProposalName, proposalHash)
-        self.log.info("proposal broadcast successful!")
+        self.check_proposal_existence(firstProposal.proposalName, proposalHash)
+        self.check_proposal_existence(multiSigProposal.proposalName, proposalHashMultiSig)
+        self.log.info("proposals broadcasted successfully!")
 
         # Proposal is established after 5 minutes. Mine 7 blocks
         # Proposal needs to be on the chain > 5 min.
         self.stake(7, [self.remoteOne, self.remoteTwo])
 
         # now let's vote for the proposal with the first MN
-        self.log.info("broadcasting votes for the proposal now..")
+        self.log.info("broadcasting votes for the proposals now..")
         voteResult = self.ownerOne.mnbudgetvote("alias", proposalHash, "yes", self.masternodeOneAlias)
+        assert_equal(voteResult["detail"][0]["result"], "success")
+
+        voteResult = self.ownerOne.mnbudgetvote("alias", proposalHashMultiSig, "yes", self.masternodeOneAlias)
         assert_equal(voteResult["detail"][0]["result"], "success")
 
         # check that the vote was accepted everywhere
         self.stake(1, [self.remoteOne, self.remoteTwo])
-        self.check_vote_existence(firstProposalName, self.mnOneTxHash, "YES")
+        self.check_vote_existence(firstProposal.proposalName, self.mnOneTxHash, "YES")
+        self.check_vote_existence(multiSigProposal.proposalName, self.mnOneTxHash, "YES")
         self.log.info("all good, MN1 vote accepted everywhere!")
 
         # now let's vote for the proposal with the second MN
@@ -162,20 +213,25 @@ class MasternodeGovernanceBasicTest(PivxTier2TestFramework):
 
         # check that the vote was accepted everywhere
         self.stake(1, [self.remoteOne, self.remoteTwo])
-        self.check_vote_existence(firstProposalName, self.mnTwoTxHash, "YES")
+        self.check_vote_existence(firstProposal.proposalName, self.mnTwoTxHash, "YES")
         self.log.info("all good, MN2 vote accepted everywhere!")
 
         # Now check the budget
         blockStart = nextSuperBlockHeight
-        blockEnd = blockStart + firstProposalCycles * 145
-        TotalPayment = firstProposalAmountPerCycle * firstProposalCycles
-        Allotted = firstProposalAmountPerCycle
-        RemainingPaymentCount = firstProposalCycles
+        blockEnd = blockStart + firstProposal.proposalCycles * 145
+        TotalPayment = firstProposal.proposalAmountPerCycle * firstProposal.proposalCycles
+        Allotted = firstProposal.proposalAmountPerCycle
+        RemainingPaymentCount = firstProposal.proposalCycles
+        # 2 votes for the regular one, 1 vote for the multisig proposal
         expected_budget = [
-            self.get_proposal_obj(firstProposalName, firstProposalLink, proposalHash, proposalFeeTxId, blockStart,
-                                  blockEnd, firstProposalCycles, RemainingPaymentCount, firstProposalAddress, 1,
-                                  2, 0, 0, Decimal(str(TotalPayment)), Decimal(str(firstProposalAmountPerCycle)),
-                                  True, True, Decimal(str(Allotted)), Decimal(str(Allotted)))
+            self.get_proposal_obj(firstProposal.proposalName, firstProposal.proposalLink, proposalHash, proposalFeeTxId, blockStart,
+                                  blockEnd, firstProposal.proposalCycles, RemainingPaymentCount, firstProposal.proposalAddress, 1,
+                                  2, 0, 0, Decimal(str(TotalPayment)), Decimal(str(firstProposal.proposalAmountPerCycle)),
+                                  True, True, Decimal(str(Allotted)), Decimal(str(Allotted))),
+            self.get_proposal_obj(multiSigProposal.proposalName, multiSigProposal.proposalLink, proposalHashMultiSig, proposalFeeTxIdMultiSig, blockStart,
+                                  blockEnd, multiSigProposal.proposalCycles, RemainingPaymentCount, multiSigProposal.proposalAddress, 1,
+                                  1, 0, 0, Decimal(str(TotalPayment)), Decimal(str(multiSigProposal.proposalAmountPerCycle)),
+                                  True, True, Decimal(str(Allotted)), Decimal(str(Allotted * 2)))
                            ]
         self.check_budgetprojection(expected_budget)
 
@@ -207,13 +263,17 @@ class MasternodeGovernanceBasicTest(PivxTier2TestFramework):
         self.check_budget_finalization_sync(2, "OK")
 
         self.stake(8, [self.remoteOne, self.remoteTwo])
-        addrInfo = self.miner.listreceivedbyaddress(0, False, False, firstProposalAddress)
-        assert_equal(addrInfo[0]["amount"], firstProposalAmountPerCycle)
+        addrInfo = self.miner.listreceivedbyaddress(0, False, False, firstProposal.proposalAddress)
+        assert_equal(addrInfo[0]["amount"], firstProposal.proposalAmountPerCycle)
+
+        addrInfo = self.miner.listreceivedbyaddress(0, False, False, multiSigProposal.proposalAddress)
+        assert_equal(addrInfo[0]["amount"], multiSigProposal.proposalAmountPerCycle)
 
         self.log.info("budget proposal paid!, all good")
 
         # Check that the proposal info returns updated payment count
         expected_budget[0]["RemainingPaymentCount"] -= 1
+        expected_budget[1]["RemainingPaymentCount"] -= 1
         self.check_budgetprojection(expected_budget)
 
 

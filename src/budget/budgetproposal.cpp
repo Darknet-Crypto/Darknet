@@ -131,13 +131,6 @@ bool CBudgetProposal::CheckAmount(const CAmount& nTotalBudget)
 
 bool CBudgetProposal::CheckAddress()
 {
-    // !TODO: There might be an issue with multisig in the coinbase on mainnet
-    // we will add support for it in a future release.
-    if (address.IsPayToScriptHash()) {
-        strInvalid = "Multisig is not currently supported.";
-        return false;
-    }
-
     // Check address
     CTxDestination dest;
     if (!ExtractDestination(address, dest, false)) {
