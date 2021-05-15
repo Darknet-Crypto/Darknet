@@ -124,6 +124,11 @@ public:
     CDataStream GetBroadcast() const;
     void Relay();
 
+    inline bool operator==(const CBudgetProposal& other) const
+    {
+        return GetHash() == other.GetHash();
+    }
+
     // compare proposals by proposal hash
     inline bool operator>(const CBudgetProposal& other) const
     {
