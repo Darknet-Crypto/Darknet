@@ -58,6 +58,9 @@ public:
     void resizeEvent(QResizeEvent *event) override;
     void loadClientModel() override;
 
+public Q_SLOTS:
+    void onVoteForPropClicked();
+
 private:
     Ui::governancewidget *ui;
     GovernanceModel* governanceModel{nullptr};

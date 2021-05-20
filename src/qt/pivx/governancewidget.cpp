@@ -3,6 +3,7 @@
 
 #include "qt/pivx/governancemodel.h"
 #include "qt/pivx/qtutils.h"
+#include "qt/pivx/votedialog.h"
 
 #include <map>
 #include <QGraphicsDropShadowEffect>
@@ -84,6 +85,14 @@ GovernanceWidget::~GovernanceWidget()
 {
     delete ui;
     delete governanceModel;
+}
+
+void GovernanceWidget::onVoteForPropClicked()
+{
+    window->showHide(true);
+    VoteDialog* dialog = new VoteDialog(window);
+    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
+    dialog->deleteLater();
 }
 
 void GovernanceWidget::loadClientModel() {
