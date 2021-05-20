@@ -2368,6 +2368,121 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
  }
 
 /*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HH       VOTE DIALOG
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
+
+
+
+*[cssClass="vote-title"] {
+    color:#4D4D4D;
+    font-size:22px;
+}
+
+*[cssClass="vote-amount"] {
+    color:#4D4D4D;
+    font-size:20px;
+}
+
+*[cssClass="vote-time"] {
+    color:#707070;
+    font-size:18px;
+}
+
+*[cssClass="btn-vote-select"] {
+    background: transparent;
+    border: 0px;
+    color:#5C4B7D;
+    font-size:16px;
+}
+
+*[cssClass="btn-vote-select"]:hover {
+    text-decoration: underline;
+}
+
+
+*[cssClass="vote-message"] {
+    color:#707070;
+    font-size:14px;
+}
+
+*[cssClass="vote-grid"] {
+    border: 1px solid #BABABA;
+    background-color:transparent;
+}
+
+
+*[cssClass="vote-progress"] {
+    color: #4d4d4d;
+    font-size:14px;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+
+*[cssClass="vote-progress"]::chunk:horizontal {
+    background: rgba(238, 238, 238, 0.85);
+    border-right:1px solid  #bababa;
+}
+
+
+
+*[cssClass="vote-progress-no"] {
+    height: 36px;
+    color: #4d4d4d;
+    font-size:14px;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+
+*[cssClass="vote-progress-no"]::chunk:horizontal {
+    background: rgba(238, 238, 238, 0.85);
+    height: 36px;
+}
+
+
+*[cssClass="vote-progress-yes"] {
+    min-height: 36px;
+    color: #4d4d4d;
+    font-size:14px;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+
+*[cssClass="vote-progress-yes"]::chunk:horizontal {
+    background: rgba(92, 75, 125, 0.2);
+}
+
+
+
+QCheckBox[cssClass="check-vote"] {
+    spacing: 5px;
+    padding:5px;
+    font-size:18px;
+    color:#707070;
+}
+
+QCheckBox:checked[cssClass="check-vote"]  {
+    spacing: 5px;
+    font-size:18px;
+    color:#5c4b7d;
+}
+
+QCheckBox::indicator[cssClass="check-vote"] {
+    width: 24px;
+    height: 24px;
+}
+
+QCheckBox::indicator:unchecked[cssClass="check-vote"] {
+    image: url("://ic-check-vote");
+}
+
+QCheckBox::indicator:checked[cssClass="check-vote"] {
+    image: url("://ic-check-vote-active");
+}
+
+/*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 HH       SPIN BOX
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
