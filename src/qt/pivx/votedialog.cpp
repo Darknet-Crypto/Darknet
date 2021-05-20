@@ -5,6 +5,7 @@
 #include "qt/pivx/votedialog.h"
 #include "qt/pivx/forms/ui_votedialog.h"
 
+#include "qt/pivx/mnselectiondialog.h"
 #include "qt/pivx/qtutils.h"
 
 VoteDialog::VoteDialog(QWidget *parent) :
@@ -42,6 +43,7 @@ VoteDialog::VoteDialog(QWidget *parent) :
     checkBoxYes = new QCheckBox(ui->containerYes);
     initVoteCheck(ui->containerYes, checkBoxYes, progressBarYes, "Yes", Qt::LayoutDirection::LeftToRight, true);
 
+    connect(ui->btnSelectMasternodes, &QPushButton::clicked, this, &VoteDialog::onMnSelectionClicked);
     connect(ui->btnEsc, &QPushButton::clicked, this, &VoteDialog::close);
     connect(ui->btnCancel, &QPushButton::clicked, this, &VoteDialog::close);
     connect(ui->btnSave, &QPushButton::clicked, this, &VoteDialog::onAcceptClicked);
@@ -57,6 +59,16 @@ void VoteDialog::showEvent(QShowEvent *event)
     // Qt hack to solve the macOS-only extra margin issue.
     progressBarYes->setFixedWidth(progressBarYes->width() + 5);
     progressBarNo->setFixedWidth(progressBarNo->width() + 5);
+}
+
+void VoteDialog::onMnSelectionClicked()
+{
+    PIVXGUI* window = dynamic_cast<PIVXGUI*>(parent());
+    MnSelectionDialog* dialog = new MnSelectionDialog(window);
+    dialog->resize(size());
+    dialog->setModel(); // todo: set mnmodel.
+    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5, false);
+    dialog->deleteLater();
 }
 
 void VoteDialog::onCheckBoxClicked(QCheckBox* checkBox, QProgressBar* progressBar, bool isVoteYes)

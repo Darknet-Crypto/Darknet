@@ -51,6 +51,7 @@ QT_FORMS_UI = \
   qt/pivx/forms/defaultdialog.ui \
   qt/pivx/forms/coldstakingwidget.ui \
   qt/pivx/forms/proposalcard.ui \
+  qt/pivx/forms/mnselectiondialog.ui \
   qt/pivx/forms/votedialog.ui \
   qt/pivx/forms/governancewidget.ui \
   qt/pivx/settings/forms/settingsbackupwallet.ui \
@@ -140,6 +141,7 @@ QT_MOC_CPP = \
   qt/pivx/moc_defaultdialog.cpp \
   qt/pivx/moc_coldstakingwidget.cpp \
   qt/pivx/moc_proposalcard.cpp \
+  qt/pivx/moc_mnselectiondialog.cpp \
   qt/pivx/moc_votedialog.cpp \
   qt/pivx/moc_governancewidget.cpp \
   qt/pivx/settings/moc_settingsbackupwallet.cpp \
@@ -257,6 +259,7 @@ BITCOIN_QT_H = \
   qt/pivx/coldstakingwidget.h \
   qt/pivx/governancemodel.h \
   qt/pivx/proposalcard.h \
+  qt/pivx/mnselectiondialog.h \
   qt/pivx/votedialog.h \
   qt/pivx/governancewidget.h \
   qt/pivx/settings/settingsbackupwallet.h \
@@ -590,6 +593,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/pivx/coldstakingwidget.cpp \
   qt/pivx/governancemodel.cpp \
   qt/pivx/proposalcard.cpp \
+  qt/pivx/mnselectiondialog.cpp \
   qt/pivx/votedialog.cpp \
   qt/pivx/governancewidget.cpp \
   qt/pivx/settings/settingsbackupwallet.cpp \

@@ -26,6 +26,7 @@ public:
 public Q_SLOTS:
     void onAcceptClicked();
     void onCheckBoxClicked(QCheckBox* checkBox, QProgressBar* progressBar, bool isVoteYes);
+    void onMnSelectionClicked();
 
 private:
     Ui::VoteDialog *ui;

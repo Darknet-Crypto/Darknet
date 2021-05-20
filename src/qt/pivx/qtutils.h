@@ -35,7 +35,7 @@ extern Qt::Modifier SHORT_KEY;
 bool openDialog(QDialog* widget, QWidget* gui);
 void closeDialog(QDialog* widget, PIVXGUI* gui);
 void openDialogFullScreen(QWidget* parent, QWidget* dialog);
-bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX = 3, int posY = 5);
+bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX = 3, int posY = 5, bool hideOpaqueBackground = true);
 bool openDialogWithOpaqueBackground(QDialog* widget, PIVXGUI* gui, double posX = 3);
 bool openDialogWithOpaqueBackgroundFullScreen(QDialog* widget, PIVXGUI* gui);
 
