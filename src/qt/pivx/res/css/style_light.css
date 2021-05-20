@@ -2399,7 +2399,6 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     text-decoration: underline;
 }
 
-
 *[cssClass="vote-message"] {
     color:#707070;
     font-size:14px;
@@ -2410,7 +2409,6 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     background-color:transparent;
 }
 
-
 *[cssClass="vote-progress"] {
     color: #4d4d4d;
     font-size:14px;
@@ -2418,13 +2416,10 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     border-radius: 2px;
 }
 
-
 *[cssClass="vote-progress"]::chunk:horizontal {
     background: rgba(238, 238, 238, 0.85);
     border-right:1px solid  #bababa;
 }
-
-
 
 *[cssClass="vote-progress-no"] {
     height: 36px;
@@ -2434,12 +2429,10 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     border-radius: 2px;
 }
 
-
 *[cssClass="vote-progress-no"]::chunk:horizontal {
     background: rgba(238, 238, 238, 0.85);
     height: 36px;
 }
-
 
 *[cssClass="vote-progress-yes"] {
     min-height: 36px;
@@ -2449,12 +2442,9 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     border-radius: 2px;
 }
 
-
 *[cssClass="vote-progress-yes"]::chunk:horizontal {
     background: rgba(92, 75, 125, 0.2);
 }
-
-
 
 QCheckBox[cssClass="check-vote"] {
     spacing: 5px;
@@ -2480,6 +2470,103 @@ QCheckBox::indicator:unchecked[cssClass="check-vote"] {
 
 QCheckBox::indicator:checked[cssClass="check-vote"] {
     image: url("://ic-check-vote-active");
+}
+
+/*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HH       SELECT MASTER NODE
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
+
+
+*[cssClass="text-title-purple"] {
+    color: #5C4B7D;
+    font-size: 14px;
+}
+
+*[cssClass="text-purple"] {
+    color: #5C4B7D;
+    font-size: 14px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+*[cssClass="btn-dialog-secondary"] {
+    background: #ffffff;
+    border:1px solid #bababa;
+    border-radius: 2px;
+    color: #4d4d4d;
+    font-size: 14px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+
+*[cssClass="btn-dialog-secondary"]:hover {
+    border:1px solid #5C4B7D;
+    color: #5C4B7D;
+}
+
+
+QHeaderView::section {
+    background-color: #5C4B7D;
+    color: white;
+    font-size: 14px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border: 1px solid #5C4B7D;
+}
+
+
+QTreeView {
+    show-decoration-selected: 1;
+    background: white;
+    border: 1px solid #5C4B7D;
+    font-size: 14px;
+    color: #4d4d4d;
+    padding-left: 0px;
+}
+
+QTreeView::item {
+    border:0px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 0px;
+    font-size: 14px;
+    color: #4d4d4d;
+}
+
+QTreeView::item:hover {
+    background:rgba(176, 136, 255, 0.2);
+    border:0px;
+}
+
+QTreeView::item:selected {
+    color: #5C4B7D;
+    border:0px;
+}
+
+QTreeView::item:selected:active{
+    color: #5C4B7D;
+    border:0px;
+}
+
+QTreeView::item:selected:!active {
+    color:#5C4B7D;
+    border:0px;
+}
+
+
+QTreeView::indicator {
+    width: 24px;
+    height: 24px;
+}
+
+
+QTreeView::indicator:unchecked {
+    image: url(://ic-check-box);
+}
+
+QTreeView::indicator:checked {
+    image: url(://ic-check-active);
 }
 
 /*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
@@ -3097,6 +3184,14 @@ QPushButton[cssClass="ic-arrow"]:checked{
 *[cssClass="ic-close"] {
     qproperty-icon: url("://ic-close") off,
     url("://ic-close") on ;
+    qproperty-iconSize: 24px 24px;
+    background-color: transparent;
+    border:none;
+}
+
+*[cssClass="ic-chevron-left"] {
+    qproperty-icon: url("://ic-chevron-left") off,
+    url("://ic-chevron-left") on ;
     qproperty-iconSize: 24px 24px;
     background-color: transparent;
     border:none;
