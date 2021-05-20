@@ -36,18 +36,18 @@ public:
     /** Amount of times that the proposal will be paid */
     int totalPayments;
     /** Amount of times that the proposal was paid already */
-    int paidPayments;
+    int remainingPayments;
     /** Proposal state */
     Status status;
 
     ProposalInfo() {}
     explicit ProposalInfo(const uint256& _id, std::string  _name, std::string  _url,
                           int _votesYes, int _votesNo, std::string  _recipientAdd,
-                          CAmount _amount, int _totalPayments, int _paidPayments,
+                          CAmount _amount, int _totalPayments, int _remainingPayments,
                           Status _status) :
             id(_id), name(std::move(_name)), url(std::move(_url)), votesYes(_votesYes), votesNo(_votesNo),
             recipientAdd(std::move(_recipientAdd)), amount(_amount), totalPayments(_totalPayments),
-            paidPayments(_paidPayments), status(_status) {}
+            remainingPayments(_remainingPayments), status(_status) {}
 
     bool isEmpty() { return id.IsNull(); }
 

@@ -21,6 +21,7 @@
 #include "qt/pivx/receivewidget.h"
 #include "qt/pivx/addresseswidget.h"
 #include "qt/pivx/coldstakingwidget.h"
+#include "qt/pivx/governancewidget.h"
 #include "qt/pivx/masternodeswidget.h"
 #include "qt/pivx/snackbar.h"
 #include "qt/pivx/settings/settingswidget.h"
@@ -70,6 +71,7 @@ public Q_SLOTS:
     void goToReceive();
     void goToAddresses();
     void goToMasterNodes();
+    void goToGovernance();
     void goToColdStaking();
     void goToSettings();
     void goToSettingsInfo();
@@ -138,6 +140,7 @@ private:
     AddressesWidget *addressesWidget = nullptr;
     MasterNodesWidget *masterNodesWidget = nullptr;
     ColdStakingWidget *coldStakingWidget = nullptr;
+    GovernanceWidget* governancewidget{nullptr};
     SettingsWidget* settingsWidget = nullptr;
 
     SnackBar *snackBar = nullptr;

@@ -126,6 +126,7 @@ PIVXGUI::PIVXGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         addressesWidget = new AddressesWidget(this);
         masterNodesWidget = new MasterNodesWidget(this);
         coldStakingWidget = new ColdStakingWidget(this);
+        governancewidget = new GovernanceWidget(this);
         settingsWidget = new SettingsWidget(this);
 
         // Add to parent
@@ -135,6 +136,7 @@ PIVXGUI::PIVXGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         stackedContainer->addWidget(addressesWidget);
         stackedContainer->addWidget(masterNodesWidget);
         stackedContainer->addWidget(coldStakingWidget);
+        stackedContainer->addWidget(governancewidget);
         stackedContainer->addWidget(settingsWidget);
         stackedContainer->setCurrentWidget(dashboard);
 
@@ -202,6 +204,8 @@ void PIVXGUI::connectActions()
     connect(masterNodesWidget, &MasterNodesWidget::execDialog, this, &PIVXGUI::execDialog);
     connect(coldStakingWidget, &ColdStakingWidget::showHide, this, &PIVXGUI::showHide);
     connect(coldStakingWidget, &ColdStakingWidget::execDialog, this, &PIVXGUI::execDialog);
+    connect(governancewidget, &GovernanceWidget::showHide, this, &PIVXGUI::showHide);
+    connect(governancewidget, &GovernanceWidget::execDialog, this, &PIVXGUI::execDialog);
     connect(settingsWidget, &SettingsWidget::execDialog, this, &PIVXGUI::execDialog);
 }
 
@@ -253,6 +257,7 @@ void PIVXGUI::setClientModel(ClientModel* _clientModel)
         sendWidget->setClientModel(clientModel);
         masterNodesWidget->setClientModel(clientModel);
         settingsWidget->setClientModel(clientModel);
+        governancewidget->setClientModel(clientModel);
 
         // Receive and report messages from client model
         connect(clientModel, &ClientModel::message, this, &PIVXGUI::message);
@@ -506,6 +511,11 @@ void PIVXGUI::goToMasterNodes()
 void PIVXGUI::goToColdStaking()
 {
     showTop(coldStakingWidget);
+}
+
+void PIVXGUI::goToGovernance()
+{
+    showTop(governancewidget);
 }
 
 void PIVXGUI::goToSettings(){

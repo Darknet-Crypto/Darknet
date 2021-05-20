@@ -50,6 +50,8 @@ QT_FORMS_UI = \
   qt/pivx/forms/addresseswidget.ui \
   qt/pivx/forms/defaultdialog.ui \
   qt/pivx/forms/coldstakingwidget.ui \
+  qt/pivx/forms/proposalcard.ui \
+  qt/pivx/forms/governancewidget.ui \
   qt/pivx/settings/forms/settingsbackupwallet.ui \
   qt/pivx/settings/forms/settingsexportcsv.ui \
   qt/pivx/settings/forms/settingsbittoolwidget.ui \
@@ -136,6 +138,8 @@ QT_MOC_CPP = \
   qt/pivx/moc_addresseswidget.cpp \
   qt/pivx/moc_defaultdialog.cpp \
   qt/pivx/moc_coldstakingwidget.cpp \
+  qt/pivx/moc_proposalcard.cpp \
+  qt/pivx/moc_governancewidget.cpp \
   qt/pivx/settings/moc_settingsbackupwallet.cpp \
   qt/pivx/settings/moc_settingsexportcsv.cpp \
   qt/pivx/settings/moc_settingsbittoolwidget.cpp \
@@ -249,6 +253,9 @@ BITCOIN_QT_H = \
   qt/pivx/addresseswidget.h \
   qt/pivx/defaultdialog.h \
   qt/pivx/coldstakingwidget.h \
+  qt/pivx/governancemodel.h \
+  qt/pivx/proposalcard.h \
+  qt/pivx/governancewidget.h \
   qt/pivx/settings/settingsbackupwallet.h \
   qt/pivx/settings/settingsexportcsv.h \
   qt/pivx/settings/settingsbittoolwidget.h \
@@ -485,7 +492,16 @@ RES_ICONS = \
   qt/pivx/res/img/ic-information.svg \
   qt/pivx/res/img/ic-information-hover.svg \
   qt/pivx/res/img/ani-loading-dark.gif \
-  qt/pivx/res/img/ani-loading.gif
+  qt/pivx/res/img/ani-loading.gif \
+  qt/pivx/res/img/ic-check-vote.svg \
+  qt/pivx/res/img/ic-check-vote-active.svg \
+  qt/pivx/res/img/ic-filter.svg \
+  qt/pivx/res/img/ic-link.svg \
+  qt/pivx/res/img/ic-nav-governance.svg \
+  qt/pivx/res/img/ic-nav-governance-active.svg \
+  qt/pivx/res/img/ic-nav-governance-hover.svg \
+  qt/pivx/res/img/ic-time.svg \
+  qt/pivx/res/img/img-empty-governance.svg
 
 BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
@@ -569,6 +585,9 @@ BITCOIN_QT_WALLET_CPP = \
   qt/pivx/addresseswidget.cpp \
   qt/pivx/defaultdialog.cpp \
   qt/pivx/coldstakingwidget.cpp \
+  qt/pivx/governancemodel.cpp \
+  qt/pivx/proposalcard.cpp \
+  qt/pivx/governancewidget.cpp \
   qt/pivx/settings/settingsbackupwallet.cpp \
   qt/pivx/settings/settingsexportcsv.cpp \
   qt/pivx/settings/settingsbittoolwidget.cpp \

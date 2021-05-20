@@ -223,5 +223,15 @@
         <file alias="ic-check-cold-staking-enabled">pivx/res/img/ic-check-cold-staking-enabled.svg</file>
         <file alias="ic-information">pivx/res/img/ic-information.svg</file>
         <file alias="ic-information-hover">pivx/res/img/ic-information-hover.svg</file>
+        <file alias="ic-check-vote">pivx/res/img/ic-check-vote.svg</file>
+        <file alias="ic-check-vote-active">pivx/res/img/ic-check-vote-active.svg</file>
+        <file alias="ic-filter">pivx/res/img/ic-filter.svg</file>
+        <file alias="ic-link">pivx/res/img/ic-link.svg</file>
+        <file alias="ic-link-hover">pivx/res/img/ic-link-hover.svg</file>
+        <file alias="ic-nav-governance">pivx/res/img/ic-nav-governance.svg</file>
+        <file alias="ic-nav-governance-active">pivx/res/img/ic-nav-governance-active.svg</file>
+        <file alias="ic-nav-governance-hover">pivx/res/img/ic-nav-governance-hover.svg</file>
+        <file alias="ic-time">pivx/res/img/ic-time.svg</file>
+        <file alias="img-empty-governance">pivx/res/img/img-empty-governance.svg</file>
     </qresource>
 </RCC>
