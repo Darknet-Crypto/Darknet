@@ -1,6 +1,7 @@
 #include "qt/pivx/governancewidget.h"
 #include "qt/pivx/forms/ui_governancewidget.h"
 
+#include "qt/pivx/createproposaldialog.h"
 #include "qt/pivx/governancemodel.h"
 #include "qt/pivx/qtutils.h"
 #include "qt/pivx/votedialog.h"
@@ -91,6 +92,14 @@ void GovernanceWidget::onVoteForPropClicked()
 {
     window->showHide(true);
     VoteDialog* dialog = new VoteDialog(window);
+    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
+    dialog->deleteLater();
+}
+
+void GovernanceWidget::onCreatePropClicked()
+{
+    window->showHide(true);
+    CreateProposalDialog* dialog = new CreateProposalDialog(window);
     openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
     dialog->deleteLater();
 }

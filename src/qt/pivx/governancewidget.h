@@ -60,6 +60,7 @@ public:
 
 public Q_SLOTS:
     void onVoteForPropClicked();
+    void onCreatePropClicked();
 
 private:
     Ui::governancewidget *ui;
