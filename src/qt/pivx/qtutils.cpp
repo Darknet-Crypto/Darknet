@@ -337,6 +337,7 @@ void setCssProperty(std::initializer_list<QWidget*> args, const QString& value)
 
 void setCssProperty(QWidget* wid, const QString& value, bool forceUpdate)
 {
+    if (wid->property("cssClass") == value) return;
     wid->setProperty("cssClass", value);
     forceUpdateStyle(wid, forceUpdate);
 }

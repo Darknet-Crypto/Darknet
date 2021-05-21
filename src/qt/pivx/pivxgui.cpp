@@ -634,6 +634,7 @@ bool PIVXGUI::addWallet(const QString& name, WalletModel* walletModel)
     addressesWidget->setWalletModel(walletModel);
     masterNodesWidget->setWalletModel(walletModel);
     coldStakingWidget->setWalletModel(walletModel);
+    governancewidget->setWalletModel(walletModel);
     settingsWidget->setWalletModel(walletModel);
 
     // Connect actions..
@@ -644,6 +645,7 @@ bool PIVXGUI::addWallet(const QString& name, WalletModel* walletModel)
     connect(sendWidget, &SendWidget::message,this, &PIVXGUI::message);
     connect(receiveWidget, &ReceiveWidget::message,this, &PIVXGUI::message);
     connect(addressesWidget, &AddressesWidget::message,this, &PIVXGUI::message);
+    connect(governancewidget, &GovernanceWidget::message,this, &PIVXGUI::message);
     connect(settingsWidget, &SettingsWidget::message, this, &PIVXGUI::message);
 
     // Pass through transaction notifications

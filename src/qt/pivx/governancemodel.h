@@ -5,8 +5,9 @@
 #ifndef GOVERNANCEMODEL_H
 #define GOVERNANCEMODEL_H
 
-#include "uint256.h"
 #include "clientmodel.h"
+#include "operationresult.h"
+#include "uint256.h"
 
 #include <atomic>
 #include <string>
@@ -59,6 +60,7 @@ public:
 
 class GovernanceModel
 {
+    static const int PROP_URL_MAX_SIZE = 100;
 
 public:
     explicit GovernanceModel(ClientModel* _clientModel);
@@ -69,6 +71,14 @@ public:
     bool hasProposals();
     // Whether a visual refresh is needed
     bool isRefreshNeeded() { return refreshNeeded; }
+    // Return the budget maximum available amount for the running chain
+    CAmount getMaxAvailableBudgetAmount() const;
+    // Return the proposal maximum payments count for the running chain
+    int getPropMaxPaymentsCount() const;
+    // Check if the URL is valid.
+    OperationResult validatePropURL(const QString& url) const;
+    OperationResult validatePropAmount(CAmount amount) const;
+    OperationResult validatePropPaymentCount(int paymentCount) const;
 
 private:
     ClientModel* clientModel{nullptr};

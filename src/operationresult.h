@@ -19,6 +19,7 @@ public:
     OperationResult(bool _res) : m_res(_res) { }
 
     std::string getError() const { return (m_error ? *m_error : ""); }
+    bool getRes() const { return m_res; }
     explicit operator bool() const { return m_res; }
 };
 

@@ -7,6 +7,8 @@
 #include "budget/budgetmanager.h"
 #include "destination_io.h"
 #include "script/standard.h"
+#include "utilmoneystr.h"
+#include "utilstrencodings.h"
 
 #include <algorithm>
 
@@ -56,3 +58,36 @@ bool GovernanceModel::hasProposals()
     return g_budgetman.HasAnyProposal();
 }
 
+CAmount GovernanceModel::getMaxAvailableBudgetAmount() const
+{
+    return Params().GetConsensus().nBudgetCycleBlocks;
+}
+
+int GovernanceModel::getPropMaxPaymentsCount() const
+{
+    return Params().GetConsensus().nMaxProposalPayments;
+}
+
+OperationResult GovernanceModel::validatePropURL(const QString& url) const
+{
+    std::string strError;
+    return {validateURL(url.toStdString(), strError, PROP_URL_MAX_SIZE), strError};
+}
+
+OperationResult GovernanceModel::validatePropAmount(CAmount amount) const
+{
+    if (amount > getMaxAvailableBudgetAmount()) {
+        return {false, strprintf("Amount exceeding the maximum available budget amount of %s PIV", FormatMoney(amount))};
+    }
+    return {true};
+}
+
+OperationResult GovernanceModel::validatePropPaymentCount(int paymentCount) const
+{
+    if (paymentCount < 1) return { false, "Invalid payment count, must be greater than zero."};
+    int nMaxPayments = getPropMaxPaymentsCount();
+    if (paymentCount > nMaxPayments) {
+        return { false, strprintf("Invalid payment count, cannot be greater than %d", nMaxPayments)};
+    }
+    return {true};
+}

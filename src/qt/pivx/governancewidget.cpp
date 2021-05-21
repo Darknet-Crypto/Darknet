@@ -99,8 +99,8 @@ void GovernanceWidget::onVoteForPropClicked()
 void GovernanceWidget::onCreatePropClicked()
 {
     window->showHide(true);
-    CreateProposalDialog* dialog = new CreateProposalDialog(window);
-    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
+    CreateProposalDialog* dialog = new CreateProposalDialog(window, governanceModel, walletModel);
+    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, ui->left->height() < 700 ? 12 : 5);
     dialog->deleteLater();
 }
 

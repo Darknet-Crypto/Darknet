@@ -5,7 +5,9 @@
 #include "qt/pivx/createproposaldialog.h"
 #include "qt/pivx/forms/ui_createproposaldialog.h"
 
+#include "qt/pivx/governancemodel.h"
 #include "qt/pivx/qtutils.h"
+#include "qt/pivx/snackbar.h"
 
 void initPageIndexBtn(QPushButton* btn)
 {
@@ -19,9 +21,11 @@ void initPageIndexBtn(QPushButton* btn)
     btn->setVisible(false);
 }
 
-CreateProposalDialog::CreateProposalDialog(QWidget *parent) :
+CreateProposalDialog::CreateProposalDialog(QWidget *parent, GovernanceModel* _govModel, WalletModel* _walletModel) :
     QDialog(parent),
     ui(new Ui::CreateProposalDialog),
+    govModel(_govModel),
+    walletModel(_walletModel),
     icConfirm1(new QPushButton()),
     icConfirm2(new QPushButton()),
     icConfirm3(new QPushButton())
@@ -77,6 +81,9 @@ void CreateProposalDialog::setupPageOne()
     setCssProperty(ui->labelMessage1b, "dialog-proposal-message");
     setEditBoxStyle(ui->labelName, ui->lineEditPropName, "e.g Best proposal ever!");
     setEditBoxStyle(ui->labelURL, ui->lineEditURL, "e.g https://forum.pivx/proposals/best_proposal_ever");
+
+    connect(ui->lineEditPropName, &QLineEdit::textChanged, this, &CreateProposalDialog::propNameChanged);
+    connect(ui->lineEditURL, &QLineEdit::textChanged, this, &CreateProposalDialog::propUrlChanged);
 }
 
 void CreateProposalDialog::setupPageTwo()
@@ -86,6 +93,13 @@ void CreateProposalDialog::setupPageTwo()
     setEditBoxStyle(ui->labelAmount, ui->lineEditAmount, "e.g 500 PIV");
     setEditBoxStyle(ui->labelMonths, ui->lineEditMonths, "e.g 2");
     setEditBoxStyle(ui->labelAddress, ui->lineEditAddress, "e.g D...something..");
+
+    ui->lineEditAmount->setValidator(new QIntValidator(1,43200, this));
+    ui->lineEditMonths->setValidator(new QIntValidator(1, govModel->getPropMaxPaymentsCount(), this));
+
+    connect(ui->lineEditAmount, &QLineEdit::textChanged, this, &CreateProposalDialog::propAmountChanged);
+    connect(ui->lineEditMonths, &QLineEdit::textChanged, this, &CreateProposalDialog::propMonthsChanged);
+    connect(ui->lineEditAddress, &QLineEdit::textChanged, this, &CreateProposalDialog::propaddressChanged);
 }
 
 void CreateProposalDialog::setupPageThree()
@@ -106,11 +120,86 @@ void CreateProposalDialog::setupPageThree()
                     ui->labelResultUrl}, "text-body1-dialog");
 }
 
+void CreateProposalDialog::propNameChanged(const QString& newText)
+{
+    setCssEditLine(ui->lineEditPropName, !newText.isEmpty(), true);
+}
+
+void CreateProposalDialog::propUrlChanged(const QString& newText)
+{
+    setCssEditLine(ui->lineEditURL, govModel->validatePropURL(newText).getRes(), true);
+}
+
+void CreateProposalDialog::propAmountChanged(const QString& newText)
+{
+    setCssEditLine(ui->lineEditAmount, govModel->validatePropAmount(newText.toInt()).getRes(), true);
+}
+
+void CreateProposalDialog::propMonthsChanged(const QString& newText)
+{
+    setCssEditLine(ui->lineEditMonths, govModel->validatePropPaymentCount(newText.toInt()).getRes(), true);
+}
+
+bool CreateProposalDialog::propaddressChanged(const QString& str)
+{
+    if (!str.isEmpty()) {
+        QString trimmedStr = str.trimmed();
+        bool isShielded = false;
+        const bool valid = walletModel->validateAddress(trimmedStr, false, isShielded) && !isShielded;
+        setCssEditLine(ui->lineEditAddress,  valid, true);
+        return valid;
+    }
+    setCssEditLine(ui->lineEditAddress, true, true);
+    return false;
+}
+
+bool CreateProposalDialog::validatePageOne()
+{
+    if (ui->lineEditPropName->text().isEmpty()) {
+        inform(tr("Proposal name field cannot be empty"));
+        return false;
+    }
+    auto res = govModel->validatePropURL(ui->lineEditURL->text());
+    if (!res) inform(QString::fromStdString(res.getError()));
+    return res.getRes();
+}
+
+bool CreateProposalDialog::validatePageTwo()
+{
+    QString sPaymentCount = ui->lineEditAmount->text();
+    if (sPaymentCount.isEmpty()) {
+        inform(tr("Proposal amount field cannot be empty"));
+        return false;
+    }
+
+    // Amount validation
+    auto opRes = govModel->validatePropAmount(ui->lineEditAmount->text().toInt());
+    if (!opRes) {
+        inform(QString::fromStdString(opRes.getError()));
+        return false;
+    }
+
+    // Payments count validation
+    opRes = govModel->validatePropPaymentCount(sPaymentCount.toInt());
+    if (!opRes) {
+        inform(QString::fromStdString(opRes.getError()));
+        return false;
+    }
+
+    if (!propaddressChanged(ui->lineEditAddress->text())) {
+        inform(tr("Invalid payment address"));
+        return false;
+    }
+
+    return true;
+}
+
 void CreateProposalDialog::onNextClicked()
 {
     int nextPos = pos + 1;
     switch (pos){
         case 0:{
+            if (!validatePageOne()) return;
             ui->stackedWidget->setCurrentIndex(nextPos);
             ui->pushNumber2->setChecked(true);
             ui->pushName3->setChecked(false);
@@ -121,6 +210,7 @@ void CreateProposalDialog::onNextClicked()
             break;
         }
         case 1:{
+            if (!validatePageTwo()) return;
             ui->stackedWidget->setCurrentIndex(nextPos);
             ui->pushNumber3->setChecked(true);
             ui->pushName3->setChecked(true);
@@ -166,6 +256,14 @@ void CreateProposalDialog::onBackClicked()
             break;
         }
     }
+}
+
+void CreateProposalDialog::inform(const QString& text)
+{
+    if (!snackBar) snackBar = new SnackBar(nullptr, this);
+    snackBar->setText(text);
+    snackBar->resize(this->width(), snackBar->height());
+    openDialog(snackBar, this);
 }
 
 CreateProposalDialog::~CreateProposalDialog()
