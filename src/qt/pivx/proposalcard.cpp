@@ -58,8 +58,10 @@ void ProposalCard::setProposal(const ProposalInfo& _proposalInfo)
         ui->labelStatus->setText(tr("Passing"));
     } else {
         cssClassStatus = "card-status-no-votes";
-        ui->labelStatus->setText(tr("No Votes"));
+        ui->labelStatus->setText(proposalInfo.status == ProposalInfo::Status::WAITING_FOR_APPROVAL ?
+                tr("Waiting") : tr("No Votes"));
     }
+
     setCssProperty(ui->labelStatus, cssClassStatus, true);
 }
 

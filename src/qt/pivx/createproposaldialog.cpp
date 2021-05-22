@@ -166,7 +166,7 @@ bool CreateProposalDialog::validatePageOne()
 
 bool CreateProposalDialog::validatePageTwo()
 {
-    QString sPaymentCount = ui->lineEditAmount->text();
+    QString sPaymentCount = ui->lineEditMonths->text();
     if (sPaymentCount.isEmpty()) {
         inform(tr("Proposal amount field cannot be empty"));
         return false;
@@ -194,6 +194,33 @@ bool CreateProposalDialog::validatePageTwo()
     return true;
 }
 
+void CreateProposalDialog::loadSummary()
+{
+    ui->labelResultName->setText(ui->lineEditPropName->text());
+    ui->labelResultUrl->setText(ui->lineEditURL->text());
+    ui->labelResultAmount->setText(GUIUtil::formatBalance(ui->lineEditAmount->text().toInt() * COIN));
+    ui->labelResultMonths->setText(ui->lineEditMonths->text());
+    ui->labelResultAddress->setText(ui->lineEditAddress->text());
+    ui->labelResultUrl->setText(ui->lineEditURL->text());
+}
+
+void CreateProposalDialog::sendProposal()
+{
+    CAmount amount = ui->lineEditAmount->text().toInt() * COIN;
+    auto opRes = govModel->createProposal(
+            ui->lineEditPropName->text().toStdString(),
+            ui->lineEditURL->text().toStdString(),
+            ui->lineEditMonths->text().toInt(),
+            amount,
+            ui->lineEditAddress->text().toStdString()
+            );
+    if (!opRes) {
+        inform(QString::fromStdString(opRes.getError()));
+        return;
+    }
+    accept();
+}
+
 void CreateProposalDialog::onNextClicked()
 {
     int nextPos = pos + 1;
@@ -211,6 +238,7 @@ void CreateProposalDialog::onNextClicked()
         }
         case 1:{
             if (!validatePageTwo()) return;
+            loadSummary();
             ui->stackedWidget->setCurrentIndex(nextPos);
             ui->pushNumber3->setChecked(true);
             ui->pushName3->setChecked(true);
@@ -221,7 +249,7 @@ void CreateProposalDialog::onNextClicked()
             break;
         }
         case 2:{
-            accept();
+            sendProposal();
         }
     }
     pos = nextPos;

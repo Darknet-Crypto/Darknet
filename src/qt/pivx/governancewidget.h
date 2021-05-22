@@ -18,6 +18,10 @@ namespace Ui {
 class governancewidget;
 }
 
+QT_BEGIN_NAMESPACE
+class QTimer;
+QT_END_NAMESPACE
+
 class PIVXGUI;
 class GovernanceModel;
 
@@ -55,6 +59,7 @@ public:
     ~GovernanceWidget() override;
 
     void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void loadClientModel() override;
     void loadWalletModel() override;
@@ -69,9 +74,10 @@ private:
     QGridLayout* gridLayout{nullptr}; // cards
     std::vector<ProposalCard*> cards;
     int propsPerRow = 0;
+    QTimer* refreshTimer{nullptr};
 
     void showEmptyScreen(bool show);
-    void tryGridRefresh();
+    void tryGridRefresh(bool force=false);
     ProposalCard* newCard();
     void refreshCardsGrid(bool forceRefresh);
     int calculateColumnsPerRow();

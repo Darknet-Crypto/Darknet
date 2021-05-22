@@ -43,6 +43,9 @@ private:
     QPushButton* icConfirm3{nullptr};
     int pos = 0;
 
+    void loadSummary();
+    void sendProposal();
+
     void setupPageOne();
     void setupPageTwo();
     void setupPageThree();

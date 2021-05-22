@@ -8,6 +8,7 @@
 
 #include <map>
 #include <QGraphicsDropShadowEffect>
+#include <QTimer>
 
 GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
         PWidget(parent),
@@ -100,7 +101,11 @@ void GovernanceWidget::onCreatePropClicked()
 {
     window->showHide(true);
     CreateProposalDialog* dialog = new CreateProposalDialog(window, governanceModel, walletModel);
-    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, ui->left->height() < 700 ? 12 : 5);
+    if (openDialogWithOpaqueBackgroundY(dialog, window, 4.5, ui->left->height() < 700 ? 12 : 5)) {
+        // future: make this refresh atomic, no need to refresh the entire grid.
+        tryGridRefresh(true);
+        inform(tr("Proposal transaction fee broadcasted!"));
+    }
     dialog->deleteLater();
 }
 
@@ -116,7 +121,17 @@ void GovernanceWidget::loadWalletModel()
 
 void GovernanceWidget::showEvent(QShowEvent *event)
 {
-    tryGridRefresh();
+    tryGridRefresh(true); // future: move to background worker
+    if (!refreshTimer) refreshTimer = new QTimer(this);
+    if (!refreshTimer->isActive()) {
+        connect(refreshTimer, &QTimer::timeout, [this]() { tryGridRefresh(true); });
+        refreshTimer->start(1000 * 60 * 3.5); // Try to refresh screen 3.5 minutes
+    }
+}
+
+void GovernanceWidget::hideEvent(QHideEvent *event)
+{
+    refreshTimer->stop();
 }
 
 void GovernanceWidget::resizeEvent(QResizeEvent *event)
@@ -125,10 +140,10 @@ void GovernanceWidget::resizeEvent(QResizeEvent *event)
     tryGridRefresh();
 }
 
-void GovernanceWidget::tryGridRefresh()
+void GovernanceWidget::tryGridRefresh(bool force)
 {
     int _propsPerRow = calculateColumnsPerRow();
-    if (_propsPerRow != propsPerRow) {
+    if (_propsPerRow != propsPerRow || force) {
         propsPerRow = _propsPerRow;
         refreshCardsGrid(true);
     }

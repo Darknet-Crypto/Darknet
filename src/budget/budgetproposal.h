@@ -88,10 +88,11 @@ public:
     std::vector<uint256> GetVotesHashes() const;
     int GetYeas() const { return GetVoteCount(CBudgetVote::VOTE_YES); }
     int GetNays() const { return GetVoteCount(CBudgetVote::VOTE_NO); }
-    int GetAbstains() const { return GetVoteCount(CBudgetVote::VOTE_ABSTAIN); };
+    int GetAbstains() const { return GetVoteCount(CBudgetVote::VOTE_ABSTAIN); }
     CAmount GetAmount() const { return nAmount; }
     void SetAllotted(CAmount nAllottedIn) { nAllotted = nAllottedIn; }
     CAmount GetAllotted() const { return nAllotted; }
+    void SetFeeTxHash(const uint256& txid) { nFeeTXHash = txid; }
 
     uint256 GetHash() const
     {

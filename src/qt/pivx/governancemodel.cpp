@@ -6,6 +6,7 @@
 
 #include "budget/budgetmanager.h"
 #include "destination_io.h"
+#include "guiconstants.h"
 #include "masternode-sync.h"
 #include "script/standard.h"
 #include "utilmoneystr.h"
@@ -13,9 +14,49 @@
 #include "walletmodel.h"
 
 #include <algorithm>
+#include <QTimer>
 
 GovernanceModel::GovernanceModel(ClientModel* _clientModel) : clientModel(_clientModel) {}
+GovernanceModel::~GovernanceModel() {}
 void GovernanceModel::setWalletModel(WalletModel* _walletModel) { walletModel = _walletModel; }
+
+ProposalInfo GovernanceModel::buidProposalInfo(const CBudgetProposal* prop,
+                              const std::vector<CBudgetProposal>& currentBudget,
+                              bool isPending)
+{
+    CTxDestination recipient;
+    ExtractDestination(prop->GetPayee(), recipient);
+
+    // Calculate status
+    int votesYes = prop->GetYeas();
+    int votesNo = prop->GetNays();
+    ProposalInfo::Status status;
+
+    if (isPending) {
+        // Proposal waiting for confirmation to be broadcasted.
+        status = ProposalInfo::WAITING_FOR_APPROVAL;
+    } else {
+        if (std::find(currentBudget.begin(), currentBudget.end(), *prop) != currentBudget.end()) {
+            status = ProposalInfo::PASSING;
+        } else if (votesYes > votesNo) {
+            status = ProposalInfo::PASSING_NOT_FUNDED;
+        } else {
+            status = ProposalInfo::NOT_PASSING;
+        }
+    }
+
+
+    return ProposalInfo(prop->GetHash(),
+            prop->GetName(),
+            prop->GetURL(),
+            votesYes,
+            votesNo,
+            Standard::EncodeDestination(recipient),
+            prop->GetAmount(),
+            prop->GetTotalPaymentCount(),
+            prop->GetRemainingPaymentCount(clientModel->getLastBlockProcessedHeight()),
+            status);
+}
 
 std::list<ProposalInfo> GovernanceModel::getProposals()
 {
@@ -23,34 +64,14 @@ std::list<ProposalInfo> GovernanceModel::getProposals()
     std::list<ProposalInfo> ret;
     std::vector<CBudgetProposal> budget = g_budgetman.GetBudget();
     for (const auto& prop : g_budgetman.GetAllProposals()) {
-        CTxDestination recipient;
-        ExtractDestination(prop->GetPayee(), recipient);
-
-        // Calculate status
-        int votesYes = prop->GetYeas();
-        int votesNo = prop->GetNays();
-        ProposalInfo::Status status;
-        if (std::find(budget.begin(), budget.end(), *prop) != budget.end()) {
-            status = ProposalInfo::PASSING;
-        } else if (votesYes > votesNo){
-            status = ProposalInfo::PASSING_NOT_FUNDED;
-        } else {
-            status = ProposalInfo::NOT_PASSING;
-        }
-
-        ret.emplace_back(
-                prop->GetHash(),
-                prop->GetName(),
-                prop->GetURL(),
-                votesYes,
-                votesNo,
-                Standard::EncodeDestination(recipient),
-                prop->GetAmount(),
-                prop->GetTotalPaymentCount(),
-                prop->GetRemainingPaymentCount(clientModel->getLastBlockProcessedHeight()),
-                status
-        );
+        ret.emplace_back(buidProposalInfo(prop, budget, false));
     }
+
+    // Add pending proposals
+    for (const auto& prop : waitingPropsForConfirmations) {
+        ret.emplace_back(buidProposalInfo(&prop, budget, true));
+    }
+
     return ret;
 }
 
@@ -129,4 +150,51 @@ OperationResult GovernanceModel::createProposal(const std::string& strProposalNa
     // Craft and send transaction.
     auto opRes = walletModel->createAndSendProposalFeeTx(proposal);
     if (!opRes) return opRes;
+    scheduleBroadcast(proposal);
+
+    return {true};
 }
+
+void GovernanceModel::scheduleBroadcast(const CBudgetProposal& proposal)
+{
+    // Cache the proposal to be sent as soon as it gets the minimum required confirmations
+    // without requiring user interaction
+    waitingPropsForConfirmations.emplace_back(proposal);
+
+    // Launch timer if it's not already running
+    if (!pollTimer) pollTimer = new QTimer(this);
+    if (!pollTimer->isActive()) {
+        connect(pollTimer, &QTimer::timeout, this, &GovernanceModel::pollGovernanceChanged);
+        pollTimer->start(MODEL_UPDATE_DELAY * 60 * 3.5); // Every 3.5 minutes
+    }
+}
+
+void GovernanceModel::pollGovernanceChanged()
+{
+    if (!isTierTwoSync()) return;
+
+    // Try to broadcast any pending for confirmations proposal
+    auto it = waitingPropsForConfirmations.begin();
+    while (it != waitingPropsForConfirmations.end()) {
+        if (!g_budgetman.AddProposal(*it)) {
+            LogPrint(BCLog::QT, "Cannot broadcast budget proposal - %s", it->IsInvalidReason());
+            it++;
+            continue;
+        }
+        it->Relay();
+        it = waitingPropsForConfirmations.erase(it);
+    }
+
+    // If there are no more waiting proposals, turn the timer off.
+    if (waitingPropsForConfirmations.empty()) {
+        pollTimer->stop();
+    }
+}
+
+void GovernanceModel::stopPolling()
+{
+    if (pollTimer && pollTimer->isActive()) {
+        pollTimer->stop();
+    }
+}
+
