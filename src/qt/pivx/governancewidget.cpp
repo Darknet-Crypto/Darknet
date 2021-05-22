@@ -104,8 +104,14 @@ void GovernanceWidget::onCreatePropClicked()
     dialog->deleteLater();
 }
 
-void GovernanceWidget::loadClientModel() {
+void GovernanceWidget::loadClientModel()
+{
     governanceModel = new GovernanceModel(clientModel);
+}
+
+void GovernanceWidget::loadWalletModel()
+{
+    governanceModel->setWalletModel(walletModel);
 }
 
 void GovernanceWidget::showEvent(QShowEvent *event)

@@ -6,6 +6,7 @@
 
 #include "walletmodel.h"
 
+#include "budget/budgetproposal.h"
 #include "init.h"   // for ShutdownRequested()
 #include "interfaces/handler.h"
 #include "sapling/key_io_sapling.h"
@@ -28,6 +29,14 @@
 #include <QSet>
 #include <QTimer>
 
+// Util function
+template <typename T>
+static std::string toHexStr(const T& obj)
+{
+    CDataStream ss(SER_DISK, CLIENT_VERSION);
+    ss << obj;
+    return HexStr(ss.begin(), ss.end());
+}
 
 WalletModel::WalletModel(CWallet* wallet, OptionsModel* optionsModel, QObject* parent) : QObject(parent), wallet(wallet), walletWrapper(*wallet),
                                                                                          optionsModel(optionsModel),
@@ -636,6 +645,36 @@ OperationResult WalletModel::PrepareShieldedTransaction(WalletModelTransaction* 
     txRef = MakeTransactionRef(operation.getFinalTx());
     modelTransaction->setTransactionFee(operation.getFee()); // in the future, fee will be dynamically calculated.
     return operationResult;
+}
+
+OperationResult WalletModel::createAndSendProposalFeeTx(CBudgetProposal& proposal)
+{
+    CTransactionRef wtx;
+    const uint256& nHash = proposal.GetHash();
+    CReserveKey keyChange(wallet);
+    if (!wallet->CreateBudgetFeeTX(wtx, nHash, keyChange, false)) { // 50 PIV collateral for proposal
+        return {false ,"Error making fee transaction for proposal. Please check your wallet balance."};
+    }
+
+    //send the tx to the network
+    const CWallet::CommitResult& res = wallet->CommitTransaction(wtx, keyChange, g_connman.get());
+    if (res.status != CWallet::CommitStatus::OK) {
+        return {false, strprintf("Cannot commit proposal fee transaction: %s", res.ToString())};
+    }
+    proposal.SetFeeTxHash(wtx->GetHash());
+
+    {
+        // todo: encapsulate inside wallet module
+        LOCK(wallet->cs_wallet);
+        // Store own proposal data attached to the transaction that originated it.
+        // The proposal will be automatically broadcasted when it gets up to the minimum required confirmations.
+        assert(wallet->mapWallet.count(wtx->GetHash()));
+        auto& inWtx = wallet->mapWallet.at(wtx->GetHash()); // Internal tx
+        inWtx.SetComment("Proposal: " + proposal.GetName());
+        inWtx.mapValue.emplace("proposal", toHexStr(proposal));
+    }
+
+    return {true};
 }
 
 const CWalletTx* WalletModel::getTx(uint256 id)

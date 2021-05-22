@@ -6,15 +6,16 @@
 
 #include "budget/budgetmanager.h"
 #include "destination_io.h"
+#include "masternode-sync.h"
 #include "script/standard.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
+#include "walletmodel.h"
 
 #include <algorithm>
 
-GovernanceModel::GovernanceModel(ClientModel* _clientModel) : clientModel(_clientModel)
-{
-}
+GovernanceModel::GovernanceModel(ClientModel* _clientModel) : clientModel(_clientModel) {}
+void GovernanceModel::setWalletModel(WalletModel* _walletModel) { walletModel = _walletModel; }
 
 std::list<ProposalInfo> GovernanceModel::getProposals()
 {
@@ -60,6 +61,11 @@ bool GovernanceModel::hasProposals()
 
 CAmount GovernanceModel::getMaxAvailableBudgetAmount() const
 {
+    return Params().GetConsensus().nBudgetCycleBlocks * COIN;
+}
+
+int GovernanceModel::getNumBlocksPerBudgetCycle() const
+{
     return Params().GetConsensus().nBudgetCycleBlocks;
 }
 
@@ -90,4 +96,37 @@ OperationResult GovernanceModel::validatePropPaymentCount(int paymentCount) cons
         return { false, strprintf("Invalid payment count, cannot be greater than %d", nMaxPayments)};
     }
     return {true};
+}
+
+bool GovernanceModel::isTierTwoSync()
+{
+    return masternodeSync.IsBlockchainSynced();
+}
+
+OperationResult GovernanceModel::createProposal(const std::string& strProposalName,
+                                                const std::string& strURL,
+                                                int nPaymentCount,
+                                                CAmount nAmount,
+                                                const std::string& strPaymentAddr)
+{
+    // First get the next superblock height
+    const int nBlocksPerCycle = getNumBlocksPerBudgetCycle();
+    const int chainHeight = clientModel->getNumBlocks();
+    int nBlockStart = chainHeight - chainHeight % nBlocksPerCycle + nBlocksPerCycle;
+
+
+    // Parse address
+    const CTxDestination* dest = Standard::GetTransparentDestination(Standard::DecodeDestination(strPaymentAddr));
+    if (!dest) return {false, "invalid recipient address for the proposal"};
+    CScript scriptPubKey = GetScriptForDestination(*dest);
+
+    // Validate proposal
+    CBudgetProposal proposal(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, UINT256_ZERO);
+    if (!proposal.IsWellFormed(g_budgetman.GetTotalBudget(proposal.GetBlockStart()))) {
+        return {false, strprintf("Proposal is not valid %s", proposal.IsInvalidReason())};
+    }
+
+    // Craft and send transaction.
+    auto opRes = walletModel->createAndSendProposalFeeTx(proposal);
+    if (!opRes) return opRes;
 }

@@ -58,12 +58,15 @@ public:
     }
 };
 
+class WalletModel;
+
 class GovernanceModel
 {
     static const int PROP_URL_MAX_SIZE = 100;
 
 public:
     explicit GovernanceModel(ClientModel* _clientModel);
+    void setWalletModel(WalletModel* _walletModel);
 
     // Return proposals ordered by net votes
     std::list<ProposalInfo> getProposals();
@@ -71,6 +74,8 @@ public:
     bool hasProposals();
     // Whether a visual refresh is needed
     bool isRefreshNeeded() { return refreshNeeded; }
+    // Return the number of blocks per budget cycle
+    int getNumBlocksPerBudgetCycle() const;
     // Return the budget maximum available amount for the running chain
     CAmount getMaxAvailableBudgetAmount() const;
     // Return the proposal maximum payments count for the running chain
@@ -79,9 +84,20 @@ public:
     OperationResult validatePropURL(const QString& url) const;
     OperationResult validatePropAmount(CAmount amount) const;
     OperationResult validatePropPaymentCount(int paymentCount) const;
+    // Whether the tier two network synchronization has finished or not
+    bool isTierTwoSync();
 
+    // Creates a proposal, crafting and broadcasting the fee transaction,
+    // storing it locally to be broadcasted when the fee tx proposal depth
+    // fulfills the minimum depth requirements
+    OperationResult createProposal(const std::string& strProposalName,
+                                   const std::string& strURL,
+                                   int nPaymentCount,
+                                   CAmount nAmount,
+                                   const std::string& strPaymentAddr);
 private:
     ClientModel* clientModel{nullptr};
+    WalletModel* walletModel{nullptr};
     std::atomic<bool> refreshNeeded{false};
 };
 

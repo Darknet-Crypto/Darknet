@@ -57,6 +57,7 @@ public:
     void showEvent(QShowEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
     void loadClientModel() override;
+    void loadWalletModel() override;
 
 public Q_SLOTS:
     void onVoteForPropClicked();
