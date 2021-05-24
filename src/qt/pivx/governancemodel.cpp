@@ -9,6 +9,8 @@
 #include "guiconstants.h"
 #include "masternode-sync.h"
 #include "script/standard.h"
+#include "qt/transactiontablemodel.h"
+#include "qt/transactionrecord.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "walletmodel.h"
@@ -18,7 +20,12 @@
 
 GovernanceModel::GovernanceModel(ClientModel* _clientModel) : clientModel(_clientModel) {}
 GovernanceModel::~GovernanceModel() {}
-void GovernanceModel::setWalletModel(WalletModel* _walletModel) { walletModel = _walletModel; }
+
+void GovernanceModel::setWalletModel(WalletModel* _walletModel)
+{
+    walletModel = _walletModel;
+    connect(walletModel->getTransactionTableModel(), &TransactionTableModel::txLoaded, this, &GovernanceModel::txLoaded);
+}
 
 ProposalInfo GovernanceModel::buidProposalInfo(const CBudgetProposal* prop,
                               const std::vector<CBudgetProposal>& currentBudget,
@@ -173,12 +180,19 @@ void GovernanceModel::pollGovernanceChanged()
 {
     if (!isTierTwoSync()) return;
 
+    int chainHeight = clientModel->getNumBlocks();
     // Try to broadcast any pending for confirmations proposal
     auto it = waitingPropsForConfirmations.begin();
     while (it != waitingPropsForConfirmations.end()) {
         if (!g_budgetman.AddProposal(*it)) {
             LogPrint(BCLog::QT, "Cannot broadcast budget proposal - %s", it->IsInvalidReason());
-            it++;
+            if (it->GetBlockStart() >= chainHeight) {
+                // Edge case, the proposal was never broadcasted before the next superblock, can be removed.
+                // future: notify the user about it.
+                it = waitingPropsForConfirmations.erase(it);
+            } else {
+                it++;
+            }
             continue;
         }
         it->Relay();
@@ -198,3 +212,23 @@ void GovernanceModel::stopPolling()
     }
 }
 
+void GovernanceModel::txLoaded(const QString& id, const int txType, const int txStatus)
+{
+    if (txType == TransactionRecord::SendToNobody) {
+        // If this is a proposal fee, parse it.
+        const auto& wtx = walletModel->getTx(uint256S(id.toStdString()));
+        assert(wtx);
+        const auto& it = wtx->mapValue.find("proposal");
+        if (it != wtx->mapValue.end()) {
+            const std::vector<unsigned char> vec = ParseHex(it->second);
+            if (vec.empty()) return;
+            CDataStream ss(vec, SER_DISK, CLIENT_VERSION);
+            CBudgetProposal proposal;
+            ss >> proposal;
+            if (!g_budgetman.HaveProposal(proposal.GetHash()) &&
+                proposal.GetBlockStart() < clientModel->getNumBlocks()) {
+                scheduleBroadcast(proposal);
+            }
+        }
+    }
+}

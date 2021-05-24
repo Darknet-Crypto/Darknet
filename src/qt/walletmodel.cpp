@@ -49,7 +49,11 @@ WalletModel::WalletModel(CWallet* wallet, OptionsModel* optionsModel, QObject* p
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
+}
 
+void WalletModel::init()
+{
+    transactionTableModel->init();
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
     connect(pollTimer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);

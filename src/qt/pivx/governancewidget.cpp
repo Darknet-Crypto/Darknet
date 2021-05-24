@@ -109,9 +109,9 @@ void GovernanceWidget::onCreatePropClicked()
     dialog->deleteLater();
 }
 
-void GovernanceWidget::loadClientModel()
+void GovernanceWidget::setGovModel(GovernanceModel* _model)
 {
-    governanceModel = new GovernanceModel(clientModel);
+    governanceModel = _model;
 }
 
 void GovernanceWidget::loadWalletModel()

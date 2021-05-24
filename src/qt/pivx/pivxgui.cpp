@@ -619,6 +619,12 @@ void PIVXGUI::openFAQ(SettingsFaqWidget::Section section)
 
 
 #ifdef ENABLE_WALLET
+void PIVXGUI::setGovModel(GovernanceModel* govModel)
+{
+    if (!stackedContainer || !clientModel) return;
+    governancewidget->setGovModel(govModel);
+}
+
 bool PIVXGUI::addWallet(const QString& name, WalletModel* walletModel)
 {
     // Single wallet supported for now..

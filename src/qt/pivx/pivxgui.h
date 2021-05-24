@@ -98,6 +98,7 @@ public Q_SLOTS:
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
 #ifdef ENABLE_WALLET
+    void setGovModel(GovernanceModel* govModel);
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
