@@ -27,9 +27,7 @@ void GovernanceModel::setWalletModel(WalletModel* _walletModel)
     connect(walletModel->getTransactionTableModel(), &TransactionTableModel::txLoaded, this, &GovernanceModel::txLoaded);
 }
 
-ProposalInfo GovernanceModel::buidProposalInfo(const CBudgetProposal* prop,
-                              const std::vector<CBudgetProposal>& currentBudget,
-                              bool isPending)
+ProposalInfo GovernanceModel::buidProposalInfo(const CBudgetProposal* prop, bool isPassing, bool isPending)
 {
     CTxDestination recipient;
     ExtractDestination(prop->GetPayee(), recipient);
@@ -43,7 +41,7 @@ ProposalInfo GovernanceModel::buidProposalInfo(const CBudgetProposal* prop,
         // Proposal waiting for confirmation to be broadcasted.
         status = ProposalInfo::WAITING_FOR_APPROVAL;
     } else {
-        if (std::find(currentBudget.begin(), currentBudget.end(), *prop) != currentBudget.end()) {
+        if (isPassing) {
             status = ProposalInfo::PASSING;
         } else if (votesYes > votesNo) {
             status = ProposalInfo::PASSING_NOT_FUNDED;
@@ -71,14 +69,15 @@ std::list<ProposalInfo> GovernanceModel::getProposals()
     std::list<ProposalInfo> ret;
     std::vector<CBudgetProposal> budget = g_budgetman.GetBudget();
     for (const auto& prop : g_budgetman.GetAllProposals()) {
-        ret.emplace_back(buidProposalInfo(prop, budget, false));
+        bool isPassing = std::find(budget.begin(), budget.end(), *prop) != budget.end();
+        ret.emplace_back(buidProposalInfo(prop, isPassing, false));
+        if (isPassing) allocatedAmount += prop->GetAmount();
     }
 
     // Add pending proposals
     for (const auto& prop : waitingPropsForConfirmations) {
-        ret.emplace_back(buidProposalInfo(&prop, budget, true));
+        ret.emplace_back(buidProposalInfo(&prop, false, true));
     }
-
     return ret;
 }
 
@@ -100,6 +99,13 @@ int GovernanceModel::getNumBlocksPerBudgetCycle() const
 int GovernanceModel::getPropMaxPaymentsCount() const
 {
     return Params().GetConsensus().nMaxProposalPayments;
+}
+
+int GovernanceModel::getNextSuperblockHeight() const
+{
+    const int nBlocksPerCycle = getNumBlocksPerBudgetCycle();
+    const int chainHeight = clientModel->getNumBlocks();
+    return chainHeight - chainHeight % nBlocksPerCycle + nBlocksPerCycle;
 }
 
 OperationResult GovernanceModel::validatePropURL(const QString& url) const
@@ -138,10 +144,7 @@ OperationResult GovernanceModel::createProposal(const std::string& strProposalNa
                                                 const std::string& strPaymentAddr)
 {
     // First get the next superblock height
-    const int nBlocksPerCycle = getNumBlocksPerBudgetCycle();
-    const int chainHeight = clientModel->getNumBlocks();
-    int nBlockStart = chainHeight - chainHeight % nBlocksPerCycle + nBlocksPerCycle;
-
+    int nBlockStart = getNextSuperblockHeight();
 
     // Parse address
     const CTxDestination* dest = Standard::GetTransparentDestination(Standard::DecodeDestination(strPaymentAddr));

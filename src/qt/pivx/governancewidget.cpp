@@ -54,9 +54,7 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     delegate->setValues(values);
     ui->comboBoxSort->setModel(model);
     ui->comboBoxSort->setItemDelegate(delegate);
-
     // Filter
-
     ui->btnFilter->setText("Filter");
     ui->btnFilter->setProperty("cssClass", "btn-secundary-filter");
 
@@ -70,17 +68,12 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     setCssProperty(ui->labelAllocatedAmount, "label-budget-amount-allocated");
     setCssProperty(ui->iconClock , "ic-time");
     setCssProperty(ui->labelNextSuperblock, "label-budget-text");
-    ui->labelNextSuperblock->setText("Next superblock in ~4 days.\n7,544 blocks to go."); // Update superblock data
 
     // Create proposal
     ui->btnCreateProposal->setTitleClassAndText("btn-title-grey", "Create Proposal");
     ui->btnCreateProposal->setSubTitleClassAndText("text-subtitle", "Prepare and submit a new proposal.");
     connect(ui->btnCreateProposal, SIGNAL(clicked()), this, SLOT(onCreatePropClicked()));
     ui->emptyContainer->setVisible(false);
-
-    // Move to update process.
-    ui->labelAllocatedAmount->setText("37,394.912 PIV");
-    ui->labelAvailableAmount->setText("5,394.912 PIV");
 }
 
 GovernanceWidget::~GovernanceWidget()
@@ -107,6 +100,21 @@ void GovernanceWidget::onCreatePropClicked()
         inform(tr("Proposal transaction fee broadcasted!"));
     }
     dialog->deleteLater();
+}
+
+void GovernanceWidget::loadClientModel()
+{
+    connect(clientModel, &ClientModel::numBlocksChanged, this, &GovernanceWidget::chainHeightChanged);
+}
+
+void GovernanceWidget::chainHeightChanged(int height)
+{
+    if (!isVisible()) return;
+    int remainingBlocks = governanceModel->getNextSuperblockHeight() - height;
+    int remainingDays = remainingBlocks / 1440;
+    QString text = remainingDays == 0 ? tr("Next superblock today!\n%2 blocks to go.").arg(remainingBlocks) :
+                    tr("Next superblock in %1 days.\n%2 blocks to go.").arg(remainingDays).arg(remainingBlocks);
+    ui->labelNextSuperblock->setText(text);
 }
 
 void GovernanceWidget::setGovModel(GovernanceModel* _model)
@@ -146,6 +154,11 @@ void GovernanceWidget::tryGridRefresh(bool force)
     if (_propsPerRow != propsPerRow || force) {
         propsPerRow = _propsPerRow;
         refreshCardsGrid(true);
+
+        // refresh budget distribution values
+        chainHeightChanged(clientModel->getNumBlocks());
+        ui->labelAllocatedAmount->setText(GUIUtil::formatBalance(governanceModel->getBudgetAllocatedAmount()));
+        ui->labelAvailableAmount->setText(GUIUtil::formatBalance(governanceModel->getBudgetAvailableAmount()));
     }
 }
 

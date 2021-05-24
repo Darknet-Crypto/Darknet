@@ -61,10 +61,12 @@ public:
     void showEvent(QShowEvent *event) override;
     void hideEvent(QHideEvent *event) override;
     void resizeEvent(QResizeEvent *event) override;
+    void loadClientModel() override;
     void loadWalletModel() override;
     void setGovModel(GovernanceModel* _model);
 
 public Q_SLOTS:
+    void chainHeightChanged(int height);
     void onVoteForPropClicked();
     void onCreatePropClicked();
 

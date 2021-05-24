@@ -89,6 +89,10 @@ public:
     CAmount getMaxAvailableBudgetAmount() const;
     // Return the proposal maximum payments count for the running chain
     int getPropMaxPaymentsCount() const;
+    int getNextSuperblockHeight() const;
+    // Returns the sum of all of the passing proposals
+    CAmount getBudgetAllocatedAmount() const { return allocatedAmount; };
+    CAmount getBudgetAvailableAmount() const { return getMaxAvailableBudgetAmount() - allocatedAmount; };
     // Check if the URL is valid.
     OperationResult validatePropURL(const QString& url) const;
     OperationResult validatePropAmount(CAmount amount) const;
@@ -113,6 +117,9 @@ private:
     WalletModel* walletModel{nullptr};
     std::atomic<bool> refreshNeeded{false};
 
+    // Cached amount
+    CAmount allocatedAmount{0};
+
     QTimer* pollTimer{nullptr};
     // Cached proposals waiting for the minimum required confirmations
     // to be broadcasted to the network.
@@ -122,9 +129,7 @@ private:
     void stopPolling();
 
     // Util function to create a ProposalInfo object
-    ProposalInfo buidProposalInfo(const CBudgetProposal* prop,
-                                  const std::vector<CBudgetProposal>& currentBudget,
-                                  bool isPending);
+    ProposalInfo buidProposalInfo(const CBudgetProposal* prop, bool isPassing, bool isPending);
 };
 
 #endif // GOVERNANCEMODEL_H
