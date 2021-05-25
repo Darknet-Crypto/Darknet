@@ -7,7 +7,6 @@
 
 #include "qt/pivx/pwidget.h"
 #include "qt/pivx/furabstractlistitemdelegate.h"
-#include "qt/pivx/mnmodel.h"
 #include "qt/pivx/tooltipmenu.h"
 #include "walletmodel.h"
 
@@ -17,6 +16,7 @@
 #include <QWidget>
 
 class PIVXGUI;
+class MNModel;
 
 namespace Ui {
 class MasterNodesWidget;
@@ -34,8 +34,7 @@ public:
 
     explicit MasterNodesWidget(PIVXGUI *parent = nullptr);
     ~MasterNodesWidget();
-
-    void loadWalletModel() override;
+    void setMNModel(MNModel* _mnModel);
 
     void run(int type) override;
     void onError(QString error, int type) override;
@@ -67,7 +66,6 @@ private:
     bool checkMNsNetwork();
     void startAlias(QString strAlias);
     bool startAll(QString& failedMN, bool onlyMissing);
-    bool startMN(const CMasternodeConfig::CMasternodeEntry& mne, std::string& strError);
 };
 
 #endif // MASTERNODESWIDGET_H

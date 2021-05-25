@@ -11,20 +11,25 @@ namespace Ui {
     class MnSelectionDialog;
 }
 
+class MNModel;
+class MnInfo;
+
 class MnSelectionDialog : public QDialog
 {
 Q_OBJECT
 
 public:
-    explicit MnSelectionDialog(QWidget *parent = nullptr);
+    explicit MnSelectionDialog(QWidget *parent);
     ~MnSelectionDialog();
 
-    void setModel();
+    void setModel(MNModel* _mnModel);
     void updateView();
 
 private:
     Ui::MnSelectionDialog *ui;
+    MNModel* mnModel{nullptr};
     int colCheckBoxWidth_treeMode{50};
+    std::list<MnInfo> masternodesList;
 
     enum {
         COLUMN_CHECKBOX,

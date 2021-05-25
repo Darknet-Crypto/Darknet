@@ -5,14 +5,14 @@
 #include "qt/pivx/settings/settingssignmessagewidgets.h"
 #include "qt/pivx/settings/forms/ui_settingssignmessagewidgets.h"
 #include "qt/pivx/qtutils.h"
-#include "guiutil.h"
 #include "walletmodel.h"
 
 #include "key_io.h"
-#include "init.h"
 #include "wallet/wallet.h"
 #include "askpassphrasedialog.h"
 #include "addressbookpage.h"
+
+#include "messagesigner.h"
 
 #include <string>
 #include <vector>

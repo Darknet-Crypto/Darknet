@@ -4,6 +4,7 @@
 
 #include "qt/pivx/mnselectiondialog.h"
 #include "qt/pivx/forms/ui_mnselectiondialog.h"
+#include "qt/pivx/mnmodel.h"
 #include "qt/pivx/qtutils.h"
 
 MnSelectionDialog::MnSelectionDialog(QWidget *parent) :
@@ -36,15 +37,20 @@ MnSelectionDialog::MnSelectionDialog(QWidget *parent) :
     connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(close()));
 }
 
-void MnSelectionDialog::setModel()
+void MnSelectionDialog::setModel(MNModel* _mnModel)
 {
+    mnModel = _mnModel;
     updateView();
 }
 
 class MnInfo {
 public:
-    explicit MnInfo() {}
+    explicit MnInfo(const QString& _alias,
+                    const QString& _status) : alias(_alias), status(_status) {}
     ~MnInfo() {}
+
+    QString alias;
+    QString status;
 };
 
 void MnSelectionDialog::updateView()
@@ -54,13 +60,11 @@ void MnSelectionDialog::updateView()
     QFlags<Qt::ItemFlag> flgCheckbox = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable;
     QFlags<Qt::ItemFlag> flgTristate = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsUserCheckable | Qt::ItemIsTristate;
 
-    // todo: implement MnInfo
-    std::list<MnInfo> masternodesList; //= getMns();
-    appendItem(flgCheckbox, flgTristate, "Masternode1", "Enabled");
-    appendItem(flgCheckbox, flgTristate, "Masternode2", "Enabled");
-    appendItem(flgCheckbox, flgTristate, "Masternode3", "Disabled");
-    for (const MnInfo& mnInfo : masternodesList) {
-        appendItem(flgCheckbox, flgTristate, "Masternode1", "Enabled");
+    for (int i = 0; i < mnModel->rowCount(); ++i) {
+        QString alias = mnModel->index(i, MNModel::ALIAS, QModelIndex()).data().toString();
+        QString status = mnModel->index(i, MNModel::STATUS, QModelIndex()).data().toString();
+        masternodesList.emplace_back(alias, status);
+        appendItem(flgCheckbox, flgTristate, alias, status);
     }
 
     // save COLUMN_CHECKBOX width for tree-mode
@@ -84,15 +88,11 @@ void MnSelectionDialog::appendItem(QFlags<Qt::ItemFlag> flgCheckbox,
     itemOutput->setText(COLUMN_STATUS, mnStatus);
     itemOutput->setToolTip(COLUMN_STATUS, "Masternode status");
 
-    // todo: disable inactive masternodes
-    /*if (isInactive) {
+    if (mnStatus != "ENABLED") {
         itemOutput->setDisabled(true);
-        itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/check_disbled"));
-    }*/
-
-    // todo: set checkbox value
-    // if (coinControl->IsSelected(COutPoint(txhash, outIndex)))
-    //    itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
+        // TODO: add disabled visual representation.
+        //itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/check_disbled"));
+    }
 }
 
 MnSelectionDialog::~MnSelectionDialog()

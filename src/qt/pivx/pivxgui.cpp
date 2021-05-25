@@ -625,6 +625,13 @@ void PIVXGUI::setGovModel(GovernanceModel* govModel)
     governancewidget->setGovModel(govModel);
 }
 
+void PIVXGUI::setMNModel(MNModel* mnModel)
+{
+    if (!stackedContainer || !clientModel) return;
+    governancewidget->setMNModel(mnModel);
+    masterNodesWidget->setMNModel(mnModel);
+}
+
 bool PIVXGUI::addWallet(const QString& name, WalletModel* walletModel)
 {
     // Single wallet supported for now..

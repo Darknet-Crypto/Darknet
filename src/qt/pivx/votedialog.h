@@ -13,12 +13,15 @@ namespace Ui {
 class VoteDialog;
 }
 
+class MNModel;
+class GovernanceModel;
+
 class VoteDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit VoteDialog(QWidget *parent = nullptr);
+    explicit VoteDialog(QWidget *parent, GovernanceModel* _govModel, MNModel* _mnModel);
     ~VoteDialog();
 
     void showEvent(QShowEvent *event) override;
@@ -30,6 +33,9 @@ public Q_SLOTS:
 
 private:
     Ui::VoteDialog *ui;
+    GovernanceModel* govModel{nullptr};
+    MNModel* mnModel{nullptr};
+
     QCheckBox* checkBoxNo{nullptr};
     QCheckBox* checkBoxYes{nullptr};
     QProgressBar* progressBarNo{nullptr};

@@ -3,6 +3,7 @@
 
 #include "qt/pivx/createproposaldialog.h"
 #include "qt/pivx/governancemodel.h"
+#include "qt/pivx/mnmodel.h"
 #include "qt/pivx/qtutils.h"
 #include "qt/pivx/votedialog.h"
 
@@ -79,13 +80,12 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
 GovernanceWidget::~GovernanceWidget()
 {
     delete ui;
-    delete governanceModel;
 }
 
 void GovernanceWidget::onVoteForPropClicked()
 {
     window->showHide(true);
-    VoteDialog* dialog = new VoteDialog(window);
+    VoteDialog* dialog = new VoteDialog(window, governanceModel, mnModel);
     openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
     dialog->deleteLater();
 }
@@ -120,6 +120,11 @@ void GovernanceWidget::chainHeightChanged(int height)
 void GovernanceWidget::setGovModel(GovernanceModel* _model)
 {
     governanceModel = _model;
+}
+
+void GovernanceWidget::setMNModel(MNModel* _mnModel)
+{
+    mnModel = _mnModel;
 }
 
 void GovernanceWidget::loadWalletModel()

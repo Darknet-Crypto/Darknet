@@ -22,6 +22,7 @@ QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
+class MNModel;
 class PIVXGUI;
 class GovernanceModel;
 
@@ -64,6 +65,7 @@ public:
     void loadClientModel() override;
     void loadWalletModel() override;
     void setGovModel(GovernanceModel* _model);
+    void setMNModel(MNModel* _mnModel);
 
 public Q_SLOTS:
     void chainHeightChanged(int height);
@@ -73,6 +75,7 @@ public Q_SLOTS:
 private:
     Ui::governancewidget *ui;
     GovernanceModel* governanceModel{nullptr};
+    MNModel* mnModel{nullptr};
     QGridLayout* gridLayout{nullptr}; // cards
     std::vector<ProposalCard*> cards;
     int propsPerRow = 0;

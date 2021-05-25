@@ -20,6 +20,7 @@
 #include "masternodeman.h"
 #include "wallet/wallet.h"
 #include "util/system.h"
+#include "qt/pivx/mnmodel.h"
 #include "qt/pivx/optionbutton.h"
 #include <fstream>
 
@@ -74,7 +75,6 @@ MasterNodesWidget::MasterNodesWidget(PIVXGUI *parent) :
             new MNHolder(isLightTheme()),
             this
     );
-    mnModel = new MNModel(this, walletModel);
 
     this->setStyleSheet(parent->styleSheet());
 
@@ -142,13 +142,12 @@ void MasterNodesWidget::hideEvent(QHideEvent *event)
     if (timer) timer->stop();
 }
 
-void MasterNodesWidget::loadWalletModel()
+void MasterNodesWidget::setMNModel(MNModel* _mnModel)
 {
-    if (walletModel) {
-        ui->listMn->setModel(mnModel);
-        ui->listMn->setModelColumn(AddressTableModel::Label);
-        updateListState();
-    }
+    mnModel = _mnModel;
+    ui->listMn->setModel(mnModel);
+    ui->listMn->setModelColumn(AddressTableModel::Label);
+    updateListState();
 }
 
 void MasterNodesWidget::updateListState()
@@ -219,6 +218,17 @@ void MasterNodesWidget::onEditMNClicked()
     }
 }
 
+static bool startMN(const CMasternodeConfig::CMasternodeEntry& mne, std::string& strError)
+{
+    CMasternodeBroadcast mnb;
+    if (!CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb))
+        return false;
+
+    mnodeman.UpdateMasternodeList(mnb);
+    mnb.Relay();
+    return true;
+}
+
 void MasterNodesWidget::startAlias(QString strAlias)
 {
     QString strStatusHtml;
@@ -239,17 +249,6 @@ void MasterNodesWidget::updateModelAndInform(QString informText)
 {
     mnModel->updateMNList();
     inform(informText);
-}
-
-bool MasterNodesWidget::startMN(const CMasternodeConfig::CMasternodeEntry& mne, std::string& strError)
-{
-    CMasternodeBroadcast mnb;
-    if (!CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb))
-        return false;
-
-    mnodeman.UpdateMasternodeList(mnb);
-    mnb.Relay();
-    return true;
 }
 
 void MasterNodesWidget::onStartAllClicked(int type)

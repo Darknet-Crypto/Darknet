@@ -259,7 +259,7 @@
                <item>
                 <widget class="QLabel" name="labelAmountOfVotes">
                  <property name="text">
-                  <string>3</string>
+                  <string>0</string>
                  </property>
                 </widget>
                </item>

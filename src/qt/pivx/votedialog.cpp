@@ -5,12 +5,15 @@
 #include "qt/pivx/votedialog.h"
 #include "qt/pivx/forms/ui_votedialog.h"
 
+#include "qt/pivx/mnmodel.h"
 #include "qt/pivx/mnselectiondialog.h"
 #include "qt/pivx/qtutils.h"
 
-VoteDialog::VoteDialog(QWidget *parent) :
+VoteDialog::VoteDialog(QWidget *parent, GovernanceModel* _govModel, MNModel* _mnModel) :
     QDialog(parent),
-    ui(new Ui::VoteDialog)
+    ui(new Ui::VoteDialog),
+    govModel(_govModel),
+    mnModel(_mnModel)
 {
     ui->setupUi(this);
     this->setStyleSheet(parent->styleSheet());
@@ -66,14 +69,18 @@ void VoteDialog::onMnSelectionClicked()
     PIVXGUI* window = dynamic_cast<PIVXGUI*>(parent());
     MnSelectionDialog* dialog = new MnSelectionDialog(window);
     dialog->resize(size());
-    dialog->setModel(); // todo: set mnmodel.
+    dialog->setModel(mnModel);
     openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5, false);
     dialog->deleteLater();
 }
 
 void VoteDialog::onCheckBoxClicked(QCheckBox* checkBox, QProgressBar* progressBar, bool isVoteYes)
 {
-    // todo: set value.
+    if (isVoteYes) {
+        checkBoxNo->setCheckState(Qt::Unchecked);
+    } else {
+        checkBoxYes->setCheckState(Qt::Unchecked);
+    }
 }
 
 void VoteDialog::initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgressBar* progressBar, QString text, Qt::LayoutDirection direction, bool isVoteYes)
@@ -101,6 +108,9 @@ void VoteDialog::initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgres
     connect(checkBox, &QCheckBox::clicked, [this, checkBox, progressBar, isVoteYes](){ onCheckBoxClicked(checkBox, progressBar, isVoteYes); });
     checkBox->setAttribute(Qt::WA_LayoutUsesWidgetRect);
     checkBox->show();
+
+    // Progress bar
+    progressBar->setValue(35);
 }
 
 VoteDialog::~VoteDialog()

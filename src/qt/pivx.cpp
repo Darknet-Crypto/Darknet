@@ -24,6 +24,7 @@
 
 #ifdef ENABLE_WALLET
 #include "qt/pivx/governancemodel.h"
+#include "qt/pivx/mnmodel.h"
 #include "paymentserver.h"
 #include "walletmodel.h"
 #include "interfaces/wallet.h"
@@ -235,6 +236,7 @@ private:
     PaymentServer* paymentServer{nullptr};
     WalletModel* walletModel{nullptr};
     GovernanceModel* govModel{nullptr};
+    MNModel* mnModel{nullptr};
 #endif
     int returnValue{0};
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
@@ -499,6 +501,8 @@ void BitcoinApplication::initializeResult(int retval)
             window->addWallet(PIVXGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(PIVXGUI::DEFAULT_WALLET);
         }
+        mnModel = new MNModel(this, walletModel);
+        window->setMNModel(mnModel);
 #endif
 
         // If -min option passed, start window minimized.
