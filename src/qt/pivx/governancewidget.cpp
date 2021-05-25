@@ -49,8 +49,8 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     values.append("Date");
     values.append("Value");
     values.append("Name");
-    for (int n = 0; n < values.size(); n++) {
-        model->appendRow(new QStandardItem(tr("Sort by: %1").arg(values.at(n))));
+    for (const auto& value : values) {
+        model->appendRow(new QStandardItem(tr("Sort by: %1").arg(value)));
     }
     delegate->setValues(values);
     ui->comboBoxSort->setModel(model);
@@ -73,7 +73,7 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     // Create proposal
     ui->btnCreateProposal->setTitleClassAndText("btn-title-grey", "Create Proposal");
     ui->btnCreateProposal->setSubTitleClassAndText("text-subtitle", "Prepare and submit a new proposal.");
-    connect(ui->btnCreateProposal, SIGNAL(clicked()), this, SLOT(onCreatePropClicked()));
+    connect(ui->btnCreateProposal, &OptionButton::clicked, this, &GovernanceWidget::onCreatePropClicked);
     ui->emptyContainer->setVisible(false);
 }
 
@@ -82,10 +82,11 @@ GovernanceWidget::~GovernanceWidget()
     delete ui;
 }
 
-void GovernanceWidget::onVoteForPropClicked()
+void GovernanceWidget::onVoteForPropClicked(const ProposalInfo& proposalInfo)
 {
     window->showHide(true);
     VoteDialog* dialog = new VoteDialog(window, governanceModel, mnModel);
+    dialog->setProposal(proposalInfo);
     openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
     dialog->deleteLater();
 }
@@ -180,6 +181,7 @@ static void setCardShadow(QWidget* edit)
 ProposalCard* GovernanceWidget::newCard()
 {
     ProposalCard* propCard = new ProposalCard(ui->scrollAreaWidgetContents);
+    connect(propCard, &ProposalCard::voteClicked, this, &GovernanceWidget::onVoteForPropClicked);
     setCardShadow(propCard);
     return propCard;
 }
@@ -267,4 +269,3 @@ int GovernanceWidget::calculateColumnsPerRow()
         return 4; // max amount of cards
     }
 }
-

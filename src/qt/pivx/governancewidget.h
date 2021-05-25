@@ -69,7 +69,7 @@ public:
 
 public Q_SLOTS:
     void chainHeightChanged(int height);
-    void onVoteForPropClicked();
+    void onVoteForPropClicked(const ProposalInfo& proposalInfo);
     void onCreatePropClicked();
 
 private:

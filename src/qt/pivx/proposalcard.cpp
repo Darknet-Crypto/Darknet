@@ -30,7 +30,7 @@ ProposalCard::ProposalCard(QWidget *parent) :
     setCssProperty(ui->votesBar, "vote-progress");
     ui->votesBar->setContentsMargins(0,0,0,0);
 
-    connect(ui->btnVote, &QPushButton::clicked, [this](){ Q_EMIT voteClicked(); });
+    connect(ui->btnVote, &QPushButton::clicked, [this](){ Q_EMIT voteClicked(proposalInfo); });
     connect(ui->btnLink, &QPushButton::clicked, this, &ProposalCard::onCopyUrlClicked);
 }
 

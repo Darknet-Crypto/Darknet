@@ -52,6 +52,19 @@ VoteDialog::VoteDialog(QWidget *parent, GovernanceModel* _govModel, MNModel* _mn
     connect(ui->btnSave, &QPushButton::clicked, this, &VoteDialog::onAcceptClicked);
 }
 
+void VoteDialog::setProposal(const ProposalInfo& prop)
+{
+    ui->labelTitleVote->setText(QString::fromStdString(prop.name));
+    ui->labelAmount->setText(GUIUtil::formatBalance(prop.amount));
+    ui->labelTime->setText(tr("%1 months paid of %2").arg(prop.totalPayments - prop.remainingPayments).arg(prop.totalPayments));
+    double totalVotes = prop.votesYes + prop.votesNo;
+    double percentageNo = (totalVotes == 0) ? 0 :  (prop.votesNo / totalVotes) * 100;
+    double percentageYes = (totalVotes == 0) ? 0 : (prop.votesYes / totalVotes) * 100;
+    progressBarNo->setValue((int)percentageNo);
+    progressBarYes->setValue((int)percentageYes);
+    // todo: add votes amount text
+}
+
 void VoteDialog::onAcceptClicked()
 {
     close();
@@ -83,7 +96,7 @@ void VoteDialog::onCheckBoxClicked(QCheckBox* checkBox, QProgressBar* progressBa
     }
 }
 
-void VoteDialog::initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgressBar* progressBar, QString text, Qt::LayoutDirection direction, bool isVoteYes)
+void VoteDialog::initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgressBar* progressBar, const QString& text, Qt::LayoutDirection direction, bool isVoteYes)
 {
     QGridLayout* gridLayout = dynamic_cast<QGridLayout*>(container->layout());
     progressBar->setMaximum(100);

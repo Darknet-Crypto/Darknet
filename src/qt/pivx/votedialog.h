@@ -13,6 +13,7 @@ namespace Ui {
 class VoteDialog;
 }
 
+class ProposalInfo;
 class MNModel;
 class GovernanceModel;
 
@@ -25,6 +26,7 @@ public:
     ~VoteDialog();
 
     void showEvent(QShowEvent *event) override;
+    void setProposal(const ProposalInfo& prop);
 
 public Q_SLOTS:
     void onAcceptClicked();
@@ -42,7 +44,7 @@ private:
     QProgressBar* progressBarYes{nullptr};
 
     void initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgressBar* progressBar,
-                       QString text, Qt::LayoutDirection direction, bool isVoteYes);
+                       const QString& text, Qt::LayoutDirection direction, bool isVoteYes);
 };
 
 #endif // VOTEDIALOG_H

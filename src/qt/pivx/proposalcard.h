@@ -34,7 +34,7 @@ public Q_SLOTS:
     void onCopyUrlClicked();
 
 Q_SIGNALS:
-    void voteClicked();
+    void voteClicked(const ProposalInfo& proposalInfo);
 
 private:
     Ui::ProposalCard *ui;
