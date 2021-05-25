@@ -54,6 +54,7 @@ VoteDialog::VoteDialog(QWidget *parent, GovernanceModel* _govModel, MNModel* _mn
 
 void VoteDialog::setProposal(const ProposalInfo& prop)
 {
+    proposal = std::make_unique<ProposalInfo>(prop);
     ui->labelTitleVote->setText(QString::fromStdString(prop.name));
     ui->labelAmount->setText(GUIUtil::formatBalance(prop.amount));
     ui->labelTime->setText(tr("%1 months paid of %2").arg(prop.totalPayments - prop.remainingPayments).arg(prop.totalPayments));
@@ -67,7 +68,26 @@ void VoteDialog::setProposal(const ProposalInfo& prop)
 
 void VoteDialog::onAcceptClicked()
 {
-    close();
+    bool isPositive = checkBoxYes->isChecked();
+    bool isNegative = checkBoxNo->isChecked();
+
+    if (!isPositive && !isNegative) {
+        inform(tr("Select a vote direction"));
+        return;
+    }
+
+    if (vecSelectedMn.empty()) {
+        inform(tr("Missing voting masternodes selection"));
+        return;
+    }
+
+    // Craft and broadcast vote
+    auto res = govModel->voteForProposal(*proposal, isPositive, vecSelectedMn);
+    if (!res) {
+        inform(QString::fromStdString(res.getError()));
+        return;
+    }
+    accept();
 }
 
 void VoteDialog::showEvent(QShowEvent *event)
@@ -80,11 +100,14 @@ void VoteDialog::showEvent(QShowEvent *event)
 void VoteDialog::onMnSelectionClicked()
 {
     PIVXGUI* window = dynamic_cast<PIVXGUI*>(parent());
-    MnSelectionDialog* dialog = new MnSelectionDialog(window);
-    dialog->resize(size());
-    dialog->setModel(mnModel);
-    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5, false);
-    dialog->deleteLater();
+    if (!mnSelectionDialog) {
+        mnSelectionDialog = new MnSelectionDialog(window);
+        mnSelectionDialog->setModel(mnModel);
+    }
+    mnSelectionDialog->resize(size());
+    if (openDialogWithOpaqueBackgroundY(mnSelectionDialog, window, 4.5, 5, false)) {
+        vecSelectedMn = mnSelectionDialog->getSelectedMnAlias();
+    }
 }
 
 void VoteDialog::onCheckBoxClicked(QCheckBox* checkBox, QProgressBar* progressBar, bool isVoteYes)
@@ -121,9 +144,14 @@ void VoteDialog::initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgres
     connect(checkBox, &QCheckBox::clicked, [this, checkBox, progressBar, isVoteYes](){ onCheckBoxClicked(checkBox, progressBar, isVoteYes); });
     checkBox->setAttribute(Qt::WA_LayoutUsesWidgetRect);
     checkBox->show();
+}
 
-    // Progress bar
-    progressBar->setValue(35);
+void VoteDialog::inform(const QString& text)
+{
+    if (!snackBar) snackBar = new SnackBar(nullptr, this);
+    snackBar->setText(text);
+    snackBar->resize(this->width(), snackBar->height());
+    openDialog(snackBar, this);
 }
 
 VoteDialog::~VoteDialog()

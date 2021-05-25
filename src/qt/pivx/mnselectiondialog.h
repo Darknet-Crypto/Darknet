@@ -12,6 +12,7 @@ namespace Ui {
 }
 
 class MNModel;
+class QTreeWidgetItem;
 class MnInfo;
 
 class MnSelectionDialog : public QDialog
@@ -24,12 +25,17 @@ public:
 
     void setModel(MNModel* _mnModel);
     void updateView();
+    std::vector<std::string> getSelectedMnAlias();
+
+public Q_SLOTS:
+    void viewItemChanged(QTreeWidgetItem*, int);
 
 private:
     Ui::MnSelectionDialog *ui;
     MNModel* mnModel{nullptr};
     int colCheckBoxWidth_treeMode{50};
-    std::list<MnInfo> masternodesList;
+    // selected MNs alias
+    std::vector<std::string> selectedMnList;
 
     enum {
         COLUMN_CHECKBOX,

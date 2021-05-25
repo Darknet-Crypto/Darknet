@@ -5,12 +5,14 @@
 #include "qt/pivx/governancemodel.h"
 
 #include "budget/budgetmanager.h"
+#include "budget/budgetutil.h"
 #include "destination_io.h"
 #include "guiconstants.h"
 #include "masternode-sync.h"
 #include "script/standard.h"
 #include "qt/transactiontablemodel.h"
 #include "qt/transactionrecord.h"
+#include "qt/pivx/mnmodel.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "walletmodel.h"
@@ -162,6 +164,30 @@ OperationResult GovernanceModel::createProposal(const std::string& strProposalNa
     if (!opRes) return opRes;
     scheduleBroadcast(proposal);
 
+    return {true};
+}
+
+OperationResult GovernanceModel::voteForProposal(const ProposalInfo& prop,
+                                                 bool isVotePositive,
+                                                 const std::vector<std::string>& mnVotingAlias)
+{
+    UniValue ret; // future: don't use UniValue here.
+    for (const auto& mnAlias : mnVotingAlias) {
+        bool fLegacyMN = true; // For now, only legacy MNs
+        ret = mnBudgetVoteInner(nullptr,
+                          fLegacyMN,
+                          prop.id,
+                          false,
+                          isVotePositive ? CBudgetVote::VoteDirection::VOTE_YES : CBudgetVote::VoteDirection::VOTE_NO,
+                          mnAlias);
+        if (ret.exists("detail") && ret["detail"].isArray()) {
+            const UniValue& obj = ret["detail"].get_array()[0];
+            if (obj["result"].getValStr() != "success") {
+                return {false, obj["error"].getValStr()};
+            }
+        }
+    }
+    // add more information with ret["overall"]
     return {true};
 }
 

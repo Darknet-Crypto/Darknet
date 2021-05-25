@@ -87,7 +87,9 @@ void GovernanceWidget::onVoteForPropClicked(const ProposalInfo& proposalInfo)
     window->showHide(true);
     VoteDialog* dialog = new VoteDialog(window, governanceModel, mnModel);
     dialog->setProposal(proposalInfo);
-    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
+    if (openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5)) {
+        inform(tr("Vote emitted successfully!"));
+    }
     dialog->deleteLater();
 }
 

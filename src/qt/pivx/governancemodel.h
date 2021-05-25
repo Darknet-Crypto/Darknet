@@ -108,6 +108,10 @@ public:
                                    int nPaymentCount,
                                    CAmount nAmount,
                                    const std::string& strPaymentAddr);
+
+    OperationResult voteForProposal(const ProposalInfo& prop,
+                                    bool isVotePositive,
+                                    const std::vector<std::string>& mnVotingAlias);
 public Q_SLOTS:
     void pollGovernanceChanged();
     void txLoaded(const QString& hash, const int txType, const int txStatus);

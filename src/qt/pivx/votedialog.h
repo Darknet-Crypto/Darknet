@@ -15,7 +15,9 @@ class VoteDialog;
 
 class ProposalInfo;
 class MNModel;
+class MnSelectionDialog;
 class GovernanceModel;
+class SnackBar;
 
 class VoteDialog : public QDialog
 {
@@ -37,14 +39,21 @@ private:
     Ui::VoteDialog *ui;
     GovernanceModel* govModel{nullptr};
     MNModel* mnModel{nullptr};
+    SnackBar* snackBar{nullptr};
 
     QCheckBox* checkBoxNo{nullptr};
     QCheckBox* checkBoxYes{nullptr};
     QProgressBar* progressBarNo{nullptr};
     QProgressBar* progressBarYes{nullptr};
 
+    std::unique_ptr<ProposalInfo> proposal;
+    MnSelectionDialog* mnSelectionDialog{nullptr};
+    std::vector<std::string> vecSelectedMn;
+
     void initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgressBar* progressBar,
                        const QString& text, Qt::LayoutDirection direction, bool isVoteYes);
+
+    void inform(const QString& text);
 };
 
 #endif // VOTEDIALOG_H

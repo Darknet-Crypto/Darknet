@@ -34,7 +34,8 @@ MnSelectionDialog::MnSelectionDialog(QWidget *parent) :
 
     connect(ui->btnEsc, SIGNAL(clicked()), this, SLOT(close()));
     connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(close()));
+    connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &MnSelectionDialog::viewItemChanged);
 }
 
 void MnSelectionDialog::setModel(MNModel* _mnModel)
@@ -53,6 +54,28 @@ public:
     QString status;
 };
 
+void MnSelectionDialog::viewItemChanged(QTreeWidgetItem* item, int column)
+{
+    if (column == COLUMN_CHECKBOX) {
+        MnInfo mnInfo(item->text(COLUMN_NAME), item->text(COLUMN_STATUS));
+        if (mnInfo.alias.isEmpty()) return;
+        auto it = std::find(selectedMnList.begin(), selectedMnList.end(), mnInfo.alias.toStdString());
+        if (item->checkState(COLUMN_CHECKBOX) == Qt::Unchecked) {
+            if (it != selectedMnList.end()) {
+                selectedMnList.erase(it);
+                ui->labelAmountOfVotes->setText(QString::number((int)selectedMnList.size()));
+            }
+        } else if (item->isDisabled()) {
+            item->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
+        } else {
+            if (it == selectedMnList.end()) {
+                selectedMnList.emplace_back(mnInfo.alias.toStdString());
+                ui->labelAmountOfVotes->setText(QString::number((int)selectedMnList.size()));
+            }
+        }
+    }
+}
+
 void MnSelectionDialog::updateView()
 {
     ui->treeWidget->clear();
@@ -63,7 +86,6 @@ void MnSelectionDialog::updateView()
     for (int i = 0; i < mnModel->rowCount(); ++i) {
         QString alias = mnModel->index(i, MNModel::ALIAS, QModelIndex()).data().toString();
         QString status = mnModel->index(i, MNModel::STATUS, QModelIndex()).data().toString();
-        masternodesList.emplace_back(alias, status);
         appendItem(flgCheckbox, flgTristate, alias, status);
     }
 
@@ -90,9 +112,14 @@ void MnSelectionDialog::appendItem(QFlags<Qt::ItemFlag> flgCheckbox,
 
     if (mnStatus != "ENABLED") {
         itemOutput->setDisabled(true);
-        // TODO: add disabled visual representation.
-        //itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/check_disbled"));
+        // TODO: add disable icon.
+        //itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/check_disabled"));
     }
+}
+
+std::vector<std::string> MnSelectionDialog::getSelectedMnAlias()
+{
+    return selectedMnList;
 }
 
 MnSelectionDialog::~MnSelectionDialog()
