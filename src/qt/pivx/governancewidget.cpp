@@ -111,6 +111,8 @@ void GovernanceWidget::onVoteForPropClicked(const ProposalInfo& proposalInfo)
     VoteDialog* dialog = new VoteDialog(window, governanceModel, mnModel);
     dialog->setProposal(proposalInfo);
     if (openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5)) {
+        // future: make this refresh atomic, no need to refresh the entire grid.
+        tryGridRefresh(true);
         inform(tr("Vote emitted successfully!"));
     }
     dialog->deleteLater();
