@@ -84,6 +84,10 @@ GovernanceWidget::~GovernanceWidget()
 
 void GovernanceWidget::onVoteForPropClicked(const ProposalInfo& proposalInfo)
 {
+    if (proposalInfo.status == ProposalInfo::Status::WAITING_FOR_APPROVAL) {
+        inform(tr("Cannot vote for the proposal yet, wait until it's confirmed by the network"));
+        return;
+    }
     window->showHide(true);
     VoteDialog* dialog = new VoteDialog(window, governanceModel, mnModel);
     dialog->setProposal(proposalInfo);
