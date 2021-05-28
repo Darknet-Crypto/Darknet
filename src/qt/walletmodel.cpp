@@ -660,24 +660,15 @@ OperationResult WalletModel::createAndSendProposalFeeTx(CBudgetProposal& proposa
         return {false ,"Error making fee transaction for proposal. Please check your wallet balance."};
     }
 
-    //send the tx to the network
-    const CWallet::CommitResult& res = wallet->CommitTransaction(wtx, keyChange, g_connman.get());
+    // send the tx to the network
+    mapValue_t extraValues;
+    extraValues.emplace("proposal", toHexStr(proposal));
+    const CWallet::CommitResult& res = wallet->CommitTransaction(wtx, &keyChange, g_connman.get(), &extraValues);
     if (res.status != CWallet::CommitStatus::OK) {
         return {false, strprintf("Cannot commit proposal fee transaction: %s", res.ToString())};
     }
+    // Everything went fine, set the fee tx hash
     proposal.SetFeeTxHash(wtx->GetHash());
-
-    {
-        // todo: encapsulate inside wallet module
-        LOCK(wallet->cs_wallet);
-        // Store own proposal data attached to the transaction that originated it.
-        // The proposal will be automatically broadcasted when it gets up to the minimum required confirmations.
-        assert(wallet->mapWallet.count(wtx->GetHash()));
-        auto& inWtx = wallet->mapWallet.at(wtx->GetHash()); // Internal tx
-        inWtx.SetComment("Proposal: " + proposal.GetName());
-        inWtx.mapValue.emplace("proposal", toHexStr(proposal));
-    }
-
     return {true};
 }
 

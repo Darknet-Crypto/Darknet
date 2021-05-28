@@ -12,7 +12,6 @@
 #include "evo/deterministicmns.h"
 #include "guiinterfaceutil.h"
 #include "masternode.h"
-#include "masternode-payments.h"
 #include "policy/policy.h"
 #include "sapling/key_io_sapling.h"
 #include "script/sign.h"
@@ -3396,7 +3395,7 @@ CWallet::CommitResult CWallet::CommitTransaction(CTransactionRef tx, CReserveKey
 /**
  * Call after CreateTransaction unless you want to abort
  */
-CWallet::CommitResult CWallet::CommitTransaction(CTransactionRef tx, CReserveKey* opReservekey, CConnman* connman)
+CWallet::CommitResult CWallet::CommitTransaction(CTransactionRef tx, CReserveKey* opReservekey, CConnman* connman, mapValue_t* extras)
 {
     CommitResult res;
 
@@ -3405,6 +3404,7 @@ CWallet::CommitResult CWallet::CommitTransaction(CTransactionRef tx, CReserveKey
     wtxNew.BindWallet(this);
     wtxNew.fFromMe = true;
     wtxNew.fStakeDelegationVoided = wtxNew.tx->HasP2CSOutputs();
+    if (extras) wtxNew.mapValue.insert(extras->begin(), extras->end());
 
     {
         LOCK2(cs_main, cs_wallet);
