@@ -227,7 +227,7 @@ void GovernanceModel::scheduleBroadcast(const CBudgetProposal& proposal)
     if (!pollTimer) pollTimer = new QTimer(this);
     if (!pollTimer->isActive()) {
         connect(pollTimer, &QTimer::timeout, this, &GovernanceModel::pollGovernanceChanged);
-        pollTimer->start(MODEL_UPDATE_DELAY * 60 * 3.5); // Every 3.5 minutes
+        pollTimer->start(MODEL_UPDATE_DELAY * 60 * (walletModel->isTestNetwork() ? 0.5 : 3.5)); // Every 3.5 minutes
     }
 }
 
@@ -239,8 +239,22 @@ void GovernanceModel::pollGovernanceChanged()
     // Try to broadcast any pending for confirmations proposal
     auto it = waitingPropsForConfirmations.begin();
     while (it != waitingPropsForConfirmations.end()) {
+        // Remove expired proposals
+        if (it->IsExpired(clientModel->getNumBlocks())) {
+            it = waitingPropsForConfirmations.erase(it);
+            continue;
+        }
+
+        // Try to add it
         if (!g_budgetman.AddProposal(*it)) {
             LogPrint(BCLog::QT, "Cannot broadcast budget proposal - %s", it->IsInvalidReason());
+            // Remove proposals who due a reorg lost their fee tx
+            if (it->IsInvalidReason().find("Can't find collateral tx") != std::string::npos) {
+                // future: notify the user about it.
+                it = waitingPropsForConfirmations.erase(it);
+                continue;
+            }
+            // Check if the proposal didn't exceed the superblock start height
             if (it->GetBlockStart() >= chainHeight) {
                 // Edge case, the proposal was never broadcasted before the next superblock, can be removed.
                 // future: notify the user about it.
@@ -281,6 +295,7 @@ void GovernanceModel::txLoaded(const QString& id, const int txType, const int tx
             CBudgetProposal proposal;
             ss >> proposal;
             if (!g_budgetman.HaveProposal(proposal.GetHash()) &&
+                !proposal.IsExpired(clientModel->getNumBlocks()) &&
                 proposal.GetBlockStart() < clientModel->getNumBlocks()) {
                 scheduleBroadcast(proposal);
             }

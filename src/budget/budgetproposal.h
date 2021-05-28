@@ -31,7 +31,6 @@ private:
 
     // Functions used inside UpdateValid()/IsWellFormed - setting strInvalid
     bool IsHeavilyDownvoted(bool fNewRules);
-    bool IsExpired(int nCurrentHeight);
     bool CheckStartEnd();
     bool CheckAmount(const CAmount& nTotalBudget);
     bool CheckAddress();
@@ -71,6 +70,7 @@ public:
 
     bool IsEstablished() const;
     bool IsPassing(int nBlockStartBudget, int nBlockEndBudget, int mnCount) const;
+    bool IsExpired(int nCurrentHeight);
 
     std::string GetName() const { return strProposalName; }
     std::string GetURL() const { return strURL; }
