@@ -2224,33 +2224,6 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     background-color: transparent;
 }
 
-
-QPushButton[cssClass="btn-secundary-filter"] {
-    background-image: url(://ic-filter);
-    background-position:right center;
-    background-repeat:no-repeat;
-    border:  1px solid #335c4b7d;
-    background-color:#FFFFFF;
-    font-size:18px;
-    padding-top:4px;
-    padding-left:6px;
-    padding-bottom:4px;
-    padding-right:30px;
-    color: #5c4b7d;
-    border-radius: 2px;
-}
-
-
-QPushButton[cssClass="btn-secundary-filter"]:hover {
-    border:  1px solid #5c4b7d;
-    background-color:#FFFFFF;
-}
-
-QPushButton[cssClass="btn-secundary-filter"]:pressed {
-    border:  1px solid #5c4b7d;
-    background-color:#1A5c4b7d;
-}
-
 /*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 HH       GOVERNANCE CARD
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
@@ -2637,6 +2610,24 @@ QComboBox[cssClass="btn-combo-small"]::down-arrow {
     image: url("://ic-arrow-drop-down");
     width: 15px;
     height: 15px;
+}
+
+QComboBox[cssClass="btn-filter"] {
+    background-image: url(://ic-filter);
+    background-position:right center;
+    background-repeat:no-repeat;
+    background-color:#ffffff;
+    padding:10px 10px 10px 10px;
+    font-size:16px;
+    border:1px solid #ffffff;
+    color: #5c4b7d;
+    text-align: right;
+}
+
+QComboBox[cssClass="btn-filter"]::down-arrow {
+    image: url(noimg);
+    width: 24px;
+    height: 24px;
 }
 
 QComboBox[cssClass="btn-combo-edit"] {

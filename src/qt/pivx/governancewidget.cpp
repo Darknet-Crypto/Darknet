@@ -32,20 +32,18 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     setCssProperty(ui->pushImgEmpty, "img-empty-governance");
     setCssProperty(ui->labelEmpty, "text-empty");
 
-    // Combo box sort
-    setCssProperty(ui->comboBoxSort, "btn-combo");
-    ui->comboBoxSort->setEditable(true);
-    SortEdit* lineEdit = new SortEdit(ui->comboBoxSort);
-    lineEdit->setReadOnly(true);
-    lineEdit->setAlignment(Qt::AlignRight);
+    // Font
     QFont font;
     font.setPointSize(14);
-    lineEdit->setFont(font);
-    ui->comboBoxSort->setLineEdit(lineEdit);
 
-    QStandardItemModel *model = new QStandardItemModel(this);
-    Delegate *delegate = new Delegate(this);
-    QList<QString> values;
+    // Combo box sort
+    SortEdit* lineEdit = new SortEdit(ui->comboBoxSort);
+    lineEdit->setFont(font);
+    initComboBox(ui->comboBoxSort, lineEdit, "btn-combo", false);
+
+    QStandardItemModel* model = new QStandardItemModel(this);
+    Delegate* delegate = new Delegate(this);
+    QList<QString> values; // todo: Add sort actions
     values.append("Date");
     values.append("Value");
     values.append("Name");
@@ -55,9 +53,25 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     delegate->setValues(values);
     ui->comboBoxSort->setModel(model);
     ui->comboBoxSort->setItemDelegate(delegate);
+
     // Filter
-    ui->btnFilter->setText("Filter");
-    ui->btnFilter->setProperty("cssClass", "btn-secundary-filter");
+    SortEdit* lineEditFilter = new SortEdit(ui->comboBoxFilter);
+    lineEditFilter->setFont(font);
+    initComboBox(ui->comboBoxFilter, lineEditFilter, "btn-filter", false);
+
+    QStandardItemModel* modelFilter = new QStandardItemModel(this);
+    Delegate* delegateFilter = new Delegate(this);
+    QList<QString> valuesFilter; // todo: Add filter actions
+    valuesFilter.append("All");
+    valuesFilter.append("Passing");
+    valuesFilter.append("Not Passing");
+    valuesFilter.append("No Votes");
+    for (int n = 0; n < values.size(); n++) {
+        modelFilter->appendRow(new QStandardItem(tr("Filter: %1").arg(valuesFilter.at(n))));
+    }
+    delegateFilter->setValues(valuesFilter);
+    ui->comboBoxFilter->setModel(modelFilter);
+    ui->comboBoxFilter->setItemDelegate(delegateFilter);
 
     // Budget
     ui->labelBudget->setText("Budget Distribution");

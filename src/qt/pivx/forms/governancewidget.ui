@@ -136,9 +136,12 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QPushButton" name="btnFilter">
-             <property name="text">
-              <string>Filter</string>
+            <widget class="QComboBox" name="comboBoxFilter">
+             <property name="minimumSize">
+              <size>
+               <width>110</width>
+               <height>0</height>
+              </size>
              </property>
             </widget>
            </item>

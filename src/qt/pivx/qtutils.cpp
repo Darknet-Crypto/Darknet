@@ -238,7 +238,7 @@ QColor getRowColor(bool isLightTheme, bool isHovered, bool isSelected)
     }
 }
 
-void initComboBox(QComboBox* combo, QLineEdit* lineEdit, QString cssClass)
+void initComboBox(QComboBox* combo, QLineEdit* lineEdit, QString cssClass, bool setView)
 {
     setCssProperty(combo, std::move(cssClass));
     combo->setEditable(true);
@@ -248,7 +248,7 @@ void initComboBox(QComboBox* combo, QLineEdit* lineEdit, QString cssClass)
         combo->setLineEdit(lineEdit);
     }
     combo->setStyleSheet("selection-background-color:transparent;");
-    combo->setView(new QListView());
+    if (setView) combo->setView(new QListView());
 }
 
 void fillAddressSortControls(SortEdit* seType, SortEdit* seOrder, QComboBox* boxType, QComboBox* boxOrder)
