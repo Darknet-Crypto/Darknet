@@ -13,7 +13,8 @@ namespace Ui {
 class VoteDialog;
 }
 
-class ProposalInfo;
+struct ProposalInfo;
+struct VoteInfo;
 class MNModel;
 class MnSelectionDialog;
 class GovernanceModel;
@@ -47,6 +48,7 @@ private:
     QProgressBar* progressBarYes{nullptr};
 
     std::unique_ptr<ProposalInfo> proposal;
+    std::vector<VoteInfo> votes;
     MnSelectionDialog* mnSelectionDialog{nullptr};
     std::vector<std::string> vecSelectedMn;
 
@@ -54,6 +56,7 @@ private:
                        const QString& text, Qt::LayoutDirection direction, bool isVoteYes);
 
     void inform(const QString& text);
+    void updateMnSelectionNum();
 };
 
 #endif // VOTEDIALOG_H

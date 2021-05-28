@@ -57,13 +57,16 @@ void VoteDialog::setProposal(const ProposalInfo& prop)
     proposal = std::make_unique<ProposalInfo>(prop);
     ui->labelTitleVote->setText(QString::fromStdString(prop.name));
     ui->labelAmount->setText(GUIUtil::formatBalance(prop.amount));
-    ui->labelTime->setText(tr("%1 months paid of %2").arg(prop.totalPayments - prop.remainingPayments).arg(prop.totalPayments));
+    ui->labelTime->setText(tr("%1 months passed of %2").arg(prop.totalPayments - prop.remainingPayments).arg(prop.totalPayments));
     double totalVotes = prop.votesYes + prop.votesNo;
     double percentageNo = (totalVotes == 0) ? 0 :  (prop.votesNo / totalVotes) * 100;
     double percentageYes = (totalVotes == 0) ? 0 : (prop.votesYes / totalVotes) * 100;
     progressBarNo->setValue((int)percentageNo);
     progressBarYes->setValue((int)percentageYes);
-    // todo: add votes amount text
+    checkBoxNo->setText(tr("%1 / %2% No").arg(prop.votesNo).arg(percentageNo));
+    checkBoxYes->setText(tr("Yes %1 / %2%").arg(prop.votesYes).arg(percentageYes));
+    votes = govModel->getLocalMNsVotesForProposal(prop);
+    updateMnSelectionNum();
 }
 
 void VoteDialog::onAcceptClicked()
@@ -144,6 +147,18 @@ void VoteDialog::initVoteCheck(QWidget* container, QCheckBox* checkBox, QProgres
     connect(checkBox, &QCheckBox::clicked, [this, checkBox, progressBar, isVoteYes](){ onCheckBoxClicked(checkBox, progressBar, isVoteYes); });
     checkBox->setAttribute(Qt::WA_LayoutUsesWidgetRect);
     checkBox->show();
+}
+
+void VoteDialog::updateMnSelectionNum()
+{
+    QString text;
+    if (vecSelectedMn.empty()) {
+        text = !votes.empty() ? tr("You have voted with %1 Masternodes for this proposal\nChange votes").arg(votes.size()) :
+                tr("Select Voting Masternodes");
+    } else {
+        text = tr("%1 Masternodes selected to vote").arg(vecSelectedMn.size());
+    }
+    ui->btnSelectMasternodes->setText(text);
 }
 
 void VoteDialog::inform(const QString& text)
