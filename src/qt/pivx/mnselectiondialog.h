@@ -14,6 +14,7 @@ namespace Ui {
 class MNModel;
 class QTreeWidgetItem;
 class MnInfo;
+struct VoteInfo;
 
 class MnSelectionDialog : public QDialog
 {
@@ -25,10 +26,14 @@ public:
 
     void setModel(MNModel* _mnModel);
     void updateView();
+    // Sets the MNs who already voted for this proposal
+    void setMnVoters(const std::vector<VoteInfo>& votes);
+    // Return the MNs who are going to vote for this proposal
     std::vector<std::string> getSelectedMnAlias();
 
 public Q_SLOTS:
     void viewItemChanged(QTreeWidgetItem*, int);
+    void selectAll();
 
 private:
     Ui::MnSelectionDialog *ui;

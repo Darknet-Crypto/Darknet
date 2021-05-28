@@ -107,6 +107,8 @@ void VoteDialog::onMnSelectionClicked()
         mnSelectionDialog = new MnSelectionDialog(window);
         mnSelectionDialog->setModel(mnModel);
     }
+    mnSelectionDialog->setMnVoters(votes);
+    mnSelectionDialog->updateView();
     mnSelectionDialog->resize(size());
     if (openDialogWithOpaqueBackgroundY(mnSelectionDialog, window, 4.5, 5, false)) {
         vecSelectedMn = mnSelectionDialog->getSelectedMnAlias();

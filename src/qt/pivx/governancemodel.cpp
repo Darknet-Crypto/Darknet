@@ -90,7 +90,7 @@ bool GovernanceModel::hasProposals()
 
 CAmount GovernanceModel::getMaxAvailableBudgetAmount() const
 {
-    return Params().GetConsensus().nBudgetCycleBlocks * COIN;
+    return g_budgetman.GetTotalBudget(clientModel->getNumBlocks());
 }
 
 int GovernanceModel::getNumBlocksPerBudgetCycle() const
@@ -113,11 +113,12 @@ int GovernanceModel::getNextSuperblockHeight() const
 std::vector<VoteInfo> GovernanceModel::getLocalMNsVotesForProposal(const ProposalInfo& propInfo)
 {
     // First, get the local masternodes
-    std::vector<COutPoint> vecLocalMn;
+    std::vector<std::pair<COutPoint, std::string>> vecLocalMn;
     for (int i = 0; i < mnModel->rowCount(); ++i) {
-        vecLocalMn.emplace_back(
-                uint256S(mnModel->index(i, MNModel::COLLATERAL_ID, QModelIndex()).data().toString().toStdString()),
-                mnModel->index(i, MNModel::COLLATERAL_OUT_INDEX, QModelIndex()).data().toInt()
+        vecLocalMn.emplace_back(std::make_pair(
+                COutPoint(uint256S(mnModel->index(i, MNModel::COLLATERAL_ID, QModelIndex()).data().toString().toStdString()),
+                mnModel->index(i, MNModel::COLLATERAL_OUT_INDEX, QModelIndex()).data().toInt()),
+                mnModel->index(i, MNModel::ALIAS, QModelIndex()).data().toString().toStdString())
         );
     }
 
@@ -127,8 +128,8 @@ std::vector<VoteInfo> GovernanceModel::getLocalMNsVotesForProposal(const Proposa
     const auto& mapVotes = prop->GetVotes();
     for (const auto& it : mapVotes) {
         for (const auto& mn : vecLocalMn) {
-            if (it.first == mn && it.second.IsValid()) {
-                localVotes.emplace_back(mn, (VoteInfo::VoteDirection) it.second.GetDirection());
+            if (it.first == mn.first && it.second.IsValid()) {
+                localVotes.emplace_back(mn.first, (VoteInfo::VoteDirection) it.second.GetDirection(), mn.second);
                 break;
             }
         }

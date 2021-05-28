@@ -84,6 +84,11 @@ GovernanceWidget::~GovernanceWidget()
 
 void GovernanceWidget::onVoteForPropClicked(const ProposalInfo& proposalInfo)
 {
+    if (!governanceModel->isTierTwoSync()) {
+        inform(tr("Please wait until the node is fully synced"));
+        return;
+    }
+
     if (proposalInfo.status == ProposalInfo::Status::WAITING_FOR_APPROVAL) {
         inform(tr("Cannot vote for the proposal yet, wait until it's confirmed by the network"));
         return;

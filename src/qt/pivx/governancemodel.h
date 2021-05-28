@@ -67,9 +67,10 @@ struct VoteInfo {
         NO=2
     };
 
-    explicit VoteInfo(const COutPoint _mnId, VoteDirection _vote) : mnVoter(_mnId), vote(_vote) {}
+    explicit VoteInfo(const COutPoint _mnId, VoteDirection _vote, std::string _mnAlias) : mnVoter(_mnId), vote(_vote), mnAlias(_mnAlias) {}
     COutPoint mnVoter;
     VoteDirection vote;
+    std::string mnAlias;
 };
 
 class CBudgetProposal;

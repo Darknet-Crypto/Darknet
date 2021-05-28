@@ -32,16 +32,23 @@ MnSelectionDialog::MnSelectionDialog(QWidget *parent) :
     ui->treeWidget->setRootIsDecorated(false);
     ui->treeWidget->setFocusPolicy(Qt::NoFocus);
 
-    connect(ui->btnEsc, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->btnSave, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(ui->btnEsc, &QPushButton::clicked, this, &MnSelectionDialog::close);
+    connect(ui->btnCancel, &QPushButton::clicked, this, &MnSelectionDialog::close);
+    connect(ui->btnSave, &QPushButton::clicked, this, &MnSelectionDialog::accept);
+    connect(ui->btnSelectAll, &QPushButton::clicked, this, &MnSelectionDialog::selectAll);
     connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &MnSelectionDialog::viewItemChanged);
 }
 
 void MnSelectionDialog::setModel(MNModel* _mnModel)
 {
     mnModel = _mnModel;
-    updateView();
+}
+
+void MnSelectionDialog::setMnVoters(const std::vector<VoteInfo>& votes)
+{
+    for (const auto& voter : votes) {
+        selectedMnList.emplace_back(voter.mnAlias);
+    }
 }
 
 class MnInfo {
@@ -74,6 +81,21 @@ void MnSelectionDialog::viewItemChanged(QTreeWidgetItem* item, int column)
             }
         }
     }
+}
+
+void MnSelectionDialog::selectAll()
+{
+    const bool fSelectAll = ui->btnSelectAll->isChecked();
+    Qt::CheckState wantedState = fSelectAll ? Qt::Checked : Qt::Unchecked;
+    ui->treeWidget->setEnabled(false);
+    for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++)
+        if (ui->treeWidget->topLevelItem(i)->checkState(COLUMN_CHECKBOX) != wantedState)
+            ui->treeWidget->topLevelItem(i)->setCheckState(COLUMN_CHECKBOX, wantedState);
+    ui->treeWidget->setEnabled(true);
+    if (!fSelectAll) {
+        selectedMnList.clear();
+    }
+    updateView();
 }
 
 void MnSelectionDialog::updateView()
@@ -109,6 +131,12 @@ void MnSelectionDialog::appendItem(QFlags<Qt::ItemFlag> flgCheckbox,
     itemOutput->setToolTip(COLUMN_NAME, "Masternode name");
     itemOutput->setText(COLUMN_STATUS, mnStatus);
     itemOutput->setToolTip(COLUMN_STATUS, "Masternode status");
+
+    if (std::find(selectedMnList.begin(), selectedMnList.end(), mnName.toStdString()) != selectedMnList.end()) {
+        itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
+    } else {
+        itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
+    }
 
     if (mnStatus != "ENABLED") {
         itemOutput->setDisabled(true);
