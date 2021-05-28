@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <QTimer>
 
-GovernanceModel::GovernanceModel(ClientModel* _clientModel) : clientModel(_clientModel) {}
+GovernanceModel::GovernanceModel(ClientModel* _clientModel, MNModel* _mnModel) : clientModel(_clientModel), mnModel(_mnModel) {}
 GovernanceModel::~GovernanceModel() {}
 
 void GovernanceModel::setWalletModel(WalletModel* _walletModel)
@@ -108,6 +108,32 @@ int GovernanceModel::getNextSuperblockHeight() const
     const int nBlocksPerCycle = getNumBlocksPerBudgetCycle();
     const int chainHeight = clientModel->getNumBlocks();
     return chainHeight - chainHeight % nBlocksPerCycle + nBlocksPerCycle;
+}
+
+std::vector<VoteInfo> GovernanceModel::getLocalMNsVotesForProposal(const ProposalInfo& propInfo)
+{
+    // First, get the local masternodes
+    std::vector<COutPoint> vecLocalMn;
+    for (int i = 0; i < mnModel->rowCount(); ++i) {
+        vecLocalMn.emplace_back(
+                uint256S(mnModel->index(i, MNModel::COLLATERAL_ID, QModelIndex()).data().toString().toStdString()),
+                mnModel->index(i, MNModel::COLLATERAL_OUT_INDEX, QModelIndex()).data().toInt()
+        );
+    }
+
+    std::vector<VoteInfo> localVotes;
+    // Get the budget proposal, get the votes, then loop over it and return the ones that correspond to the local masternodes here.
+    CBudgetProposal* prop = g_budgetman.FindProposal(propInfo.id);
+    const auto& mapVotes = prop->GetVotes();
+    for (const auto& it : mapVotes) {
+        for (const auto& mn : vecLocalMn) {
+            if (it.first == mn && it.second.IsValid()) {
+                localVotes.emplace_back(mn, (VoteInfo::VoteDirection) it.second.GetDirection());
+                break;
+            }
+        }
+    }
+    return localVotes;
 }
 
 OperationResult GovernanceModel::validatePropURL(const QString& url) const

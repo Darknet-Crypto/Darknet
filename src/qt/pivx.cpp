@@ -489,20 +489,22 @@ void BitcoinApplication::initializeResult(int retval)
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET
-        govModel = new GovernanceModel(clientModel);
+        mnModel = new MNModel(this);
+        govModel = new GovernanceModel(clientModel, mnModel);
         // TODO: Expose secondary wallets
         if (!vpwallets.empty()) {
             walletModel = new WalletModel(vpwallets[0], optionsModel);
             walletModel->setClientModel(clientModel);
+            mnModel->setWalletModel(walletModel);
             govModel->setWalletModel(walletModel);
             walletModel->init();
+            mnModel->init();
 
             window->setGovModel(govModel);
             window->addWallet(PIVXGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(PIVXGUI::DEFAULT_WALLET);
+            window->setMNModel(mnModel);
         }
-        mnModel = new MNModel(this, walletModel);
-        window->setMNModel(mnModel);
 #endif
 
         // If -min option passed, start window minimized.

@@ -60,8 +60,21 @@ public:
     }
 };
 
+struct VoteInfo {
+    enum VoteDirection {
+        ABSTAIN=0,
+        YES=1,
+        NO=2
+    };
+
+    explicit VoteInfo(const COutPoint _mnId, VoteDirection _vote) : mnVoter(_mnId), vote(_vote) {}
+    COutPoint mnVoter;
+    VoteDirection vote;
+};
+
 class CBudgetProposal;
 class TransactionRecord;
+class MNModel;
 class WalletModel;
 
 QT_BEGIN_NAMESPACE
@@ -73,7 +86,7 @@ class GovernanceModel : public QObject
     static const int PROP_URL_MAX_SIZE = 100;
 
 public:
-    explicit GovernanceModel(ClientModel* _clientModel);
+    explicit GovernanceModel(ClientModel* _clientModel, MNModel* _mnModel);
     ~GovernanceModel() override;
     void setWalletModel(WalletModel* _walletModel);
 
@@ -93,6 +106,8 @@ public:
     // Returns the sum of all of the passing proposals
     CAmount getBudgetAllocatedAmount() const { return allocatedAmount; };
     CAmount getBudgetAvailableAmount() const { return getMaxAvailableBudgetAmount() - allocatedAmount; };
+    // Return the votes that the local masternodes did for the inputted proposal
+    std::vector<VoteInfo> getLocalMNsVotesForProposal(const ProposalInfo& propInfo);
     // Check if the URL is valid.
     OperationResult validatePropURL(const QString& url) const;
     OperationResult validatePropAmount(CAmount amount) const;
@@ -119,6 +134,7 @@ public Q_SLOTS:
 private:
     ClientModel* clientModel{nullptr};
     WalletModel* walletModel{nullptr};
+    MNModel* mnModel{nullptr};
     std::atomic<bool> refreshNeeded{false};
 
     // Cached amount
