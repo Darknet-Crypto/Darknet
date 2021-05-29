@@ -2104,6 +2104,10 @@ QCheckBox::indicator:checked {
     image: url("://ic-check-active");
 }
 
+QTreeView::indicator:indeterminate:disabled{
+    image: url("://ic-check-block")
+}
+
 
 QCheckBox[cssClass="btn-watch-password"] {
     spacing: 5px;
@@ -3626,6 +3630,10 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
 #treeWidget::indicator:checked {
     image: url("://ic-check-active");
+}
+
+#treeWidget::indicator:unchecked:disabled {
+    image: url("://ic-check-block");
 }
 
 #treeWidget::item {
