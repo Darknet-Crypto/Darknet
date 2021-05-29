@@ -285,6 +285,11 @@ void GovernanceModel::stopPolling()
 void GovernanceModel::txLoaded(const QString& id, const int txType, const int txStatus)
 {
     if (txType == TransactionRecord::SendToNobody) {
+        // If the tx is not longer available in the mainchain, drop it.
+        if (txStatus == TransactionStatus::Conflicted ||
+            txStatus == TransactionStatus::NotAccepted) {
+            return;
+        }
         // If this is a proposal fee, parse it.
         const auto& wtx = walletModel->getTx(uint256S(id.toStdString()));
         assert(wtx);
