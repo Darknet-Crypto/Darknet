@@ -50,18 +50,22 @@ void ProposalCard::setProposal(const ProposalInfo& _proposalInfo)
     ui->labelYes->setText(QString::fromStdString("Yes "+ std::to_string((int)percentageYes) + "%"));
 
     QString cssClassStatus;
-    if (percentageYes < percentageNo) {
+    if (proposalInfo.status == ProposalInfo::WAITING_FOR_APPROVAL){
+        cssClassStatus = "card-status-no-votes";
+        ui->labelStatus->setText(tr("Waiting"));
+        ui->votesBar->setValue(50);
+    } else if (totalVotes == 0) {
+        cssClassStatus = "card-status-no-votes";
+        ui->labelStatus->setText(tr("No Votes"));
+        ui->votesBar->setValue(50);
+    } else if (proposalInfo.status == ProposalInfo::NOT_PASSING ||
+        proposalInfo.status == ProposalInfo::PASSING_NOT_FUNDED) {
         cssClassStatus = "card-status-not-passing";
         ui->labelStatus->setText(tr("Not Passing"));
-    } else if (percentageYes > percentageNo) {
+    } else if (proposalInfo.status == ProposalInfo::PASSING) {
         cssClassStatus = "card-status-passing";
         ui->labelStatus->setText(tr("Passing"));
-    } else {
-        cssClassStatus = "card-status-no-votes";
-        ui->labelStatus->setText(proposalInfo.status == ProposalInfo::Status::WAITING_FOR_APPROVAL ?
-                tr("Waiting") : tr("No Votes"));
     }
-
     setCssProperty(ui->labelStatus, cssClassStatus, true);
 }
 
