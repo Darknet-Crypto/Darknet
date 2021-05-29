@@ -2296,6 +2296,13 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     margin-right: 2px;
 }
 
+*[cssClass="label-progress-no"] {
+    color:#4D4D4D;
+}
+
+*[cssClass="label-progress-yes"] {
+    color:#5C4B7D;
+}
 
 *[cssClass="card-progress-yes"] {
     color:#4D4D4D;

@@ -504,6 +504,9 @@ RES_ICONS = \
   qt/pivx/res/img/ani-loading.gif \
   qt/pivx/res/img/ic-check-vote.svg \
   qt/pivx/res/img/ic-check-vote-active.svg \
+  qt/pivx/res/img/ic-check-vote-dark.svg \
+  qt/pivx/res/img/ic-check-vote-active-dark.svg \
+  qt/pivx/res/img/ic-check-block.svg \
   qt/pivx/res/img/ic-filter.svg \
   qt/pivx/res/img/ic-link.svg \
   qt/pivx/res/img/ic-nav-governance.svg \

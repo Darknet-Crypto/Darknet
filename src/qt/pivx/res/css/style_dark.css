@@ -394,6 +394,41 @@ QPushButton[cssClass="btn-check-cold-staking"]:checked {
     color: #B088FF;
 }
 
+*[cssClass="btn-nav-governance"] {
+    qproperty-icon: url("://ic-nav-governance") off,
+    url("://ic-nav-governance-active") on ;
+    qproperty-iconSize: 32px 32px;
+    background-color:transparent;
+    font-size:14px;
+    color: #938da5;
+}
+
+*[cssClass="btn-nav-governance"]:checked {
+    background-color: qlineargradient(x1:0, x2: 1, stop: 0 #3c2559, stop: 1 #1f162b);
+    font-size:14px;
+    color: #B088FF;
+}
+
+*[cssClass="btn-nav-governance"]:checked:hover {
+    background-color: qlineargradient(x1:0, x2: 1, stop: 0 #3c2559, stop: 1 #1f162b);
+    color: #B088FF;
+}
+
+*[cssClass="btn-nav-governance"]:hover {
+    qproperty-icon: url("://ic-nav-governance-hover");
+    qproperty-iconSize: 32px 32px;
+    background-color:#0f0b16;
+    color: #FFFFFF;
+}
+
+*[cssClass="btn-nav-governance-active"] {
+    qproperty-icon:url("://ic-nav-governance-active")  ;
+    qproperty-iconSize: 32px 32px;
+    background-color: #0f0b16;
+    font-size:14px;
+    color: #B088FF;
+}
+
 /*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 HH       TOP BAR
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
@@ -2137,7 +2172,6 @@ QComboBox[cssClass="btn-combo-coins"]::down-arrow {
     width: 16px;
 }
 
-
 /*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 HH        RECEIVE
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
@@ -2149,6 +2183,372 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     padding:10px 10px;
 }
 
+/*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HH       PPROPOSAL
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
+
+*[cssClass="dialog-proposal-message"] {
+    color:#707070;
+    font-size:16px;
+}
+
+/*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HH       GOVERNANCE
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
+
+*[cssClass="label-budget-title"] {
+    color:#B3FFFFFF;
+    font-size:22px;
+}
+
+*[cssClass="label-budget-text"] {
+    color:#B3FFFFFF;
+    font-size:16px;
+}
+
+
+*[cssClass="label-budget-amount"] {
+    color:#ffffff;
+    font-size:17px;
+}
+
+*[cssClass="label-budget-amount-allocated"] {
+    color:#4d4d4d;
+    font-size:17px;
+}
+
+*[cssClass="ic-time"] {
+    qproperty-icon: url("://ic-time");
+    qproperty-iconSize: 26px 26px;
+    background-color: transparent;
+}
+
+/*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HH       GOVERNANCE CARD
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
+
+*[cssClass="card-governance"] {
+    background-color:#0f0b16;
+    border:  1px solid #5c4b7d;
+    border-radius: 6px;
+}
+
+*[cssClass="card-title"] {
+    color:#b088ff;
+    font-size:20px;
+}
+
+*[cssClass="card-amount"] {
+    color:#ffffff;
+    font-size:18px;
+}
+
+*[cssClass="card-time"] {
+    color:#B3FFFFFF;
+    font-size:14px;
+}
+
+*[cssClass="card-status-passing"] {
+    color:#B3FFFFFF;
+    font-size:12px;
+    border-radius:12px;
+    background-color:rgba(176, 136, 255, 0.2);
+    padding:6px 12px;
+}
+
+*[cssClass="card-status-not-passing"] {
+    color:#B3FFFFFF;
+    font-size:12px;
+    border-radius:12px;
+    background-color:rgba(186, 186, 186, 0.2);
+    padding:6px 12px;
+}
+
+*[cssClass="card-status-no-votes"] {
+    border: 1px solid #BABABA;
+    color:#B3FFFFFF;
+    font-size:12px;
+    border-radius:12px;
+    background-color:transparent;
+    padding:6px 12px;
+}
+
+*[cssClass="card-progress-box"] {
+    border: 1px solid #5c4b7d;
+    border-radius: 2px;
+}
+
+*[cssClass="card-progress-no"] {
+    color:#B3FFFFFF;
+    font-size:14px;
+    padding-left:4px;
+    background-color:transparent;
+}
+
+*[cssClass="card-progress-no"]::chunk:horizontal {
+    background: #B3000000;
+    margin-right: 2px;
+}
+
+*[cssClass="label-progress-no"] {
+    color:#E6FFFFFF;
+}
+
+*[cssClass="label-progress-yes"] {
+    color:#b088ff;
+}
+
+*[cssClass="card-progress-yes"] {
+    color:#b088ff;
+    font-size:14px;
+    padding-right:4px;
+    background-color:transparent;
+}
+
+*[cssClass="card-progress-yes"]::chunk:horizontal {
+    background: transparent;
+    margin-right: 2px;
+}
+
+*[cssClass="btn-link"] {
+    qproperty-icon: url(" ");
+    qproperty-iconSize: 22px 22px;
+    background-image: url("://ic-link");
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-position: center center;
+}
+
+*[cssClass="btn-link"]:hover {
+    background-color: transparent;
+    background-image: url("://ic-link-hover");
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+*[cssClass="card-btn-vote"] {
+    background-position:right center;
+    background-repeat:no-repeat;
+    border:  1px solid #5c4b7d;
+    background-color:#0f0b16;
+    font-size:18px;
+    color: #b088ff;
+    border-radius: 2px;
+    padding:4px 10px;
+}
+
+QPushButton[cssClass="card-btn-vote"]:hover {
+    border:  1px solid #b088ff;
+    background-color:#0f0b16;
+}
+
+QPushButton[cssClass="card-btn-vote"]:pressed {
+    border:  1px solid #b088ff;
+    background-color:#4Db088ff;
+}
+
+
+/*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HH       VOTE DIALOG
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
+
+*[cssClass="vote-title"] {
+    color:#b088ff;
+    font-size:22px;
+}
+
+*[cssClass="vote-amount"] {
+    color:#FFFFFF;
+    font-size:20px;
+}
+
+*[cssClass="vote-time"] {
+    color:#b0ffffff;
+    font-size:18px;
+}
+
+*[cssClass="btn-vote-select"] {
+    background: transparent;
+    border: 0px;
+    color:#5C4B7D;
+    font-size:16px;
+}
+
+*[cssClass="btn-vote-select"]:hover {
+    text-decoration: underline;
+}
+
+
+*[cssClass="vote-message"] {
+    color:#707070;
+    font-size:14px;
+}
+
+*[cssClass="vote-grid"] {
+    border: 1px solid #5c4b7d;
+    background-color:transparent;
+}
+
+
+*[cssClass="vote-progress"] {
+    color: #5c4b7d;
+    font-size:14px;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+
+*[cssClass="vote-progress"]::chunk:horizontal {
+    background: rgba(92, 75, 125, 0.2);
+    border-right:1px solid  #5c4b7d;
+}
+
+
+
+*[cssClass="vote-progress-no"] {
+    height: 36px;
+    color: #4d4d4d;
+    font-size:14px;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+
+*[cssClass="vote-progress-no"]::chunk:horizontal {
+    background: rgba(238, 238, 238, 0.85);
+    height: 36px;
+}
+
+
+*[cssClass="vote-progress-yes"] {
+    min-height: 36px;
+    color: #4d4d4d;
+    font-size:14px;
+    background-color: transparent;
+    border-radius: 2px;
+}
+
+
+*[cssClass="vote-progress-yes"]::chunk:horizontal {
+    background: rgba(92, 75, 125, 0.4);
+}
+
+QCheckBox[cssClass="check-vote"] {
+    spacing: 5px;
+    padding:5px;
+    font-size:18px;
+    color:#E6ffffff;
+}
+
+QCheckBox:checked[cssClass="check-vote"]  {
+    spacing: 5px;
+    font-size:18px;
+    color:#B088FF;
+}
+
+QCheckBox::indicator[cssClass="check-vote"] {
+    width: 24px;
+    height: 24px;
+}
+
+QCheckBox::indicator:unchecked[cssClass="check-vote"] {
+    image: url(://ic-check-vote-dark);
+}
+
+QCheckBox::indicator:checked[cssClass="check-vote"] {
+    image: url(://ic-check-vote-active-dark);
+}
+
+/*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+HH       SELECT MASTER NODE
+HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
+
+*[cssClass="text-title-purple"] {
+    color: #5C4B7D;
+    font-size: 14px;
+}
+
+*[cssClass="text-purple"] {
+    color: #5C4B7D;
+    font-size: 14px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+*[cssClass="btn-dialog-secundary"] {
+    border:  1px solid #5c4b7d;
+    background-color:#0f0b16;
+    border-radius: 2px;
+    color: #b088ff;
+    font-size: 14px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+*[cssClass="btn-dialog-secundary"]:hover {
+    border:  1px solid #b088ff;
+    background-color:#0f0b16;
+}
+
+QHeaderView::section {
+    background-color: #5C4B7D;
+    color: white;
+    font-size: 14px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border: 1px solid #5C4B7D;
+}
+
+QTreeView {
+    show-decoration-selected: 1;
+    background: white;
+    border: 1px solid #5C4B7D;
+    font-size: 14px;
+    color: #4d4d4d;
+    padding-left: 0px;
+}
+
+QTreeView::item {
+    border:0px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 0px;
+    font-size: 14px;
+    color: #4d4d4d;
+}
+
+QTreeView::item:hover {
+    background:rgba(176, 136, 255, 0.2);
+    border:0px;
+}
+
+QTreeView::item:selected {
+    color: #5C4B7D;
+    border:0px;
+}
+
+QTreeView::item:selected:active{
+    color: #5C4B7D;
+    border:0px;
+}
+
+QTreeView::item:selected:!active {
+    color:#5C4B7D;
+    border:0px;
+}
+
+QTreeView::indicator {
+    width: 24px;
+    height: 24px;
+}
+
+QTreeView::indicator:unchecked {
+    image: url(://ic-check-box);
+}
+
+QTreeView::indicator:checked {
+    image: url(://ic-check-active);
+}
 
 /*HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 HH       SPIN BOX
@@ -2767,6 +3167,14 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
 *[cssClass="ic-close"] {
     qproperty-icon: url("://ic-close-white");
+    qproperty-iconSize: 24px 24px;
+    background-color: transparent;
+    border:none;
+}
+
+*[cssClass="ic-chevron-left"] {
+    qproperty-icon: url("://ic-chevron-left") off,
+    url("://ic-chevron-left") on ;
     qproperty-iconSize: 24px 24px;
     background-color: transparent;
     border:none;
