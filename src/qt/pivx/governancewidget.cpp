@@ -11,6 +11,9 @@
 #include <QGraphicsDropShadowEffect>
 #include <QTimer>
 
+// Proposals filter
+const std::vector<std::string> propFilter = {"All", "Passing", "Not Passing", "Waiting"};
+
 GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
         PWidget(parent),
         ui(new Ui::governancewidget)
@@ -39,6 +42,7 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     // Combo box sort
     SortEdit* lineEdit = new SortEdit(ui->comboBoxSort);
     lineEdit->setFont(font);
+    lineEdit->setAlignment(Qt::AlignRight);
     initComboBox(ui->comboBoxSort, lineEdit, "btn-combo", false);
 
     QStandardItemModel* model = new QStandardItemModel(this);
@@ -53,6 +57,7 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
     delegate->setValues(values);
     ui->comboBoxSort->setModel(model);
     ui->comboBoxSort->setItemDelegate(delegate);
+    ui->comboBoxSort->setVisible(false);
 
     // Filter
     SortEdit* lineEditFilter = new SortEdit(ui->comboBoxFilter);
@@ -61,17 +66,20 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
 
     QStandardItemModel* modelFilter = new QStandardItemModel(this);
     Delegate* delegateFilter = new Delegate(this);
-    QList<QString> valuesFilter; // todo: Add filter actions
-    valuesFilter.append("All");
-    valuesFilter.append("Passing");
-    valuesFilter.append("Not Passing");
-    valuesFilter.append("No Votes");
-    for (int n = 0; n < values.size(); n++) {
-        modelFilter->appendRow(new QStandardItem(tr("Filter: %1").arg(valuesFilter.at(n))));
+    QList<QString> valuesFilter;
+    for (int i = 0; i < propFilter.size(); ++i) {
+        QString str = QString::fromStdString(propFilter[i]);
+        valuesFilter.append(str);
+        auto item = new QStandardItem(tr("Filter: %1").arg(str));
+        item->setData(i);
+        modelFilter->appendRow(item);
     }
     delegateFilter->setValues(valuesFilter);
     ui->comboBoxFilter->setModel(modelFilter);
     ui->comboBoxFilter->setItemDelegate(delegateFilter);
+    ui->comboBoxFilter->setCurrentIndex(0);
+    connect(ui->comboBoxFilter, static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged),
+            this, &GovernanceWidget::onFilterChanged);
 
     // Budget
     ui->labelBudget->setText("Budget Distribution");
@@ -94,6 +102,26 @@ GovernanceWidget::GovernanceWidget(PIVXGUI* parent) :
 GovernanceWidget::~GovernanceWidget()
 {
     delete ui;
+}
+
+void GovernanceWidget::onFilterChanged(const QString& value)
+{
+    int filterByType = ui->comboBoxFilter->currentIndex();
+    switch (filterByType) {
+        case 1:
+            statusFilter = ProposalInfo::Status::PASSING;
+            break;
+        case 2:
+            statusFilter = ProposalInfo::Status::NOT_PASSING;
+            break;
+        case 3:
+            statusFilter = ProposalInfo::Status::WAITING_FOR_APPROVAL;
+            break;
+        default:
+            statusFilter = nullopt;
+            break;
+    }
+    refreshCardsGrid(true);
 }
 
 void GovernanceWidget::onVoteForPropClicked(const ProposalInfo& proposalInfo)
@@ -242,7 +270,7 @@ void GovernanceWidget::refreshCardsGrid(bool forceRefresh)
     // Refresh grid only if needed
     if (!(forceRefresh || governanceModel->isRefreshNeeded())) return;
 
-    std::list<ProposalInfo> props = governanceModel->getProposals();
+    std::list<ProposalInfo> props = governanceModel->getProposals(statusFilter.get_ptr());
 
     // Start marking all the cards
     for (ProposalCard* card : cards) {

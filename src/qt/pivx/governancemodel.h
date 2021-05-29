@@ -92,7 +92,7 @@ public:
     void setWalletModel(WalletModel* _walletModel);
 
     // Return proposals ordered by net votes
-    std::list<ProposalInfo> getProposals();
+    std::list<ProposalInfo> getProposals(const ProposalInfo::Status* filterByStatus = nullptr);
     // Returns true if there is at least one proposal cached
     bool hasProposals();
     // Whether a visual refresh is needed

@@ -68,6 +68,7 @@ public:
     void setMNModel(MNModel* _mnModel);
 
 public Q_SLOTS:
+    void onFilterChanged(const QString& value);
     void chainHeightChanged(int height);
     void onVoteForPropClicked(const ProposalInfo& proposalInfo);
     void onCreatePropClicked();
@@ -80,6 +81,9 @@ private:
     std::vector<ProposalCard*> cards;
     int propsPerRow = 0;
     QTimer* refreshTimer{nullptr};
+
+    // Proposals filter
+    Optional<ProposalInfo::Status> statusFilter{nullopt};
 
     void showEmptyScreen(bool show);
     void tryGridRefresh(bool force=false);

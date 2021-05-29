@@ -65,20 +65,26 @@ ProposalInfo GovernanceModel::buidProposalInfo(const CBudgetProposal* prop, bool
             status);
 }
 
-std::list<ProposalInfo> GovernanceModel::getProposals()
+std::list<ProposalInfo> GovernanceModel::getProposals(const ProposalInfo::Status* filterByStatus)
 {
     if (!clientModel) return {};
     std::list<ProposalInfo> ret;
     std::vector<CBudgetProposal> budget = g_budgetman.GetBudget();
     for (const auto& prop : g_budgetman.GetAllProposals()) {
         bool isPassing = std::find(budget.begin(), budget.end(), *prop) != budget.end();
-        ret.emplace_back(buidProposalInfo(prop, isPassing, false));
+        ProposalInfo propInfo = buidProposalInfo(prop, isPassing, false);
+        if (!filterByStatus || propInfo.status == *filterByStatus) {
+            ret.emplace_back(propInfo);
+        }
         if (isPassing) allocatedAmount += prop->GetAmount();
     }
 
     // Add pending proposals
     for (const auto& prop : waitingPropsForConfirmations) {
-        ret.emplace_back(buidProposalInfo(&prop, false, true));
+        ProposalInfo propInfo = buidProposalInfo(&prop, false, true);
+        if (!filterByStatus || propInfo.status == *filterByStatus) {
+            ret.emplace_back(propInfo);
+        }
     }
     return ret;
 }
