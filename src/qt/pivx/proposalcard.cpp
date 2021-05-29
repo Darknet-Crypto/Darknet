@@ -67,7 +67,8 @@ void ProposalCard::setProposal(const ProposalInfo& _proposalInfo)
 
 void ProposalCard::onCopyUrlClicked()
 {
-    // todo: add copy
+    GUIUtil::setClipboard(QString::fromStdString(proposalInfo.url));
+    Q_EMIT inform(tr("Proposal URL copied to clipboard"));
 }
 
 ProposalCard::~ProposalCard()

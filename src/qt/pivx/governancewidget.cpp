@@ -237,6 +237,7 @@ ProposalCard* GovernanceWidget::newCard()
 {
     ProposalCard* propCard = new ProposalCard(ui->scrollAreaWidgetContents);
     connect(propCard, &ProposalCard::voteClicked, this, &GovernanceWidget::onVoteForPropClicked);
+    connect(propCard, &ProposalCard::inform, this, &GovernanceWidget::inform);
     setCardShadow(propCard);
     return propCard;
 }
