@@ -9,6 +9,9 @@
 #include <QCheckBox>
 #include <QProgressBar>
 
+#include "qt/pivx/governancemodel.h"
+#include <memory>
+
 namespace Ui {
 class VoteDialog;
 }
