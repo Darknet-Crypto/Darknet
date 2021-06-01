@@ -2951,6 +2951,10 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     font-size:22px;
 }
 
+*[cssClass="text-body-dialog"] {
+    color:#5C4B7D;
+    font-size:16px;
+}
 
 *[cssClass="text-body1-dialog"] {
     color:#707070;

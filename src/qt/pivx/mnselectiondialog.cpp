@@ -19,9 +19,9 @@ MnSelectionDialog::MnSelectionDialog(QWidget *parent) :
     setCssProperty(ui->btnEsc, "ic-chevron-left");
     setCssProperty(ui->btnCancel, "btn-dialog-cancel");
     setCssProperty(ui->btnSave, "btn-primary");
-    setCssProperty(ui->containerAmountOfVotes, "container-border-purple");
-    setCssProperty(ui->labelAmountOfVotesText, "text-purple");
-    setCssProperty(ui->labelAmountOfVotes, "text-purple");
+    setCssProperty(ui->containerAmountOfVotes, "container-border-light");
+    setCssProperty(ui->labelAmountOfVotesText, "text-body-dialog");
+    setCssProperty(ui->labelAmountOfVotes, "text-body-dialog");
     setCssProperty(ui->btnSelectAll, "btn-dialog-secondary");
 
     ui->treeWidget->setColumnWidth(COLUMN_CHECKBOX, colCheckBoxWidth_treeMode);
