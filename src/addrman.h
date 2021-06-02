@@ -24,33 +24,31 @@
  */
 class CAddrInfo : public CAddress
 {
-
-
 public:
     //! last try whatsoever by us (memory only)
-    int64_t nLastTry;
+    int64_t nLastTry{0};
 
     //! last counted attempt (memory only)
-    int64_t nLastCountAttempt;
+    int64_t nLastCountAttempt{0};
 
 private:
     //! where knowledge about this address first came from
     CNetAddr source;
 
     //! last successful connection by us
-    int64_t nLastSuccess;
+    int64_t nLastSuccess{0};
 
     //! connection attempts since last successful attempt
-    int nAttempts;
+    int nAttempts{0};
 
     //! reference count in new sets (memory only)
-    int nRefCount;
+    int nRefCount{0};
 
     //! in tried set? (memory only)
-    bool fInTried;
+    bool fInTried{false};
 
     //! position in vRandom
-    int nRandomPos;
+    int nRandomPos{-1};
 
     friend class CAddrMan;
 
@@ -62,25 +60,12 @@ public:
         READWRITE(obj.source, obj.nLastSuccess, obj.nAttempts);
     }
 
-    void Init()
-    {
-        nLastSuccess = 0;
-        nLastTry = 0;
-        nLastCountAttempt = 0;
-        nAttempts = 0;
-        nRefCount = 0;
-        fInTried = false;
-        nRandomPos = -1;
-    }
-
     CAddrInfo(const CAddress& addrIn, const CNetAddr& addrSource) : CAddress(addrIn), source(addrSource)
     {
-        Init();
     }
 
     CAddrInfo() : CAddress(), source()
     {
-        Init();
     }
 
     //! Calculate in which "tried" bucket this entry belongs
@@ -108,15 +93,15 @@ public:
 /** Stochastic address manager
  *
  * Design goals:
- *  * Keep the address tables in-memory, and asynchronously dump the entire to able in peers.dat.
+ *  * Keep the address tables in-memory, and asynchronously dump the entire table to peers.dat.
  *  * Make sure no (localized) attacker can fill the entire table with his nodes/addresses.
  *
  * To that end:
  *  * Addresses are organized into buckets.
- *    * Address that have not yet been tried go into 1024 "new" buckets.
- *      * Based on the address range (/16 for IPv4) of source of the information, 64 buckets are selected at random
- *      * The actual bucket is chosen from one of these, based on the range the address itself is located.
- *      * One single address can occur in up to 8 different buckets, to increase selection chances for addresses that
+ *    * Addresses that have not yet been tried go into 1024 "new" buckets.
+ *      * Based on the address range (/16 for IPv4) of the source of information, 64 buckets are selected at random.
+ *      * The actual bucket is chosen from one of these, based on the range in which the address itself is located.
+ *      * One single address can occur in up to 8 different buckets to increase selection chances for addresses that
  *        are seen frequently. The chance for increasing this multiplicity decreases exponentially.
  *      * When adding a new address to a full bucket, a randomly chosen entry (with a bias favoring less recently seen
  *        ones) is removed from it first.
@@ -218,7 +203,7 @@ private:
     //! last time Good was called (memory only)
     int64_t nLastGood GUARDED_BY(cs);
 
-    //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discpline used to resolve these collisions.
+    //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
 
 protected:
@@ -300,7 +285,7 @@ public:
      * Notice that vvTried, mapAddr and vVector are never encoded explicitly;
      * they are instead reconstructed from the other information.
      *
-     * vvNew is serialized, but only used if ADDRMAN_UNKOWN_BUCKET_COUNT didn't change,
+     * vvNew is serialized, but only used if ADDRMAN_UNKNOWN_BUCKET_COUNT didn't change,
      * otherwise it is reconstructed as well.
      *
      * This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
@@ -325,9 +310,9 @@ public:
         s << nUBuckets;
         std::map<int, int> mapUnkIds;
         int nIds = 0;
-        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
-            mapUnkIds[(*it).first] = nIds;
-            const CAddrInfo& info = (*it).second;
+        for (const auto& entry : mapInfo) {
+            mapUnkIds[entry.first] = nIds;
+            const CAddrInfo& info = entry.second;
             if (info.nRefCount) {
                 assert(nIds != nNew); // this means nNew was wrong, oh ow
                 s << info;
@@ -335,8 +320,8 @@ public:
             }
         }
         nIds = 0;
-        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
-            const CAddrInfo& info = (*it).second;
+        for (const auto& entry : mapInfo) {
+            const CAddrInfo& info = entry.second;
             if (info.fInTried) {
                 assert(nIds != nTried); // this means nTried was wrong, oh ow
                 s << info;
@@ -457,7 +442,6 @@ public:
         Check();
     }
 
-
     void Clear()
     {
         LOCK(cs);
@@ -489,7 +473,7 @@ public:
 
     ~CAddrMan()
     {
-        nKey = uint256();
+        nKey.SetNull();
     }
 
     //! Return the number of (unique) addresses in all tables.
@@ -520,8 +504,9 @@ public:
         Check();
         fRet |= Add_(addr, source, nTimePenalty);
         Check();
-        if (fRet)
+        if (fRet) {
             LogPrint(BCLog::ADDRMAN, "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort(), source.ToString(), nTried, nNew);
+        }
         return fRet;
     }
 
@@ -534,8 +519,9 @@ public:
         for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
             nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
         Check();
-        if (nAdd)
+        if (nAdd) {
             LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
+        }
         return nAdd > 0;
     }
 
@@ -624,6 +610,7 @@ public:
         SetServices_(addr, nServices);
         Check();
     }
+
 };
 
 #endif // BITCOIN_ADDRMAN_H
