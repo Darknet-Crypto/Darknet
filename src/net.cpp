@@ -1520,9 +1520,9 @@ void CConnman::ThreadOpenConnections()
         std::set<std::vector<unsigned char> > setConnected;
         {
             LOCK(cs_vNodes);
-            for (CNode* pnode : vNodes) {
+            for (const CNode* pnode : vNodes) {
                 if (!pnode->fInbound) {
-                    setConnected.insert(pnode->addr.GetGroup());
+                    setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
                     nOutbound++;
                 }
             }
@@ -1564,7 +1564,7 @@ void CConnman::ThreadOpenConnections()
             }
 
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup())) {
+            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
                 break;
             }
 
@@ -2485,7 +2485,7 @@ CSipHasher CConnman::GetDeterministicRandomizer(uint64_t id)
 
 uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad)
 {
-    std::vector<unsigned char> vchNetGroup(ad.GetGroup());
+    std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.m_asmap));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
 }

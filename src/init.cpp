@@ -52,6 +52,7 @@
 #include "torcontrol.h"
 #include "guiinterface.h"
 #include "guiinterfaceutil.h"
+#include "util/asmap.h"
 #include "util/system.h"
 #include "utilmoneystr.h"
 #include "util/threadnames.h"
@@ -113,6 +114,8 @@ static EvoNotificationInterface* pEvoNotificationInterface = nullptr;
 #else
 #define MIN_CORE_FILEDESCRIPTORS 150
 #endif
+
+static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
 /** Used to pass flags to the Bind() function */
 enum BindFlags {
@@ -504,6 +507,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-timeout=<n>", strprintf(_("Specify connection timeout in milliseconds (minimum: 1, default: %d)"), DEFAULT_CONNECT_TIMEOUT));
     strUsage += HelpMessageOpt("-torcontrol=<ip>:<port>", strprintf(_("Tor control port to use if onion listening enabled (default: %s)"), DEFAULT_TOR_CONTROL));
     strUsage += HelpMessageOpt("-torpassword=<pass>", _("Tor control port password (default: empty)"));
+    strUsage += HelpMessageOpt("-asmap=<file>", "Specify asn mapping used for bucketing of the peers. Path should be relative to the -datadir path.");
     strUsage += HelpMessageOpt("-upnp", strprintf(_("Use UPnP to map the listening port (default: %u)"), DEFAULT_UPNP));
 #ifdef USE_NATPMP
     strUsage += HelpMessageOpt("-natpmp", strprintf("Use NAT-PMP to map the listening port (default: %s)", DEFAULT_NATPMP ? "1 when listening and no -proxy" : "0"));
@@ -1957,8 +1961,6 @@ bool AppInitMain()
         GenerateBitcoins(gArgs.GetBoolArg("-gen", DEFAULT_GENERATE), vpwallets[0], gArgs.GetArg("-genproclimit", DEFAULT_GENERATE_PROCLIMIT));
 #endif
 
-    // ********************************************************* Step 12: finished
-
 #ifdef ENABLE_WALLET
     uiInterface.InitMessage(_("Reaccepting wallet transactions..."));
     for (CWalletRef pwallet : vpwallets) {
@@ -1969,6 +1971,27 @@ bool AppInitMain()
         threadGroup.create_thread(std::bind(&ThreadStakeMinter));
     }
 #endif
+
+    // Read asmap file if configured
+    if (gArgs.IsArgSet("-asmap")) {
+        std::string asmap_file = gArgs.GetArg("-asmap", "");
+        if (asmap_file.empty()) {
+            asmap_file = DEFAULT_ASMAP_FILENAME;
+        }
+        const fs::path asmap_path = GetDataDir() / asmap_file;
+        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
+        if (asmap.size() == 0) {
+            UIError(strprintf(_("Could not find or parse specified asmap: '%s'"), asmap_path));
+            return false;
+        }
+        connman.SetAsmap(asmap);
+        const uint256 asmap_version = SerializeHash(asmap);
+        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
+    } else {
+        LogPrintf("Using /16 prefix for IP bucketing.\n");
+    }
+
+    // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
