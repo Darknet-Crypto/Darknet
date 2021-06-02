@@ -24,8 +24,8 @@
 #include "threadinterrupt.h"
 
 #include <atomic>
+#include <cstdint>
 #include <deque>
-#include <stdint.h>
 #include <thread>
 #include <memory>
 #include <condition_variable>
@@ -383,7 +383,7 @@ private:
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover();
-unsigned short GetListenPort();
+uint16_t GetListenPort();
 bool BindListenPort(const CService& bindAddr, std::string& strError, bool fWhitelisted = false);
 void CheckOffsetDisconnectedPeers(const CNetAddr& ip);
 
