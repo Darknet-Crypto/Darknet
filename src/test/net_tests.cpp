@@ -11,6 +11,8 @@
 #include "streams.h"
 #include "util/memory.h"
 
+#include <cstdint>
+
 #include "test/test_pivx.h"
 
 #include <string>
@@ -76,6 +78,18 @@ CDataStream AddrmanToStream(CAddrManSerializationMock& addrman)
 }
 
 BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_CASE(cnode_listen_port)
+{
+    // test default
+    uint16_t port = GetListenPort();
+    BOOST_CHECK(port == Params().GetDefaultPort());
+    // test set port
+    uint16_t altPort = 12345;
+    BOOST_CHECK(gArgs.SoftSetArg("-port", std::to_string(altPort)));
+    port = GetListenPort();
+    BOOST_CHECK(port == altPort);
+}
 
 BOOST_AUTO_TEST_CASE(caddrdb_read)
 {

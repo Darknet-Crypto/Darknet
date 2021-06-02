@@ -18,6 +18,7 @@
 #include "utilstrencodings.h"
 
 #include <atomic>
+#include <cstdint>
 
 #ifndef WIN32
 #include <fcntl.h>
@@ -617,11 +618,13 @@ static bool ConnectThroughProxy(const proxyType &proxy, const std::string strDes
         ProxyCredentials random_auth;
         static std::atomic_int counter;
         random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket))
+        if (!Socks5(strDest, (uint16_t)port, &random_auth, hSocket)) {
             return false;
+        }
     } else {
-        if (!Socks5(strDest, (unsigned short)port, 0, hSocket))
+        if (!Socks5(strDest, (uint16_t)port, 0, hSocket)) {
             return false;
+        }
     }
 
     hSocketRet = hSocket;
