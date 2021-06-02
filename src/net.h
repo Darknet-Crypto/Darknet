@@ -137,6 +137,7 @@ public:
         NetEventsInterface* m_msgproc = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
+        std::vector<bool> m_asmap;
     };
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
@@ -269,6 +270,8 @@ public:
     CSipHasher GetDeterministicRandomizer(uint64_t id);
 
     unsigned int GetReceiveFloodSize() const;
+
+    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = asmap; }
 private:
     struct ListenSocket {
         SOCKET socket;

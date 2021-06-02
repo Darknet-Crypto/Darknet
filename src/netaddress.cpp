@@ -11,6 +11,7 @@
 #include "netaddress.h"
 #include "hash.h"
 #include "utilstrencodings.h"
+#include "util/asmap.h"
 #include "tinyformat.h"
 
 #include <cstdint>
@@ -320,9 +321,17 @@ bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
     return true;
 }
 
-// get canonical identifier of an address' group
-// no two connections will be attempted to addresses with the same group
-std::vector<unsigned char> CNetAddr::GetGroup() const
+/**
+ * Get the canonical identifier of our network group
+ *
+ * The groups are assigned in a way where it should be costly for an attacker to
+ * obtain addresses with many different group identifiers, even if it is cheap
+ * to obtain addresses with the same identifier.
+ *
+ * @note No two connections will be attempted to addresses with the same network
+ *       group.
+ */
+std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) const
 {
     std::vector<unsigned char> vchRet;
     int nClass = NET_IPV6;
@@ -381,6 +390,27 @@ std::vector<unsigned char> CNetAddr::GetGroup() const
     // for the rest of the IPv6 network, use /32 groups
     else
         nBits = 32;
+
+    // If asmap is supplied and the address is IPv4/IPv6,
+    // ignore nBits and use 32/128 bits to obtain ASN from asmap.
+    // ASN is then returned to be used for bucketing.
+    if (asmap.size() != 0 && (nClass == NET_IPV4 || nClass == NET_IPV6)) {
+        nClass = NET_IPV6;
+        std::vector<bool> ip_bits(128);
+        for (int8_t byte_i = 0; byte_i < 16; ++byte_i) {
+            uint8_t cur_byte = GetByte(15 - byte_i);
+            for (uint8_t bit_i = 0; bit_i < 8; ++bit_i) {
+                ip_bits[byte_i * 8 + bit_i] = (cur_byte >> (7 - bit_i)) & 1;
+            }
+        }
+
+        uint32_t asn = Interpret(asmap, ip_bits);
+        vchRet.push_back(nClass);
+        for (int i = 0; i < 4; i++) {
+            vchRet.push_back((asn >> (8 * i)) & 0xFF);
+        }
+        return vchRet;
+    }
 
     vchRet.push_back(nClass);
     while (nBits >= 8)
