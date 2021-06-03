@@ -121,6 +121,7 @@ BASE_SCRIPTS= [
     'rpc_signrawtransaction.py',                # ~ 50 sec
     'rpc_decodescript.py',                      # ~ 50 sec
     'rpc_blockchain.py',                        # ~ 50 sec
+    'feature_asmap.py',
     'wallet_disable.py',                        # ~ 50 sec
     'wallet_autocombine.py',                    # ~ 49 sec
     'mining_v5_upgrade.py',                     # ~ 48 sec
@@ -182,7 +183,6 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 60s vv
     #'p2p_feefilter.py',
     'feature_abortnode.py',
-    'feature_asmap.py',
     'rpc_bind.py',
     # vv Tests less than 30s vv
     #'example_test.py',
