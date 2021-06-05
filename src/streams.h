@@ -23,6 +23,34 @@
 #include <utility>
 #include <vector>
 
+template<typename Stream>
+class OverrideStream
+{
+    Stream* stream;
+
+    const int nType;
+    const int nVersion;
+
+public:
+    OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
+
+    template<typename T>
+    OverrideStream<Stream>& operator<<(const T& obj)
+    {
+        // Serialize to this stream
+        ::Serialize(*this->stream, obj, nType, nVersion);
+        return (*this);
+    }
+
+    template<typename T>
+    OverrideStream<Stream>& operator>>(T&& obj)
+    {
+        // Unserialize from this stream
+        ::Unserialize(*this->stream, obj, nType, nVersion);
+        return (*this);
+    }
+};
+
 /** Double ended buffer combining vector and stream-like interfaces.
  *
  * >> and << read and write unformatted data using the above serialization templates.
