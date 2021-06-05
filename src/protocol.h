@@ -333,32 +333,11 @@ public:
     unsigned int nTime;
 };
 
-/** inv message data */
-class CInv
+/** getdata message types */
+enum GetDataMsg
 {
-public:
-    CInv();
-    CInv(int typeIn, const uint256& hashIn);
-
-    SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
-
-    friend bool operator<(const CInv& a, const CInv& b);
-
-    bool IsKnownType() const;
-    bool IsMasterNodeType() const;
-    std::string ToString() const;
-
-    // TODO: make private (improves encapsulation)
-public:
-    int type;
-    uint256 hash;
-
-private:
-    const char* GetCommand() const;
-};
-
-enum {
-    MSG_TX = 1,
+    UNDEFINED = 0,
+    MSG_TX,
     MSG_BLOCK,
     // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
@@ -375,7 +354,29 @@ enum {
     MSG_MASTERNODE_QUORUM,
     MSG_MASTERNODE_ANNOUNCE,
     MSG_MASTERNODE_PING,
-    MSG_DSTX
+    MSG_DSTX,
+    MSG_TYPE_MAX = MSG_DSTX
+};
+
+/** inv message data */
+class CInv
+{
+public:
+    CInv();
+    CInv(int typeIn, const uint256& hashIn);
+
+    SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
+
+    friend bool operator<(const CInv& a, const CInv& b);
+
+    bool IsMasterNodeType() const;
+    std::string GetCommand() const;
+    std::string ToString() const;
+
+    // TODO: make private (improve encapsulation)
+public:
+    int type;
+    uint256 hash;
 };
 
 #endif // BITCOIN_PROTOCOL_H
