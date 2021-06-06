@@ -1391,7 +1391,7 @@ bool AppInitMain()
 
     for (const auto& net : gArgs.GetArgs("-whitelist")) {
         CSubNet subnet;
-        LookupSubNet(net.c_str(), subnet);
+        LookupSubNet(net, subnet);
         if (!subnet.IsValid())
             return UIError(strprintf(_("Invalid netmask specified in %s: '%s'"), "-whitelist", net));
         connman.AddWhitelistedRange(subnet);
@@ -1407,7 +1407,7 @@ bool AppInitMain()
     SetLimited(NET_ONION);
     if (!proxyArg.empty() && proxyArg != "0") {
         CService proxyAddr;
-        if (!Lookup(proxyArg.c_str(), proxyAddr, 9050, fNameLookup)) {
+        if (!Lookup(proxyArg, proxyAddr, 9050, fNameLookup)) {
             return UIError(strprintf(_("%s Invalid %s address or hostname: '%s'"), "Lookup():", "-proxy", proxyArg));
         }
 
@@ -1431,7 +1431,7 @@ bool AppInitMain()
             SetLimited(NET_ONION); // set onions as unreachable
         } else {
             CService onionProxy;
-            if (!Lookup(onionArg.c_str(), onionProxy, 9050, fNameLookup)) {
+            if (!Lookup(onionArg, onionProxy, 9050, fNameLookup)) {
                 return UIError(strprintf(_("%s Invalid %s address or hostname: '%s'"), "Lookup():", "-onion", onionArg));
             }
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
@@ -1450,13 +1450,13 @@ bool AppInitMain()
     if (fListen) {
         for (const std::string& strBind : gArgs.GetArgs("-bind")) {
             CService addrBind;
-            if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
+            if (!Lookup(strBind, addrBind, GetListenPort(), false))
                 return UIError(ResolveErrMsg("bind", strBind));
             fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
         }
         for (const std::string& strBind : gArgs.GetArgs("-whitebind")) {
             CService addrBind;
-            if (!Lookup(strBind.c_str(), addrBind, 0, false))
+            if (!Lookup(strBind, addrBind, 0, false))
                 return UIError(ResolveErrMsg("whitebind", strBind));
             if (addrBind.GetPort() == 0)
                 return UIError(strprintf(_("Need to specify a port with %s: '%s'"), "-whitebind", strBind));
@@ -1474,7 +1474,7 @@ bool AppInitMain()
 
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
         CService addrLocal;
-        if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
+        if (Lookup(strAddr, addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
             AddLocal(addrLocal, LOCAL_MANUAL);
         else
             return UIError(ResolveErrMsg("externalip", strAddr));

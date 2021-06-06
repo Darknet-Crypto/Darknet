@@ -1402,7 +1402,7 @@ void CConnman::ThreadDNSAddressSeed()
             if (!resolveSource.SetInternal(host)) {
                 continue;
             }
-            if (LookupHost(host.c_str(), vIPs, 0, true)) {
+            if (LookupHost(host, vIPs, 0, true)) {
                 for (CNetAddr& ip : vIPs) {
                     int nOneDay = 24*3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()), requiredServiceBits);
@@ -1644,7 +1644,7 @@ std::vector<AddedNodeInfo> CConnman::GetAddedNodeInfo()
     }
 
     for (std::string& strAddNode : lAddresses) {
-        CService service(LookupNumeric(strAddNode.c_str(), Params().GetDefaultPort()));
+        CService service(LookupNumeric(strAddNode, Params().GetDefaultPort()));
         if (service.IsValid()) {
             // strAddNode is an IP:port
             auto it = mapConnected.find(service);
@@ -1681,7 +1681,7 @@ void CConnman::ThreadOpenAddedConnections()
                 CSemaphoreGrant grant(*semOutbound);
                 // If strAddedNode is an IP/port, decode it immediately, so
                 // OpenNetworkConnection can detect existing connections to that IP/port.
-                CService service(LookupNumeric(info.strAddedNode.c_str(), Params().GetDefaultPort()));
+                CService service(LookupNumeric(info.strAddedNode, Params().GetDefaultPort()));
                 OpenNetworkConnection(CAddress(service, NODE_NONE), false, &grant, info.strAddedNode.c_str(), false);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(500)))
                     return;
@@ -2468,7 +2468,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect)
 bool validateMasternodeIP(const std::string& addrStr)
 {
     CNetAddr resolved;
-    if (LookupHost(addrStr.c_str(), resolved, false)) {
+    if (LookupHost(addrStr, resolved, false)) {
         return ((IsReachable(resolved) && resolved.IsRoutable()) ||
                 (Params().IsRegTestNet() && resolved.IsValid()));
     }

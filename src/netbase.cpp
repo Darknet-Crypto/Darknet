@@ -1,8 +1,8 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin developers
 // Copyright (c) 2017-2020 The PIVX developers
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 #ifdef HAVE_CONFIG_H
 #include "config/pivx-config.h"
@@ -10,11 +10,10 @@
 
 #include "netbase.h"
 
-#include "hash.h"
 #include "sync.h"
-#include "uint256.h"
 #include "random.h"
-#include "util/system.h"
+#include <util/string.h>
+#include <util/system.h>
 #include "utilstrencodings.h"
 
 #include <atomic>
@@ -83,13 +82,17 @@ void SplitHostPort(std::string in, int& portOut, std::string& hostOut)
         hostOut = in;
 }
 
-bool static LookupIntern(const char* pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+bool static LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     vIP.clear();
 
+    if (!ValidAsCString(name)) {
+        return false;
+    }
+
     {
         CNetAddr addr;
-        if (addr.SetSpecial(std::string(pszName))) {
+        if (addr.SetSpecial(name)) {
             vIP.push_back(addr);
             return true;
         }
@@ -107,7 +110,7 @@ bool static LookupIntern(const char* pszName, std::vector<CNetAddr>& vIP, unsign
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
 #endif
     struct addrinfo* aiRes = NULL;
-    int nErr = getaddrinfo(pszName, NULL, &aiHint, &aiRes);
+    int nErr = getaddrinfo(name.c_str(), NULL, &aiHint, &aiRes);
     if (nErr)
         return false;
 
@@ -137,38 +140,45 @@ bool static LookupIntern(const char* pszName, std::vector<CNetAddr>& vIP, unsign
     return (vIP.size() > 0);
 }
 
-bool LookupHost(const char* pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
-    std::string strHost(pszName);
+    if (!ValidAsCString(name)) {
+        return false;
+    }
+    std::string strHost = name;
     if (strHost.empty())
         return false;
     if (strHost.front() == '[' && strHost.back() == ']') {
         strHost = strHost.substr(1, strHost.size() - 2);
     }
 
-    return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup);
+    return LookupIntern(strHost, vIP, nMaxSolutions, fAllowLookup);
 }
 
-bool LookupHost(const char* pszName, CNetAddr& addr, bool fAllowLookup)
+bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup)
 {
+    if (!ValidAsCString(name)) {
+        return false;
+    }
     std::vector<CNetAddr> vIP;
-    LookupHost(pszName, vIP, 1, fAllowLookup);
+    LookupHost(name, vIP, 1, fAllowLookup);
     if (vIP.empty())
         return false;
     addr = vIP.front();
     return true;
 }
 
-bool Lookup(const char* pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
+bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
 {
-    if (pszName[0] == 0)
+    if (name.empty() || !ValidAsCString(name)) {
         return false;
+    }
     int port = portDefault;
-    std::string hostname = "";
-    SplitHostPort(std::string(pszName), port, hostname);
+    std::string hostname;
+    SplitHostPort(name, port, hostname);
 
     std::vector<CNetAddr> vIP;
-    bool fRet = LookupIntern(hostname.c_str(), vIP, nMaxSolutions, fAllowLookup);
+    bool fRet = LookupIntern(hostname, vIP, nMaxSolutions, fAllowLookup);
     if (!fRet)
         return false;
     vAddr.resize(vIP.size());
@@ -177,22 +187,28 @@ bool Lookup(const char* pszName, std::vector<CService>& vAddr, int portDefault, 
     return true;
 }
 
-bool Lookup(const char* pszName, CService& addr, int portDefault, bool fAllowLookup)
+bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllowLookup)
 {
+    if (!ValidAsCString(name)) {
+        return false;
+    }
     std::vector<CService> vService;
-    bool fRet = Lookup(pszName, vService, portDefault, fAllowLookup, 1);
+    bool fRet = Lookup(name, vService, portDefault, fAllowLookup, 1);
     if (!fRet)
         return false;
     addr = vService[0];
     return true;
 }
 
-CService LookupNumeric(const char* pszName, int portDefault)
+CService LookupNumeric(const std::string& name, int portDefault)
 {
+    if (!ValidAsCString(name)) {
+        return {};
+    }
     CService addr;
     // "1.2:345" will fail to resolve the ip, but will still set the port.
     // If the ip fails to resolve, re-init the result.
-    if (!Lookup(pszName, addr, portDefault, false))
+    if (!Lookup(name, addr, portDefault, false))
         addr = CService();
     return addr;
 }
@@ -671,14 +687,16 @@ bool ConnectSocketByName(CService& addr, SOCKET& hSocketRet, const char* pszDest
     return ConnectThroughProxy(proxy, strDest, port, hSocketRet, nTimeout, outProxyConnectionFailed);
 }
 
-bool LookupSubNet(const char* pszName, CSubNet& ret)
+bool LookupSubNet(const std::string& strSubnet, CSubNet& ret)
 {
-    std::string strSubnet(pszName);
+    if (!ValidAsCString(strSubnet)) {
+        return false;
+    }
     size_t slash = strSubnet.find_last_of('/');
     std::vector<CNetAddr> vIP;
 
     std::string strAddress = strSubnet.substr(0, slash);
-    if (LookupHost(strAddress.c_str(), vIP, 1, false))
+    if (LookupHost(strAddress, vIP, 1, false))
     {
         CNetAddr network = vIP[0];
         if (slash != strSubnet.npos) {
@@ -691,7 +709,7 @@ bool LookupSubNet(const char* pszName, CSubNet& ret)
             } else // If not a valid number, try full netmask syntax
             {
                 // Never allow lookup for netmask
-                if (LookupHost(strNetmask.c_str(), vIP, 1, false)) {
+                if (LookupHost(strNetmask, vIP, 1, false)) {
                     ret = CSubNet(network, vIP[0]);
                     return ret.IsValid();
                 }
