@@ -322,7 +322,7 @@ bool operator==(const CNetAddr& a, const CNetAddr& b)
 
 bool operator!=(const CNetAddr& a, const CNetAddr& b)
 {
-    return (memcmp(a.ip, b.ip, 16) != 0);
+    return a.m_net != b.m_net || (memcmp(a.ip, b.ip, 16) != 0);
 }
 
 bool operator<(const CNetAddr& a, const CNetAddr& b)
@@ -338,8 +338,21 @@ bool CNetAddr::GetInAddr(struct in_addr* pipv4Addr) const
     return true;
 }
 
+/**
+ * Try to get our IPv6 address.
+ *
+ * @param[out] pipv6Addr The in6_addr struct to which to copy.
+ *
+ * @returns Whether or not the operation was successful, in particular, whether
+ *          or not our address was an IPv6 address.
+ *
+ * @see CNetAddr::IsIPv6()
+ */
 bool CNetAddr::GetIn6Addr(struct in6_addr* pipv6Addr) const
 {
+    if (!IsIPv6()) {
+        return false;
+    }
     memcpy(pipv6Addr, ip, 16);
     return true;
 }
