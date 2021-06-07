@@ -133,6 +133,7 @@ class CNetAddr
         uint32_t GetMappedAS(const std::vector<bool> &asmap) const;
 
         std::vector<unsigned char> GetGroup(const std::vector<bool> &asmap) const;
+        std::vector<unsigned char> GetAddrBytes() const { return {std::begin(ip), std::end(ip)}; }
         int GetReachabilityFrom(const CNetAddr* paddrPartner = nullptr) const;
 
         CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
