@@ -91,7 +91,7 @@ std::list<ProposalInfo> GovernanceModel::getProposals(const ProposalInfo::Status
 
 bool GovernanceModel::hasProposals()
 {
-    return g_budgetman.HasAnyProposal();
+    return g_budgetman.HasAnyProposal() || !waitingPropsForConfirmations.empty();
 }
 
 CAmount GovernanceModel::getMaxAvailableBudgetAmount() const
