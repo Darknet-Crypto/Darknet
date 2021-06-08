@@ -262,7 +262,7 @@ void GovernanceModel::pollGovernanceChanged()
                 continue;
             }
             // Check if the proposal didn't exceed the superblock start height
-            if (it->GetBlockStart() >= chainHeight) {
+            if (chainHeight > it->GetBlockStart()) {
                 // Edge case, the proposal was never broadcasted before the next superblock, can be removed.
                 // future: notify the user about it.
                 it = waitingPropsForConfirmations.erase(it);
