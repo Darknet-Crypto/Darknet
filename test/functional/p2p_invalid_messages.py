@@ -85,12 +85,12 @@ class InvalidMessagesTest(PivxTestFramework):
             conn.sync_with_ping(timeout=1)
             self.nodes[0].disconnect_p2ps()
 
-    def test_large_inv(self): # future: add Misbehaving value check, first invalid message raise it to 20, second to 40.
+    def test_large_inv(self):
         conn = self.nodes[0].add_p2p_connection(P2PInterface())
-        with self.nodes[0].assert_debug_log(['ERROR: peer=5 message inv size() = 50001']):
+        with self.nodes[0].assert_debug_log(['Misbehaving', 'peer=5 (0 -> 20): message inv size() = 50001']):
             msg = messages.msg_inv([messages.CInv(1, 1)] * 50001)
             conn.send_and_ping(msg)
-        with self.nodes[0].assert_debug_log(['ERROR: peer=5 message getdata size() = 50001']):
+        with self.nodes[0].assert_debug_log(['Misbehaving', 'peer=5 (20 -> 40): message getdata size() = 50001']):
             msg = messages.msg_getdata([messages.CInv(1, 1)] * 50001)
             conn.send_and_ping(msg)
         self.nodes[0].disconnect_p2ps()
