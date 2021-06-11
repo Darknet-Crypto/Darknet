@@ -38,6 +38,13 @@ From PIVX Core 6.0 onwards, macOS versions earlier than 10.12 are no longer supp
 
 PIVX Core should also work on most other Unix-like systems but is not frequently tested on them.
 
+The node's known peers are persisted to disk in a file called `peers.dat`. The
+format of this file has been changed in a backwards-incompatible way in order to
+accommodate the storage of Tor v3 and other BIP155 addresses. This means that if
+the file is modified by v6.0 or newer then older versions will not be able to
+read it. Those old versions, in the event of a downgrade, will log an error
+message that deserialization has failed and will continue normal operation
+as if the file was missing, creating a new empty one. (#2411)
 
 Notable Changes
 ==============
