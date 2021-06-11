@@ -70,6 +70,7 @@ BASE_SCRIPTS= [
     'mining_pos_coldStaking.py',                # ~ 220 sec
     'wallet_import_rescan.py',                  # ~ 204 sec
     'p2p_invalid_block.py',                     # ~ 213 sec
+    'p2p_addrv2_relay.py',
     'p2p_invalid_messages.py',
     'feature_reindex.py',                       # ~ 205 sec
     'feature_logging.py',                       # ~ 195 sec
