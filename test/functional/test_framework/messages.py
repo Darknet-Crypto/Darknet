@@ -29,7 +29,7 @@ from .siphash import siphash256
 from .util import hex_str_to_bytes, bytes_to_hex_str
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70922
+MY_VERSION = 70923
 MY_SUBVERSION = "/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
