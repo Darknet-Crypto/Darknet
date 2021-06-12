@@ -1157,7 +1157,6 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
             PushNodeVersion(pfrom, connman, GetAdjustedTime());
 
         CNetMsgMaker msg_maker(INIT_PROTO_VERSION);
-        connman->PushMessage(pfrom, msg_maker.Make(NetMsgType::VERACK));
 
         if (nVersion >= 70923) {
             // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
@@ -1167,6 +1166,8 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
 
             connman->PushMessage(pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
         }
+
+        connman->PushMessage(pfrom, msg_maker.Make(NetMsgType::VERACK));
 
         pfrom->nServices = nServices;
         pfrom->SetAddrLocal(addrMe);
