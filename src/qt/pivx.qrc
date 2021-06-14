@@ -235,6 +235,7 @@
         <file alias="ic-nav-governance-hover">pivx/res/img/ic-nav-governance-hover.svg</file>
         <file alias="ic-time">pivx/res/img/ic-time.svg</file>
         <file alias="img-empty-governance">pivx/res/img/img-empty-governance.svg</file>
+        <file alias="img-empty-governance">pivx/res/img/img-empty-dark-governance.svg</file>
         <file alias="ic-check-block">pivx/res/img/ic-check-block.svg</file>
     </qresource>
 </RCC>

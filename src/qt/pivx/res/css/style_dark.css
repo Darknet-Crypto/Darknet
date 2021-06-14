@@ -3573,16 +3573,20 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     background-color: transparent;
 }
 
-
 *[cssClass="img-empty-staking-off"] {
     qproperty-icon: url("://img-empty-dark-staking-off");
     qproperty-iconSize: 100px 100px;
     background-color: transparent;
 }
 
-
 *[cssClass="img-empty-privacy"] {
     qproperty-icon: url("://img-empty-dark-privacy");
+    qproperty-iconSize: 100px 100px;
+    background-color: transparent;
+}
+
+*[cssClass="img-empty-governance"] {
+    qproperty-icon: url("://img-empty-dark-governance");
     qproperty-iconSize: 100px 100px;
     background-color: transparent;
 }

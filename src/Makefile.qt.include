@@ -514,7 +514,8 @@ RES_ICONS = \
   qt/pivx/res/img/ic-nav-governance-hover.svg \
   qt/pivx/res/img/ic-time.svg \
   qt/pivx/res/img/ic-link-hover.svg \
-  qt/pivx/res/img/img-empty-governance.svg
+  qt/pivx/res/img/img-empty-governance.svg \
+  qt/pivx/res/img/img-empty-dark-governance.svg
 
 BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
