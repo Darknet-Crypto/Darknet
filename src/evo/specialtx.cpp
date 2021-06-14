@@ -73,6 +73,18 @@ bool CheckSpecialTxNoContext(const CTransaction& tx, CValidationState& state)
             // provider-register
             return CheckProRegTx(tx, nullptr, state);
         }
+        case CTransaction::TxType::PROUPSERV: {
+            // provider-update-service
+            return CheckProUpServTx(tx, nullptr, state);
+        }
+        case CTransaction::TxType::PROUPREG: {
+            // provider-update-registrar
+            return CheckProUpRegTx(tx, nullptr, state);
+        }
+        case CTransaction::TxType::PROUPREV: {
+            // provider-update-revoke
+            return CheckProUpRevTx(tx, nullptr, state);
+        }
     }
 
     return state.DoS(10, error("%s: special tx %s with invalid type %d", __func__, tx.GetHash().ToString(), tx.nType),
@@ -104,6 +116,18 @@ bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVali
         case CTransaction::TxType::PROREG: {
             // provider-register
             return CheckProRegTx(tx, pindexPrev, state);
+        }
+        case CTransaction::TxType::PROUPSERV: {
+            // provider-update-service
+            return CheckProUpServTx(tx, pindexPrev, state);
+        }
+        case CTransaction::TxType::PROUPREG: {
+            // provider-update-registrar
+            return CheckProUpRegTx(tx, pindexPrev, state);
+        }
+        case CTransaction::TxType::PROUPREV: {
+            // provider-update-revoke
+            return CheckProUpRevTx(tx, pindexPrev, state);
         }
     }
 

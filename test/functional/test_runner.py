@@ -148,7 +148,7 @@ TIERTWO_SCRIPTS = [
     'tiertwo_deterministicmns.py',              # ~ 366 sec
     'tiertwo_masternode_activation.py',         # ~ 352 sec
     'tiertwo_masternode_ping.py',               # ~ 293 sec
-    'tiertwo_reorg_mempool.py',                 # ~ 107 sec
+    'tiertwo_reorg_mempool.py',                 # ~ 97 sec
 ]
 
 SAPLING_SCRIPTS = [

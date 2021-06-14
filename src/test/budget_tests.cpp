@@ -4,6 +4,7 @@
 
 #include "test_pivx.h"
 
+#include "bls/bls_wrapper.h"
 #include "budget/budgetmanager.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -246,7 +247,62 @@ BOOST_AUTO_TEST_CASE(IsCoinbaseValueValid_test)
     cbase.vout[1].nValue = budgAmt/2 + 1;
     BOOST_CHECK(!IsCoinbaseValueValid(MakeTransactionRef(cbase), budgAmt, state));
     BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-superblock-cb-amt");
+}
 
+BOOST_AUTO_TEST_CASE(fbv_signverify_bls)
+{
+    CBLSSecretKey sk1, sk2;
+    sk1.MakeNewKey();
+    sk2.MakeNewKey();
+    BOOST_ASSERT(sk1 != sk2);
+
+    CTxIn vin(COutPoint(uint256S("0000000000000000000000000000000000000000000000000000000000000002"), 0));
+    CTxIn vin2(COutPoint(uint256S("000000000000000000000000000000000000000000000000000000000000003"), 0));
+    CTxIn vin3(COutPoint(uint256S("0000000000000000000000000000000000000000000000000000000000000002"), 1));
+
+    uint256 budgetHash1 = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
+    uint256 budgetHash2 = uint256S("0000000000000000000000000000000000010000000000000000000000000001");
+
+    // Create serialized finalbudgetvote for budgetHash1, signed with sk1
+    CFinalizedBudgetVote vote(vin, budgetHash1);
+    BOOST_CHECK(vote.Sign(sk1));
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << vote;
+
+    // Verify received message on pk1
+    CFinalizedBudgetVote _vote;
+    ss >> _vote;
+    BOOST_CHECK(_vote.CheckSignature(sk1.GetPublicKey()));
+
+    // Failing verification on pk2
+    BOOST_CHECK(!_vote.CheckSignature(sk2.GetPublicKey()));
+
+    std::vector<unsigned char> sig = _vote.GetVchSig();
+
+    // Failing with different time
+    CFinalizedBudgetVote vote1(_vote);
+    vote1.SetTime(vote1.GetTime()+1);
+    BOOST_CHECK(!vote1.CheckSignature(sk1.GetPublicKey()));
+
+    // Failing with different budget hash
+    CFinalizedBudgetVote vote2(vin, budgetHash2);
+    vote2.SetTime(_vote.GetTime());
+    vote2.SetVchSig(sig);
+    BOOST_CHECK(!vote2.CheckSignature(sk1.GetPublicKey()));
+
+    // Failing with different vins: different txid (vin2) or voutn (vin3)
+    CFinalizedBudgetVote vote3_1(vin, budgetHash1);
+    CFinalizedBudgetVote vote3_2(vin2, budgetHash1);
+    CFinalizedBudgetVote vote3_3(vin3, budgetHash1);
+    vote3_1.SetTime(_vote.GetTime());
+    vote3_2.SetTime(_vote.GetTime());
+    vote3_3.SetTime(_vote.GetTime());
+    vote3_1.SetVchSig(sig);
+    vote3_2.SetVchSig(sig);
+    vote3_3.SetVchSig(sig);
+    BOOST_CHECK(vote3_1.CheckSignature(sk1.GetPublicKey()));
+    BOOST_CHECK(!vote3_2.CheckSignature(sk1.GetPublicKey()));
+    BOOST_CHECK(!vote3_3.CheckSignature(sk1.GetPublicKey()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

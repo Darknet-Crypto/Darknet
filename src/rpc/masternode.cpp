@@ -132,7 +132,7 @@ static inline bool filterMasternode(const UniValue& dmno, const std::string& str
                              || (filter(dmno["collateralHash"].get_str(), strFilter))
                              || (filter(dmno["collateralAddress"].get_str(), strFilter))
                              || (filter(dmno["dmnstate"]["ownerAddress"].get_str(), strFilter))
-                             || (filter(dmno["dmnstate"]["operatorAddress"].get_str(), strFilter))
+                             || (filter(dmno["dmnstate"]["operatorPubKey"].get_str(), strFilter))
                              || (filter(dmno["dmnstate"]["votingAddress"].get_str(), strFilter));
 }
 
@@ -705,7 +705,7 @@ UniValue getmasternodestatus(const JSONRPCRequest& request)
         }
         const CActiveMasternodeInfo* amninfo = activeMasternodeManager->GetInfo();
         UniValue mnObj(UniValue::VOBJ);
-        auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByOperatorKey(amninfo->keyIDOperator);
+        auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByOperatorKey(amninfo->pubKeyOperator);
         if (dmn) {
             dmn->ToJson(mnObj);
         }

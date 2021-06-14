@@ -13,10 +13,13 @@ bench_bench_pivx_SOURCES = \
   bench/bench.h \
   bench/Examples.cpp \
   bench/base58.cpp \
+  bench/bls.cpp \
+  bench/bls_dkg.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
   bench/chacha20.cpp \
   bench/crypto_hash.cpp \
+  bench/ecdsa.cpp \
   bench/lockedpool.cpp \
   bench/perf.cpp \
   bench/perf.h \
@@ -47,7 +50,7 @@ if ENABLE_ZMQ
 bench_bench_pivx_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
-bench_bench_pivx_LDADD += $(LIBBITCOIN_CONSENSUS) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+bench_bench_pivx_LDADD += $(LIBBITCOIN_CONSENSUS) $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 bench_bench_pivx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 # !TODO: .raw.h generated test files are not removed with make clean

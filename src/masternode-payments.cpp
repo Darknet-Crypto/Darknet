@@ -467,28 +467,26 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
 
         // See if this winner was signed with a dmn or a legacy masternode
-        bool fDeterministic{false};
-        Optional<CKeyID> mnKeyID = nullopt;
+        bool is_valid_sig = false;
         auto mnList = deterministicMNManager->GetListAtChainTip();
         auto dmn = mnList.GetMNByCollateral(winner.vinMasternode.prevout);
         if (dmn) {
-            fDeterministic = true;
-            mnKeyID = Optional<CKeyID>(dmn->pdmnState->keyIDOperator);
+            // DMN: Check BLS signature
+            is_valid_sig = winner.CheckSignature(dmn->pdmnState->pubKeyOperator.Get());
         } else {
+            // Legacy masternode
             const CMasternode* pmn = mnodeman.Find(winner.vinMasternode.prevout);
-            if (pmn) {
-                mnKeyID = Optional<CKeyID>(pmn->pubKeyMasternode.GetID());
-            }
+            is_valid_sig = pmn != nullptr && winner.CheckSignature(pmn->pubKeyMasternode.GetID());
         }
 
-        if (mnKeyID == nullopt || !winner.CheckSignature(*mnKeyID)) {
+        if (!is_valid_sig) {
             if (masternodeSync.IsSynced()) {
                 LogPrintf("CMasternodePayments::ProcessMessageMasternodePayments() : mnw - invalid signature\n");
                 LOCK(cs_main);
                 Misbehaving(pfrom->GetId(), 20);
             }
             // it could just be a non-synced masternode
-            if (!fDeterministic) {
+            if (dmn != nullptr) {
                 mnodeman.AskForMN(pfrom, winner.vinMasternode);
             }
             return;
@@ -705,7 +703,8 @@ void CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     // Get the active masternode (operator) key
     CKey mnKey; CKeyID mnKeyID; CTxIn mnVin;
-    if (!GetActiveMasternodeKeys(mnKey, mnKeyID, mnVin)) {
+    CBLSSecretKey blsKey;
+    if (!GetActiveMasternodeKeys(mnKey, mnKeyID, mnVin, blsKey)) {
         return;
     }
 
@@ -740,7 +739,10 @@ void CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     CMasternodePaymentWinner newWinner(mnVin, nBlockHeight);
     newWinner.AddPayee(pmn->GetPayeeScript());
-    if (!newWinner.Sign(mnKey, mnKeyID)) {
+    if (blsKey.IsValid() && !newWinner.Sign(blsKey)) {
+        LogPrintf("%s: Failed to sign masternode winner with DMN\n", __func__);
+        return;
+    } else if (!newWinner.Sign(mnKey, mnKeyID)) {
         LogPrintf("%s: Failed to sign masternode winner\n", __func__);
         return;
     }

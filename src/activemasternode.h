@@ -17,6 +17,8 @@
 #include "wallet/wallet.h"
 
 class CActiveDeterministicMasternodeManager;
+class CBLSPublicKey;
+class CBLSSecretKey;
 
 #define ACTIVE_MASTERNODE_INITIAL 0 // initial state
 #define ACTIVE_MASTERNODE_SYNC_IN_PROCESS 1
@@ -28,8 +30,8 @@ extern CActiveDeterministicMasternodeManager* activeMasternodeManager;
 struct CActiveMasternodeInfo
 {
     // Keys for the active Masternode
-    CKeyID keyIDOperator;
-    CKey keyOperator;
+    CBLSPublicKey pubKeyOperator;
+    CBLSSecretKey keyOperator;
     // Initialized while registering Masternode
     uint256 proTxHash{UINT256_ZERO};
     CService service;
@@ -63,7 +65,7 @@ public:
     OperationResult SetOperatorKey(const std::string& strMNOperatorPrivKey);
     // If the active masternode is ready, and the keyID matches with the registered one,
     // return private key, keyID, and pointer to dmn.
-    OperationResult GetOperatorKey(CKey& key, CKeyID& keyID, CDeterministicMNCPtr& dmn) const;
+    OperationResult GetOperatorKey(CBLSSecretKey& key, CBLSPublicKey& pubkey, CDeterministicMNCPtr& dmn) const;
     void SetNullProTx() { info.proTxHash = UINT256_ZERO; }
 
     const CActiveMasternodeInfo* GetInfo() const { return &info; }
@@ -117,6 +119,7 @@ public:
 };
 
 // Compatibility code: get keys for either legacy or deterministic masternode
-bool GetActiveMasternodeKeys(CKey& key, CKeyID& keyID, CTxIn& vin);
+bool GetActiveMasternodeKeys(CKey& key, CKeyID& keyID, CTxIn& vin, CBLSSecretKey& blsKey);
+bool GetActiveDMNKeys(CBLSSecretKey& key, CBLSPublicKey& pubkey, CTxIn& vin);
 
 #endif

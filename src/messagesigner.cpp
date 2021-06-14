@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "base58.h"
+#include "bls/bls_wrapper.h"
 #include "hash.h"
 #include "messagesigner.h"
 #include "tinyformat.h"
@@ -132,5 +133,26 @@ bool CSignedMessage::CheckSignature(const CKeyID& keyID) const
 std::string CSignedMessage::GetSignatureBase64() const
 {
     return EncodeBase64(&vchSig[0], vchSig.size());
+}
+
+bool CSignedMessage::Sign(const CBLSSecretKey& sk)
+{
+    if (!sk.IsValid()) {
+        return false;
+    }
+    const uint256& mess = GetSignatureHash();
+    const CBLSSignature& sig = sk.Sign(mess);
+    vchSig = sig.ToByteVector();
+    return true;
+}
+
+bool CSignedMessage::CheckSignature(const CBLSPublicKey& pk) const
+{
+    if (!pk.IsValid()) {
+        return false;
+    }
+    const uint256& mess = GetSignatureHash();
+    CBLSSignature sig(vchSig);
+    return sig.IsValid() && sig.VerifyInsecure(pk, mess);
 }
 

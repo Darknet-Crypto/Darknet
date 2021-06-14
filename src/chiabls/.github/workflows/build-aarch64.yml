@@ -1,0 +1,131 @@
+name: Build ARM64 wheel
+
+on: [push, pull_request]
+
+jobs:
+  build_wheels:
+    name: Build wheel on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ARM64]
+
+    steps:
+    - name: Cancel previous runs on the same branch
+      if: ${{ github.ref != 'refs/heads/main' }}
+      uses: styfle/cancel-workflow-action@0.7.0
+      with:
+        access_token: ${{ github.token }}
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Prepare cibuildwheel
+      run: |
+        if [ ! -f "venv" ]; then rm -rf venv; fi
+        sudo apt-get install python3-venv python3-pip -y
+        python3 -m venv venv
+        source venv/bin/activate
+        python -m pip install --upgrade pip
+        python -m pip install cibuildwheel==1.10.0
+
+    - name: Lint source with flake8
+      run: |
+        source venv/bin/activate
+        pip install flake8
+        flake8 src setup.py python-bindings python-impl
+
+    - name: Lint source with mypy
+      run: |
+        source venv/bin/activate
+        pip install mypy
+        mypy --config-file mypi.ini python-bindings python-impl
+
+    - name: Build wheels and test
+      run: |
+        source venv/bin/activate
+        python -m cibuildwheel --output-dir dist
+      env:
+        # build python 3.7 and 3.8
+        CIBW_BUILD: cp37-* cp38-* cp39-*
+        CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+        CIBW_BUILD_VERBOSITY_LINUX: 0
+        CIBW_BEFORE_BUILD_LINUX: >
+          python -m pip install --upgrade pip
+        CIBW_BEFORE_ALL_LINUX: >
+          yum -y install epel-release
+          && yum -y install cmake3 lzip
+          && rm -rf /usr/local/bin/cmake
+          && ln -s /usr/bin/cmake3 /usr/local/bin/cmake
+          && cmake --version
+          && curl -L https://gmplib.org/download/gmp/gmp-6.2.1.tar.lz | lzip -dc | tar x
+          && cd gmp-6.2.1 && ./configure --enable-fat
+          && make && make install && cd .. && rm -rf gmp-6.2.1
+          && curl -L https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable.tar.gz | tar xz
+          && cd libsodium-stable && ./configure --with-pic="yes"
+          && make && make install && cd .. && rm -rf libsodium-stable
+        CIBW_TEST_REQUIRES: pytest
+        CIBW_TEST_COMMAND: pytest -v {project}/python-bindings/test.py
+
+    - name: Create sha256 wheel hashes
+      run: |
+        mkdir hashes
+        cd ./dist
+        shasum -a 256 *
+        shasum -a 256 * > ../hashes/blspy-arm64-wheels-sha256.txt
+
+    - name: Upload hashes
+      uses: actions/upload-artifact@v2
+      with:
+        name: blspy-arm64-hashes
+        path: ./hashes
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheels
+        path: ./dist
+
+    - name: Test for secrets access
+      id: check_secrets
+      shell: bash
+      run: |
+        unset HAS_SECRET
+        if [ -n "$SECRET" ]; then HAS_SECRET='true' ; fi
+        echo ::set-output name=HAS_SECRET::${HAS_SECRET}
+      env:
+        SECRET: "${{ secrets.test_pypi_password }}"
+
+    - name: Install twine
+      run: |
+        source venv/bin/activate
+        pip install twine
+
+    - name: Publish distribution to PyPI
+      if: startsWith(github.event.ref, 'refs/tags') && steps.check_secrets.outputs.HAS_SECRET
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_PASSWORD: ${{ secrets.pypi_password }}
+      run: |
+        source venv/bin/activate
+        twine upload --non-interactive --skip-existing --verbose 'dist/*'
+
+    - name: Publish distribution to Test PyPI
+      if: steps.check_secrets.outputs.HAS_SECRET
+      env:
+        TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+        TWINE_USERNAME: __token__
+        TWINE_NON_INTERACTIVE: 1
+        TWINE_PASSWORD: ${{ secrets.test_pypi_password }}
+      run: |
+        source venv/bin/activate
+        twine upload --non-interactive --skip-existing --verbose 'dist/*'
+
+    - name: Clean up
+      run: |
+        rm -rf venv
+        rm -rf dist

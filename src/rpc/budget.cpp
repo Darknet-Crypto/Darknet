@@ -243,14 +243,24 @@ static UniValue packVoteReturnValue(const UniValue& details, int success, int fa
 // key, alias and collateral outpoint of a masternode. Struct used to sign proposal/budget votes
 struct MnKeyData
 {
+    bool use_bls;   // whether to use a CKey (mbv) or blsKey (fbv, mnw)
     std::string mnAlias;
     const COutPoint* collateralOut;
     CKey key;
+    CBLSSecretKey blsKey;
 
+    MnKeyData() = delete;
     MnKeyData(const std::string& _mnAlias, const COutPoint* _collateralOut, const CKey& _key):
+        use_bls(false),
         mnAlias(_mnAlias),
         collateralOut(_collateralOut),
         key(_key)
+    {}
+    MnKeyData(const std::string& _mnAlias, const COutPoint* _collateralOut, const CBLSSecretKey& _key):
+        use_bls(true),
+        mnAlias(_mnAlias),
+        collateralOut(_collateralOut),
+        blsKey(_key)
     {}
 };
 
@@ -286,7 +296,8 @@ static UniValue voteFinalBudget(const uint256& budgetHash,
     int success = 0;
     for (const auto& k : mnKeys) {
         CFinalizedBudgetVote vote(CTxIn(*k.collateralOut), budgetHash);
-        if (!vote.Sign(k.key, k.key.GetPubKey().GetID())) {
+        if ((k.use_bls && !vote.Sign(k.blsKey)) ||
+                (!k.use_bls && !vote.Sign(k.key, k.key.GetPubKey().GetID()))) {
             resultsObj.push_back(packErrorRetStatus(k.mnAlias, "Failure to sign."));
             failed++;
             continue;
@@ -350,7 +361,7 @@ static mnKeyList getMNKeysForActiveMasternode(UniValue& resultsObj)
 }
 
 // Deterministic masternodes
-static mnKeyList getDMNKeys(CWallet* const pwallet, const Optional<std::string>& mnAliasFilter, bool fFinal, UniValue& resultsObj, int& failed)
+static mnKeyList getDMNVotingKeys(CWallet* const pwallet, const Optional<std::string>& mnAliasFilter, bool fFinal, UniValue& resultsObj, int& failed)
 {
     if (!pwallet) {
         throw JSONRPCError(RPC_IN_WARMUP, "Wallet (with voting key) not found.");
@@ -366,7 +377,7 @@ static mnKeyList getDMNKeys(CWallet* const pwallet, const Optional<std::string>&
         if (!mnFilter) {
             resultsObj.push_back(packErrorRetStatus(*mnAliasFilter, "Invalid or unknown proTxHash"));
             failed++;
-            return mnKeyList();
+            return {};
         }
     }
 
@@ -377,13 +388,19 @@ static mnKeyList getDMNKeys(CWallet* const pwallet, const Optional<std::string>&
     mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
         bool filtered = mnFilter && dmn->proTxHash == mnFilter->proTxHash;
         if (!mnFilter || filtered) {
-            const CKeyID& mnKeyID = fFinal ? dmn->pdmnState->keyIDOperator : dmn->pdmnState->keyIDVoting;
+            if (fFinal) {
+                // We should never get here. BLS operator key (for active mn) is needed.
+                throw JSONRPCError(RPC_MISC_ERROR, "Finalized budget voting is allowed only locally, from the masternode");
+            }
+            // Get voting key from the wallet
             CKey mnKey;
-            if (pwallet->GetKey(mnKeyID, mnKey)) {
+            if (pwallet->GetKey(dmn->pdmnState->keyIDVoting, mnKey)) {
                 mnKeys.emplace_back(dmn->proTxHash.ToString(), &dmn->collateralOutpoint, mnKey);
             } else if (filtered) {
                 resultsObj.push_back(packErrorRetStatus(*mnAliasFilter, strprintf(
-                                     "Private key for voting address %s not known by this wallet", EncodeDestination(mnKeyID))));
+                                        "Private key for voting address %s not known by this wallet",
+                                        EncodeDestination(dmn->pdmnState->keyIDVoting)))
+                                    );
                 failed++;
             }
         }
@@ -395,28 +412,34 @@ static mnKeyList getDMNKeys(CWallet* const pwallet, const Optional<std::string>&
 static mnKeyList getDMNKeysForActiveMasternode(UniValue& resultsObj)
 {
     // local node must be a masternode
-    if (!activeMasternodeManager)
+    if (!activeMasternodeManager) {
         throw JSONRPCError(RPC_MISC_ERROR, _("This is not a deterministic masternode. 'local' option disabled."));
+    }
 
-    CKey dmnKey; CKeyID dmnKeyID; CDeterministicMNCPtr dmn;
-    auto res = activeMasternodeManager->GetOperatorKey(dmnKey, dmnKeyID, dmn);
+    CBLSSecretKey sk; CBLSPublicKey pk; CDeterministicMNCPtr dmn;
+    auto res = activeMasternodeManager->GetOperatorKey(sk, pk, dmn);
     if (!res) {
         resultsObj.push_back(packErrorRetStatus("local", res.getError()));
         return {};
     }
 
-    return {MnKeyData("local", &dmn->collateralOutpoint, dmnKey)};
+    return {MnKeyData("local", &dmn->collateralOutpoint, sk)};
 }
 
 // vote on proposal (finalized budget, if fFinal=true) with all possible keys or a single mn (mnAliasFilter)
+// Note: for DMNs only proposal voting is allowed with the voting key
+// (finalized budget voting requires the operator BLS key)
 static UniValue mnBudgetVoteInner(CWallet* const pwallet, bool fLegacyMN, const uint256& budgetHash, bool fFinal,
                                   const CBudgetVote::VoteDirection& nVote, const Optional<std::string>& mnAliasFilter)
 {
+    if (fFinal && !fLegacyMN) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Finalized budget voting is allowed only locally, from the masternode");
+    }
     UniValue resultsObj(UniValue::VARR);
     int failed = 0;
 
     mnKeyList mnKeys = fLegacyMN ? getMNKeys(mnAliasFilter, resultsObj, failed)
-                                 : getDMNKeys(pwallet, mnAliasFilter, fFinal, resultsObj, failed);
+                                 : getDMNVotingKeys(pwallet, mnAliasFilter, fFinal, resultsObj, failed);
 
     if (mnKeys.empty()) {
         return packVoteReturnValue(resultsObj, 0, failed);

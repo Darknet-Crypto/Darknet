@@ -17,6 +17,7 @@
 #include "activemasternode.h"
 #include "addrman.h"
 #include "amount.h"
+#include "bls/bls_wrapper.h"
 #include "budget/budgetdb.h"
 #include "budget/budgetmanager.h"
 #include "checkpoints.h"
@@ -765,11 +766,16 @@ bool InitSanityCheck(void)
         return false;
     }
 
-    if (!glibc_sanity_test() || !glibcxx_sanity_test())
+    if (!glibc_sanity_test() || !glibcxx_sanity_test()) {
         return false;
+    }
 
     if (!Random_SanityCheck()) {
         UIError(_("OS cryptographic RNG sanity check failure. Aborting."));
+        return false;
+    }
+
+    if (!BLSInit()) {
         return false;
     }
 

@@ -1378,21 +1378,26 @@ class msg_witness_blocktxn(msg_blocktxn):
 
 # PIVX Classes
 class Masternode(object):
-    def __init__(self, idx, owner_addr, operator_addr, voting_addr, ipport, payout_addr, operator_key):
+    def __init__(self, idx, owner_addr, operator_pk, voting_addr, ipport, payout_addr, operator_sk):
         self.idx = idx
         self.owner = owner_addr
-        self.operator = operator_addr
+        self.operator_pk = operator_pk
         self.voting = voting_addr
         self.ipport = ipport
         self.payee = payout_addr
-        self.operator_key = operator_key
+        self.operator_sk = operator_sk
         self.proTx = None
         self.collateral = None
 
+    def revoked(self):
+        self.ipport = "[::]:0"
+        self.operator_pk = "0" * 96
+        self.operator_sk = None
+
     def __repr__(self):
         return "Masternode(idx=%d, owner=%s, operator=%s, voting=%s, ip=%s, payee=%s, opkey=%s, protx=%s, collateral=%s)" % (
-            self.idx, str(self.owner), str(self.operator), str(self.voting), str(self.ipport),
-            str(self.payee), str(self.operator_key), str(self.proTx), str(self.collateral)
+            self.idx, str(self.owner), str(self.operator_pk), str(self.voting), str(self.ipport),
+            str(self.payee), str(self.operator_sk), str(self.proTx), str(self.collateral)
         )
 
     def __str__(self):

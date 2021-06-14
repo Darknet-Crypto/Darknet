@@ -49,6 +49,10 @@ public:
 
 /** Base Class for all signed messages on the network
  */
+
+class CBLSPublicKey;
+class CBLSSecretKey;
+
 class CSignedMessage
 {
 protected:
@@ -77,6 +81,10 @@ public:
     void SetVchSig(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
     std::vector<unsigned char> GetVchSig() const { return vchSig; }
     std::string GetSignatureBase64() const;
+
+    // Sign-Verify with BLS
+    bool Sign(const CBLSSecretKey& sk);
+    bool CheckSignature(const CBLSPublicKey& pk) const;
 };
 
 #endif

@@ -1,0 +1,57 @@
+name:  Build and Test C++ with Relic Nightly
+
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: Build and Test C++ with Relic Nightly
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+    - name: Cancel previous runs on the same branch
+      if: ${{ github.ref != 'refs/heads/main' }}
+      uses: styfle/cancel-workflow-action@0.7.0
+      with:
+        access_token: ${{ github.token }}
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Ubuntu build C++ and test Relic at origin/main
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        echo "Relic origin/main commit:"
+        curl -H "application/vnd.github.v3.sha" \
+        https://api.github.com/repos/relic-toolkit/relic/commits/main | \
+        head -10
+        sudo apt-get update
+        sudo apt-get install snap -y
+        sudo apt-get remove --purge cmake -y
+        sudo snap install cmake --classic
+        hash -r
+        cmake --version
+        echo "attempting to curl"
+        curl -L https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable.tar.gz | tar xz
+        echo "curl complete."
+        cd libsodium-stable
+        ls -l
+        ./configure --with-pic="yes"
+        make
+        sudo make install
+        cd ..
+        echo "Setting libsodium to static compile."
+        export CIBUILDWHEEL=1
+        export RELIC_MAIN=1
+        mkdir -p build
+        cd build
+        cmake ../
+        cmake --build . -- -j 6
+        echo "Running ./src/runtest"
+        ./src/runtest

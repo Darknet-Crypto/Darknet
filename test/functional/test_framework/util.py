@@ -557,7 +557,6 @@ def find_vout_for_address(node, txid, addr):
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
 
 ### PIVX specific utils ###
-vZC_DENOMS = [1, 5, 10, 50, 100, 500, 1000, 5000]
 DEFAULT_FEE = 0.01
 SPORK_ACTIVATION_TIME = 1563253447
 SPORK_DEACTIVATION_TIME = 4070908800
@@ -596,19 +595,20 @@ def get_collateral_vout(json_tx):
     return funding_txidn
 
 # owner and voting keys are created from controller node.
-# operator key and address are created, if operator_addr_and_key is None.
-def create_new_dmn(idx, controller, payout_addr, operator_addr_and_key):
+# operator keys are created, if operator_keys is None.
+def create_new_dmn(idx, controller, payout_addr, operator_keys):
     port = p2p_port(idx) if idx <= MAX_NODES else p2p_port(MAX_NODES) + (idx - MAX_NODES)
     ipport = "127.0.0.1:" + str(port)
     owner_addr = controller.getnewaddress("mnowner-%d" % idx)
     voting_addr = controller.getnewaddress("mnvoting-%d" % idx)
-    if operator_addr_and_key is None:
-        operator_addr = controller.getnewaddress("mnoperator-%d" % idx)
-        operator_key = controller.dumpprivkey(operator_addr)
+    if operator_keys is None:
+        bls_keypair = controller.generateblskeypair()
+        operator_pk = bls_keypair["public"]
+        operator_sk = bls_keypair["secret"]
     else:
-        operator_addr = operator_addr_and_key[0]
-        operator_key = operator_addr_and_key[1]
-    return messages.Masternode(idx, owner_addr, operator_addr, voting_addr, ipport, payout_addr, operator_key)
+        operator_pk = operator_keys[0]
+        operator_sk = operator_keys[1]
+    return messages.Masternode(idx, owner_addr, operator_pk, voting_addr, ipport, payout_addr, operator_sk)
 
 def spend_mn_collateral(spender, dmn):
     inputs = [dmn.collateral.to_json()]
