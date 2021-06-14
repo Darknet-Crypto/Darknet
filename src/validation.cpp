@@ -1702,7 +1702,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     int64_t nTime1 = GetTimeMicros();
     nTimeConnect += nTime1 - nTimeStart;
-    LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs - 1), nTimeConnect * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs - 1), nTimeConnect * 0.000001);
 
     //PoW phase redistributed fees to miner. PoS stage destroys fees.
     CAmount nExpectedMint = GetBlockValue(pindex->nHeight);
@@ -1736,14 +1736,14 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         return state.DoS(100, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
     int64_t nTime2 = GetTimeMicros();
     nTimeVerify += nTime2 - nTimeStart;
-    LogPrint(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime2 - nTimeStart), nInputs <= 1 ? 0 : 0.001 * (nTime2 - nTimeStart) / (nInputs - 1), nTimeVerify * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime2 - nTimeStart), nInputs <= 1 ? 0 : 0.001 * (nTime2 - nTimeStart) / (nInputs - 1), nTimeVerify * 0.000001);
 
     if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck)) {
         return error("%s: Special tx processing failed with %s", __func__, FormatStateMessage(state));
     }
     int64_t nTime3 = GetTimeMicros();
     nTimeProcessSpecial += nTime3 - nTime2;
-    LogPrint(BCLog::BENCH, "    - Process special tx: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeProcessSpecial * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "    - Process special tx: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeProcessSpecial * 0.000001);
 
     //IMPORTANT NOTE: Nothing before this point should actually store to disk (or even memory)
     if (fJustCheck)
@@ -1781,7 +1781,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     int64_t nTime4 = GetTimeMicros();
     nTimeIndex += nTime4 - nTime3;
-    LogPrint(BCLog::BENCH, "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeIndex * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeIndex * 0.000001);
 
     if (consensus.NetworkUpgradeActive(pindex->nHeight, Consensus::UPGRADE_ZC_V2) &&
             pindex->nHeight < consensus.height_last_ZC_AccumCheckpoint) {
@@ -1994,7 +1994,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         assert(flushed);
         dbTx->Commit();
     }
-    LogPrint(BCLog::BENCH, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
+    LogPrint(BCLog::BENCHMARK, "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     const uint256& saplingAnchorAfterDisconnect = pcoinsTip->GetBestAnchor();
     // Write the chain state to disk, if necessary.
     if (!FlushStateToDisk(state, FLUSH_STATE_IF_NEEDED))
@@ -2109,7 +2109,7 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
     int64_t nTime2 = GetTimeMicros();
     nTimeReadFromDisk += nTime2 - nTime1;
     int64_t nTime3;
-    LogPrint(BCLog::BENCH, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
     {
         auto dbTx = evoDb->BeginTransaction();
 
@@ -2123,14 +2123,14 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
         }
         nTime3 = GetTimeMicros();
         nTimeConnectTotal += nTime3 - nTime2;
-        LogPrint(BCLog::BENCH, "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
+        LogPrint(BCLog::BENCHMARK, "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
         bool flushed = view.Flush();
         assert(flushed);
         dbTx->Commit();
     }
     int64_t nTime4 = GetTimeMicros();
     nTimeFlush += nTime4 - nTime3;
-    LogPrint(BCLog::BENCH, "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
 
     // Write the chain state to disk, if necessary. Always write to disk if this is the first of a new file.
     FlushStateMode flushMode = FLUSH_STATE_IF_NEEDED;
@@ -2140,7 +2140,7 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
         return false;
     int64_t nTime5 = GetTimeMicros();
     nTimeChainState += nTime5 - nTime4;
-    LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
 
     // Remove conflicting transactions from the mempool.
     mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight, !IsInitialBlockDownload());
@@ -2154,8 +2154,8 @@ bool static ConnectTip(CValidationState& state, CBlockIndex* pindexNew, const st
     int64_t nTime6 = GetTimeMicros();
     nTimePostConnect += nTime6 - nTime5;
     nTimeTotal += nTime6 - nTime1;
-    LogPrint(BCLog::BENCH, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
-    LogPrint(BCLog::BENCH, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
+    LogPrint(BCLog::BENCHMARK, "- Connect block: %.2fms [%.2fs]\n", (nTime6 - nTime1) * 0.001, nTimeTotal * 0.000001);
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;

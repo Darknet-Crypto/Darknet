@@ -8,6 +8,7 @@
 #include "test/test_pivx.h"
 
 #include "blockassembler.h"
+#include "bls/bls_wrapper.h"
 #include "guiinterface.h"
 #include "evo/deterministicmns.h"
 #include "evo/evodb.h"
@@ -43,6 +44,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     : m_path_root(fs::temp_directory_path() / "test_pivx" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
 {
     ECC_Start();
+    BLSInit();
     SetupEnvironment();
     InitSignatureCache();
     fCheckBlockIndex = true;

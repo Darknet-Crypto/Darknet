@@ -119,6 +119,9 @@ background.tiff*
 .cargo/config
 target/
 
+# Relic (chiabls)
+src/chiabls/contrib/relic/include/relic_conf.*
+
 # Unit-tests
 Makefile.test
 pivx-qt_test

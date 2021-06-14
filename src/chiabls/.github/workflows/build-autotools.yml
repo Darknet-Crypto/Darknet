@@ -1,0 +1,90 @@
+name: Autotools build for bls-signatures
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: ARM 32-bit
+            os: ubuntu-18.04
+            host: arm-linux-gnueabihf
+            arch: armhf
+            apt_get: gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+            arch_packages: libgmp-dev:armhf libsodium-dev:armhf
+
+          - name: ARM 64-bit
+            os: ubuntu-18.04
+            host: aarch64-linux-gnu
+            arch: arm64
+            apt_get: gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+            arch_packages: libgmp-dev:arm64 libsodium-dev:arm64
+
+          #- name: i686 Linux
+          #  os: ubuntu-18.04
+          #  host: i686-pc-linux-gnu
+          #  arch: armhf
+          #  apt_get: gcc-multilib g++-multilib
+          #  arch_packages: libgmp-dev:i386 libsodium-dev:i386
+
+          - name: x86_64 Linux
+            os: ubuntu-18.04
+            host: x86_64-unknown-linux-gnu
+            arch: armhf # dummy arch
+            apt_get: gcc-multilib g++-multilib
+            arch_packages: libgmp-dev libsodium-dev
+            unit_tests: true
+
+          - name: x86_64 MacOS
+            os: macos-10.15
+            host: x86_64-apple-darwin19.6.0
+            brew_install: autoconf automake libtool gmp libsodium
+            cc: clang
+            cxx: clang++
+            unit_tests: true
+
+    steps:
+      - name: Get Source
+        uses: actions/checkout@v2
+
+      - name: Setup Arches
+        if: matrix.config.arch
+        uses: ryankurte/action-apt@v0.3.0
+        with:
+          arch: ${{ matrix.config.arch }}
+          packages: ${{ matrix.config.arch_packages }}
+
+      - name: Setup Environment
+        run: |
+          if [[ ${{ matrix.config.os }} = ubuntu* ]]; then
+            sudo apt-get --yes update
+            sudo apt-get install --no-install-recommends --no-upgrade -qq ${{ matrix.config.apt_get }}
+          fi
+          if [[ ${{ matrix.config.os }} = macos* ]]; then
+            brew install ${{ matrix.config.brew_install }}
+          fi
+
+      - name: Build
+        run: |
+          if [[ ${{ matrix.config.os }} = macos* ]]; then
+            CC=${{ matrix.config.cc }}
+            CXX=${{ matrix.config.cxx }}
+            export CC
+            export CXX
+          fi
+
+          ./autogen.sh
+          ./configure --host=${{ matrix.config.host }} || ( cat config.log && false)
+          make -j2 || ( echo "Build failure. Verbose build follows." && make V=1 ; false )
+
+          if [ "${{ matrix.config.unit_tests }}" = "true" ]; then
+            make -j2 check
+          fi
+
