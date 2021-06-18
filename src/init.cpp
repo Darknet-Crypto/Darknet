@@ -787,8 +787,10 @@ static void LoadSaplingParams()
     } catch (std::runtime_error &e) {
         uiInterface.ThreadSafeMessageBox(strprintf(
                 _("Cannot find the Sapling parameters in the following directory:\n"
-                  "%s\n"
-                  "Please run 'sapling-fetch-params' or './util/fetch-params.sh' and then restart."),
+                  "%s\n\n"
+                  "Options:\n"
+                  "1) If you downloaded the zip or tar.gz package, please read the README file that is inside it and follow the instructions.\n"
+                  "2) Run 'install-params.sh' or './util/fetch-params.sh' and then restart.\n"),
                 ZC_GetParamsDir()),
                                          "", CClientUIInterface::MSG_ERROR);
         StartShutdown();
