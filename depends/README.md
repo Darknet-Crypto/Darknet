@@ -88,8 +88,6 @@ build script logic) are searched for among the host system packages using
 `pkg-config`. It allows building with packages of other (newer) versions</dd>
 <dt>DEBUG</dt>
 <dd>disable some optimizations and enable more runtime checking</dd>
-<dt>LIBRUSTZCASH_OVERRIDE</dt>
-<dd>Path to a local librustzcash repository</dd>
 <dt>HOST_ID_SALT</dt>
 <dd>Optional salt to use when generating host package ids</dd>
 <dt>BUILD_ID_SALT</dt>
