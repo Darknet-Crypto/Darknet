@@ -131,6 +131,7 @@ private:
 public:
     bool WriteBlockIndex(const CDiskBlockIndex& blockindex);
     bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool EraseBatchSync(const std::vector<const CBlockIndex*>& blockinfo);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo& fileinfo);
     bool ReadLastBlockFile(int& nFile);
     bool WriteReindexing(bool fReindex);

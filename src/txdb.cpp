@@ -259,6 +259,14 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     return WriteBatch(batch, true);
 }
 
+bool CBlockTreeDB::EraseBatchSync(const std::vector<const CBlockIndex*>& blockinfo) {
+    CDBBatch batch;
+    for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
+        batch.Erase(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()));
+    }
+    return WriteBatch(batch, true);
+}
+
 bool CBlockTreeDB::ReadTxIndex(const uint256& txid, CDiskTxPos& pos)
 {
     return Read(std::make_pair(DB_TXINDEX, txid), pos);
