@@ -4,8 +4,6 @@
 
 #include "wallet/test/wallet_test_fixture.h"
 
-#include "blockassembler.h"
-#include "consensus/merkle.h"
 #include "primitives/block.h"
 #include "sapling/transaction_builder.h"
 #include "sapling/sapling_operation.h"
@@ -25,10 +23,8 @@ struct TestSaplingChainSetup: public TestChain100Setup
     {
         initZKSNARKS(); // init zk-snarks lib
 
-        bitdb.MakeMock();
         bool fFirstRun;
-        std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, "wallet_test.dat"));
-        pwalletMain = MakeUnique<CWallet>(std::move(dbw));
+        pwalletMain = MakeUnique<CWallet>("testWallet", CWalletDBWrapper::CreateMock());
         pwalletMain->LoadWallet(fFirstRun);
         RegisterValidationInterface(pwalletMain.get());
 
@@ -53,8 +49,6 @@ struct TestSaplingChainSetup: public TestChain100Setup
     ~TestSaplingChainSetup()
     {
         UnregisterValidationInterface(pwalletMain.get());
-        bitdb.Flush(true);
-        bitdb.Reset();
     }
 };
 

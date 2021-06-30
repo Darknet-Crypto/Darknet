@@ -131,7 +131,7 @@ class WalletHDTest(PivxTestFramework):
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
-        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallet.dat"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
         self.start_node(1)
 
         # Assert that derivation is deterministic
@@ -154,7 +154,7 @@ class WalletHDTest(PivxTestFramework):
         self.stop_node(1)
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
         shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
-        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallet.dat"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
         self.start_and_connect_node1()
         # Wallet automatically scans blocks older than key on startup (but shielded addresses need to be regenerated)
         assert_equal(self.nodes[1].getbalance(), NUM_HD_ADDS + 1)
@@ -213,7 +213,7 @@ class WalletHDTest(PivxTestFramework):
 
         # Delete wallet and recover from first seed
         self.stop_node(1)
-        os.remove(os.path.join(self.nodes[1].datadir, "regtest", "wallet.dat"))
+        os.remove(os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
         self.start_node(1)
         # Regenerate old shield addresses
         self.log.info("Restore from seed ...")

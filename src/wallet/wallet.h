@@ -67,8 +67,6 @@ static const CAmount DEFAULT_TRANSACTION_MAXFEE = 1 * COIN;
 static const CAmount nHighTransactionMaxFeeWarning = 100 * nHighTransactionFeeWarning;
 //! Largest (in bytes) free transaction we're willing to create
 static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
-//! -custombackupthreshold default
-static const int DEFAULT_CUSTOMBACKUPTHRESHOLD = 1;
 //! -minstakesplit default
 static const CAmount DEFAULT_MIN_STAKE_SPLIT_THRESHOLD = 100 * COIN;
 //! Default for -spendzeroconfchange
@@ -85,7 +83,6 @@ static const unsigned int DEFAULT_CREATEWALLETBACKUPS = 10;
 //! Default for -disablewallet
 static const bool DEFAULT_DISABLE_WALLET = false;
 
-extern const char * DEFAULT_WALLET_DAT;
 static const int64_t TIMESTAMP_MIN = 0;
 
 class CAddressBookIterator;
@@ -589,6 +586,14 @@ private:
     //! the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
 
+    /**
+     * Wallet filename from wallet=<path> command line or config option.
+     * Used in debug logs and to send RPCs to the right wallet instance when
+     * more than one wallet is loaded.
+     */
+    std::string m_name;
+
+    /** Internal database handle. */
     std::unique_ptr<CWalletDBWrapper> dbw;
 
     /**
@@ -726,26 +731,15 @@ public:
     /** Get database handle used by this wallet. Ideally this function would
      * not be necessary.
      */
-    CWalletDBWrapper& GetDBHandle() const
-    {
-        return *dbw;
-    }
+    CWalletDBWrapper* GetDBHandlePtr() const { return dbw.get(); }
+    CWalletDBWrapper& GetDBHandle() const { return *dbw; }
 
     /** Get a name for this wallet for logging/debugging purposes.
      */
-    std::string GetName() const
-    {
-        if (dbw) {
-            return dbw->GetName();
-        } else {
-            return "dummy";
-        }
-    }
+    const std::string& GetName() const { return m_name; }
 
-    // Create wallet with dummy database handle
-    CWallet();
-    // Create wallet with passed-in database handle
-    CWallet(std::unique_ptr<CWalletDBWrapper> dbw_in);
+    /** Construct wallet with specified name and database implementation. */
+    CWallet(std::string name, std::unique_ptr<CWalletDBWrapper> dbw_in);
     ~CWallet();
     void SetNull();
 
@@ -1164,13 +1158,18 @@ public:
     bool AbandonTransaction(const uint256& hashTx);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static CWallet* CreateWalletFromFile(const std::string walletFile);
+    static CWallet* CreateWalletFromFile(const std::string& name, const fs::path& path);
 
     /**
      * Wallet post-init setup
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
     void postInitProcess(CScheduler& scheduler);
+
+    /**
+     * Creates a wallet backup in strDest path
+     */
+    bool BackupWallet(const std::string& strDest);
 
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current

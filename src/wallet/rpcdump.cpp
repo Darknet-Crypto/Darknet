@@ -19,7 +19,6 @@
 #include "wallet.h"
 #include "validation.h"
 
-#include <fstream>
 #include <secp256k1.h>
 #include <stdint.h>
 
@@ -350,10 +349,11 @@ UniValue importwallet(const JSONRPCRequest& request)
             "\nImport using the json rpc call\n" +
             HelpExampleRpc("importwallet", "\"test\""));
 
-    std::ifstream file;
-    file.open(request.params[0].get_str().c_str(), std::ios::in | std::ios::ate);
-    if (!file.is_open())
+    fsbridge::ifstream file;
+    file.open(request.params[0].get_str(), std::ios::in | std::ios::ate);
+    if (!file.is_open()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+    }
 
     WalletRescanReserver reserver(pwallet);
     if (!reserver.reserve()) {
@@ -547,8 +547,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want, move it out of the way first");
     }
 
-    std::ofstream file;
-    file.open(request.params[0].get_str().c_str());
+    fsbridge::ofstream file;
+    file.open(filepath);
     if (!file.is_open())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
 

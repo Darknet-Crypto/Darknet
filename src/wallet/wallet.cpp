@@ -39,8 +39,6 @@ bool bdisableSystemnotifications = false; // Those bubbles can be annoying and s
 bool fPayAtLeastCustomFee = true;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 
-const char * DEFAULT_WALLET_DAT = "wallet.dat";
-
 /**
  * Fees smaller than this (in upiv) are considered zero fee (for transaction creation)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minTxFee 10 times higher
@@ -2065,7 +2063,7 @@ std::set<uint256> CWalletTx::GetConflicts() const
 
 void CWallet::Flush(bool shutdown)
 {
-    bitdb.Flush(shutdown);
+    dbw->Flush(shutdown);
 }
 
 void CWallet::ResendWalletTransactions(CConnman* connman)
@@ -4102,32 +4100,29 @@ void CWallet::LockIfMyCollateral(const CTransactionRef& ptx)
     }
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string walletFile)
+CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
 {
+    const std::string& walletFile = name;
+
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
 
     if (gArgs.GetBoolArg("-zapwallettxes", false)) {
         uiInterface.InitMessage(_("Zapping all transactions from wallet..."));
 
-        std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, walletFile));
-        CWallet *tempWallet = new CWallet(std::move(dbw));
+        std::unique_ptr<CWallet> tempWallet = MakeUnique<CWallet>(name, CWalletDBWrapper::Create(path));
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DB_LOAD_OK) {
             UIError(strprintf(_("Error loading %s: Wallet corrupted"), walletFile));
             return nullptr;
         }
-
-        delete tempWallet;
-        tempWallet = nullptr;
     }
 
     uiInterface.InitMessage(_("Loading wallet..."));
 
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
-    std::unique_ptr<CWalletDBWrapper> dbw(new CWalletDBWrapper(&bitdb, walletFile));
-    CWallet *walletInstance = new CWallet(std::move(dbw));
+    CWallet *walletInstance = new CWallet(name, CWalletDBWrapper::Create(path));
     DBErrors nLoadWalletRet = walletInstance->LoadWallet(fFirstRun);
     if (nLoadWalletRet != DB_LOAD_OK) {
         if (nLoadWalletRet == DB_CORRUPT) {
@@ -4307,6 +4302,11 @@ void CWallet::postInitProcess(CScheduler& scheduler)
     }
 }
 
+bool CWallet::BackupWallet(const std::string& strDest)
+{
+    return dbw->Backup(strDest);
+}
+
 CKeyPool::CKeyPool()
 {
     nTime = GetTime();
@@ -4367,16 +4367,10 @@ bool CWalletTx::AcceptToMemoryPool(CValidationState& state, bool fLimitFree, boo
 
 std::string CWallet::GetUniqueWalletBackupName() const
 {
-    return strprintf("%s%s", (dbw ? dbw->GetName() : "null"), FormatISO8601DateTimeForBackup(GetTime()));
+    return strprintf("%s%s", (!m_name.empty() ? m_name : "null"), FormatISO8601DateTimeForBackup(GetTime()));
 }
 
-CWallet::CWallet() : dbw(new CWalletDBWrapper())
-{
-    SetNull();
-}
-
-CWallet::CWallet(std::unique_ptr<CWalletDBWrapper> dbw_in)
-        : dbw(std::move(dbw_in))
+CWallet::CWallet(std::string name, std::unique_ptr<CWalletDBWrapper> dbw) : m_name(std::move(name)), dbw(std::move(dbw))
 {
     SetNull();
 }

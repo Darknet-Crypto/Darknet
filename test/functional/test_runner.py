@@ -125,6 +125,7 @@ BASE_SCRIPTS= [
     'mining_v5_upgrade.py',                     # ~ 48 sec
     'p2p_mempool.py',                           # ~ 46 sec
     'rpc_named_arguments.py',                   # ~ 45 sec
+    'feature_filelock.py',
     'feature_help.py',                          # ~ 30 sec
 
     # Don't append tests at the end to avoid merge conflicts

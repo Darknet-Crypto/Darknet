@@ -11,8 +11,11 @@
 #include "init.h"
 #include "masternodeconfig.h"
 #include "noui.h"
-#include "rpc/server.h"
 #include "util/system.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/walletutil.h"
+#endif
 
 #include <stdio.h>
 
@@ -171,6 +174,10 @@ bool AppInit(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    util::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
     SetupEnvironment();
 
     // Connect pivxd signal handlers

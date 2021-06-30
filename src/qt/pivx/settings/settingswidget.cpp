@@ -9,7 +9,6 @@
 #include "optionsmodel.h"
 #include "clientmodel.h"
 #include "utilitydialog.h"
-#include "wallet/wallet.h"
 #include <QScrollBar>
 #include <QDataWidgetMapper>
 
@@ -202,6 +201,7 @@ void SettingsWidget::loadWalletModel()
     this->settingsBitToolWidget->setWalletModel(this->walletModel);
     this->settingsDisplayOptionsWidget->setWalletModel(this->walletModel);
     this->settingsWalletOptionsWidget->setWalletModel(this->walletModel);
+    this->settingsInformationWidget->setWalletModel(this->walletModel);
 }
 
 void SettingsWidget::onResetAction()

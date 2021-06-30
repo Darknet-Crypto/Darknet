@@ -91,7 +91,6 @@ SettingsInformationWidget::SettingsInformationWidget(PIVXGUI* _window,QWidget *p
 #ifdef ENABLE_WALLET
     // Wallet data -- remove it with if it's needed
     ui->labelInfoBerkeley->setText(DbEnv::version(0, 0, 0));
-    ui->labelInfoDataDir->setText(QString::fromStdString(GetDataDir().string() + QDir::separator().toLatin1() + gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT)));
 #else
     ui->labelInfoBerkeley->setText(tr("No information"));
 #endif
@@ -124,6 +123,13 @@ void SettingsInformationWidget::loadClientModel()
         connect(clientModel, &ClientModel::numBlocksChanged, this, &SettingsInformationWidget::setNumBlocks);
 
         connect(clientModel, &ClientModel::strMasternodesChanged, this, &SettingsInformationWidget::setMasternodeCount);
+    }
+}
+
+void SettingsInformationWidget::loadWalletModel()
+{
+    if (walletModel) {
+        ui->labelInfoDataDir->setText(walletModel->getWalletPath());
     }
 }
 

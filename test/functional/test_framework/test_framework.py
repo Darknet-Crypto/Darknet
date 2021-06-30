@@ -520,7 +520,7 @@ class PivxTestFramework():
 
             for i in range(MAX_NODES):
                 for entry in os.listdir(cache_path(i)):
-                    if entry not in ['wallet.dat', 'chainstate', 'blocks', 'sporks', 'evodb', 'zerocoin', 'backups']:
+                    if entry not in ['wallet.dat', 'chainstate', 'blocks', 'sporks', 'evodb', 'zerocoin', 'backups', "wallets"]:
                         os.remove(cache_path(i, entry))
 
         def clean_cache_dir():

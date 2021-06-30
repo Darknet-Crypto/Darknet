@@ -383,7 +383,7 @@ void MasterNodesWidget::onDeleteMNClicked()
     fs::path pathBootstrap = GetDataDir() / strConfFile;
     if (fs::exists(pathBootstrap)) {
         fs::path pathMasternodeConfigFile = GetMasternodeConfigFile();
-        fs::ifstream streamConfig(pathMasternodeConfigFile);
+        fsbridge::ifstream streamConfig(pathMasternodeConfigFile);
 
         if (!streamConfig.good()) {
             inform(tr("Invalid masternode.conf file"));

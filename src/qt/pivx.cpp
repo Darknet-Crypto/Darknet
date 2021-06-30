@@ -26,6 +26,7 @@
 #include "paymentserver.h"
 #include "walletmodel.h"
 #include "interfaces/wallet.h"
+#include "wallet/walletutil.h"
 #endif
 #include "masternodeconfig.h"
 
@@ -544,6 +545,10 @@ WId BitcoinApplication::getMainWinId() const
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    util::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
     SetupEnvironment();
 
     /// 1. Parse command-line options. These take precedence over anything else.
@@ -683,17 +688,12 @@ int main(int argc, char* argv[])
 
     bool ret = true;
 #ifdef ENABLE_WALLET
-    // Check if the wallet exists or need to be created
-    std::string strWalletFile = gArgs.GetArg("-wallet", DEFAULT_WALLET_DAT);
-    std::string strDataDir = GetDataDir().string();
-    // Wallet file must be a plain filename without a directory
-    fs::path wallet_file_path(strWalletFile);
-    if (strWalletFile != wallet_file_path.filename().string()) {
-        throw std::runtime_error(strprintf(_("Wallet %s resides outside data directory %s"), strWalletFile, strDataDir));
-    }
+    // Check if at least one wallet exists or needs to be created
+    const std::string& strWalletFile = gArgs.GetArg("-wallet", "");
+    auto opRes = VerifyWalletPath(strWalletFile);
+    if (!opRes) throw std::runtime_error(opRes.getError());
 
-    fs::path pathBootstrap = GetDataDir() / strWalletFile;
-    if (!fs::exists(pathBootstrap)) {
+    if (!fs::exists(fs::absolute(strWalletFile, GetWalletDir()))) {
         // wallet doesn't exist, popup tutorial screen.
         ret = app.createTutorialScreen();
     }

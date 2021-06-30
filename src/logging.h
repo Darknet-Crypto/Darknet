@@ -149,9 +149,9 @@ template<typename... Args> std::string FormatStringFromLogArgs(const char *fmt, 
         std::string _log_msg_; /* Unlikely name to avoid shadowing variables */     \
         try {                                                                       \
             _log_msg_ = tfm::format(__VA_ARGS__);                                   \
-        } catch (tinyformat::format_error &e) {                                     \
+        } catch (tinyformat::format_error &fmterr) {                                     \
             /* Original format string will have newline so don't add one here */    \
-            _log_msg_ = "Error \"" + std::string(e.what()) +                        \
+            _log_msg_ = "Error \"" + std::string(fmterr.what()) +                        \
                         "\" while formatting log message: " +                       \
                         FormatStringFromLogArgs(__VA_ARGS__);                       \
         }                                                                           \

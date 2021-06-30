@@ -311,7 +311,7 @@ bool MasterNodeWizardDialog::createMN()
     }
 
     fs::path pathMasternodeConfigFile = GetMasternodeConfigFile();
-    fs::ifstream streamConfig(pathMasternodeConfigFile);
+    fsbridge::ifstream streamConfig(pathMasternodeConfigFile);
 
     if (!streamConfig.good()) {
         returnStr = tr("Invalid masternode.conf file");

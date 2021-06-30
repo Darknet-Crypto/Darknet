@@ -66,6 +66,7 @@
 #include <codecvt>
 
 #include <io.h> /* for _commit */
+#include <shellapi.h>
 #include <shlobj.h>
 #endif
 
@@ -101,6 +102,58 @@ bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
 
     uint64_t free_bytes_available = fs::space(dir).available;
     return free_bytes_available >= min_disk_space + additional_bytes;
+}
+
+/** A map that contains all the currently held directory locks. After
+ * successful locking, these will be held here until the global destructor
+ * cleans them up and thus automatically unlocks them, or ReleaseDirectoryLocks
+ * is called.
+ */
+static std::map<std::string, std::unique_ptr<fsbridge::FileLock>> dir_locks;
+/** Mutex to protect dir_locks. */
+static std::mutex cs_dir_locks;
+
+bool LockDirectory(const fs::path& directory, const std::string& lockfile_name, bool probe_only)
+{
+    std::lock_guard<std::mutex> ulock(cs_dir_locks);
+    fs::path pathLockFile = directory / lockfile_name;
+
+    // If a lock for this directory already exists in the map, don't try to re-lock it
+    if (dir_locks.count(pathLockFile.string())) {
+        return true;
+    }
+
+    // Create empty lock file if it doesn't exist.
+    FILE* file = fsbridge::fopen(pathLockFile, "a");
+    if (file) fclose(file);
+    auto lock = std::make_unique<fsbridge::FileLock>(pathLockFile);
+    if (!lock->TryLock()) {
+        return error("Error while attempting to lock directory %s: %s", directory.string(), lock->GetReason());
+    }
+    if (!probe_only) {
+        // Lock successful and we're not just probing, put it into the map
+        dir_locks.emplace(pathLockFile.string(), std::move(lock));
+    }
+    return true;
+}
+
+void ReleaseDirectoryLocks()
+{
+    std::lock_guard<std::mutex> ulock(cs_dir_locks);
+    dir_locks.clear();
+}
+
+bool DirIsWritable(const fs::path& directory)
+{
+    fs::path tmpFile = directory / fs::unique_path();
+
+    FILE* file = fsbridge::fopen(tmpFile, "a");
+    if (!file) return false;
+
+    fclose(file);
+    remove(tmpFile);
+
+    return true;
 }
 
 /**
@@ -697,7 +750,10 @@ const fs::path& GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
-    fs::create_directories(path);
+    if (fs::create_directories(path)) {
+        // This is the first run, create wallets subdirectory too
+        fs::create_directories(path / "wallets");
+    }
 
     return path;
 }
@@ -780,7 +836,7 @@ void ArgsManager::ReadConfigFile(const std::string& confPath)
         m_config_args.clear();
     }
 
-    fs::ifstream stream(GetConfigFile(confPath));
+    fsbridge::ifstream stream(GetConfigFile(confPath));
 
     // ok to not have a config file
     if (stream.good()) {
@@ -836,8 +892,8 @@ void CreatePidFile(const fs::path& path, pid_t pid)
 bool RenameOver(fs::path src, fs::path dest)
 {
 #ifdef WIN32
-    return MoveFileExA(src.string().c_str(), dest.string().c_str(),
-               MOVEFILE_REPLACE_EXISTING) != 0;
+    return MoveFileExW(src.wstring().c_str(), dest.wstring().c_str(),
+                       MOVEFILE_REPLACE_EXISTING) != 0;
 #else
     int rc = std::rename(src.string().c_str(), dest.string().c_str());
     return (rc == 0);
@@ -1011,6 +1067,10 @@ void SetupEnvironment()
     } catch (const std::runtime_error&) {
         setenv("LC_ALL", "C", 1);
     }
+#elif defined(WIN32)
+    // Set the default input/output charset is utf-8
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 #endif
     // The path locale is lazy initialized and to avoid deinitialization errors
     // in multithreading environments, it is set explicitly by the main thread.
@@ -1068,3 +1128,31 @@ int ScheduleBatchPriority(void)
     return 1;
 #endif
 }
+
+namespace util {
+#ifdef WIN32
+    WinCmdLineArgs::WinCmdLineArgs()
+{
+    wchar_t** wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> utf8_cvt;
+    argv = new char*[argc];
+    args.resize(argc);
+    for (int i = 0; i < argc; i++) {
+        args[i] = utf8_cvt.to_bytes(wargv[i]);
+        argv[i] = &*args[i].begin();
+    }
+    LocalFree(wargv);
+}
+
+WinCmdLineArgs::~WinCmdLineArgs()
+{
+    delete[] argv;
+}
+
+std::pair<int, char**> WinCmdLineArgs::get()
+{
+    return std::make_pair(argc, argv);
+}
+#endif
+} // namespace util
+

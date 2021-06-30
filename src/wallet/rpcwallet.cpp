@@ -27,6 +27,7 @@
 #include "utilmoneystr.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
+#include "wallet/walletutil.h"
 #include "zpivchain.h"
 
 #include  <init.h>    // for StartShutdown
@@ -3372,7 +3373,7 @@ UniValue backupwallet(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strDest = request.params[0].get_str();
-    if (!BackupWallet(*pwallet, strDest))
+    if (!pwallet->BackupWallet(strDest))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet backup failed!");
 
     return NullUniValue;

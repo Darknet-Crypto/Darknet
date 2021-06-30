@@ -98,6 +98,7 @@ set(BITCOIN_TESTS
         ${CMAKE_CURRENT_SOURCE_DIR}/evo_deterministicmns_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/evo_specialtx_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/flatfile_tests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/fs_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/getarg_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/hash_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/key_tests.cpp

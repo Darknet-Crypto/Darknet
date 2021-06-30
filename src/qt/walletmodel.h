@@ -166,6 +166,9 @@ public:
     bool isSaplingWalletEnabled() const;
     bool upgradeWallet(std::string& upgradeError);
 
+    // Returns the path to the first wallet db (future: add multi-wallet support)
+    QString getWalletPath();
+
     interfaces::WalletBalances GetWalletBalances() { return m_cached_balances; };
 
     CAmount getBalance(const CCoinControl* coinControl = nullptr, bool fIncludeDelegated = true, bool fUnlockedOnly = false, bool fIncludeShielded = true) const;

@@ -108,6 +108,7 @@ BITCOIN_TESTS =\
   test/evo_deterministicmns_tests.cpp \
   test/evo_specialtx_tests.cpp \
   test/flatfile_tests.cpp \
+  test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
   test/key_tests.cpp \

@@ -9,7 +9,6 @@
 #include "test/librust/utiltest.h"
 
 #include "rpc/server.h"
-#include "rpc/client.h"
 
 #include "core_io.h"
 #include "consensus/merkle.h"
@@ -56,7 +55,7 @@ BOOST_FIXTURE_TEST_SUITE(sapling_rpc_wallet_tests, WalletTestingSetup)
 BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_validateaddress)
 {
     SelectParams(CBaseChainParams::MAIN);
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     UniValue retValue;
 
@@ -66,7 +65,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_validateaddress)
 
     // Wallet should be empty:
     std::set<libzcash::SaplingPaymentAddress> addrs;
-    pwalletMain->GetSaplingPaymentAddresses(addrs);
+    m_wallet.GetSaplingPaymentAddresses(addrs);
     BOOST_CHECK(addrs.size()==0);
 
     // This Sapling address is not valid, it belongs to another network
@@ -91,11 +90,11 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_validateaddress)
 BOOST_AUTO_TEST_CASE(rpc_wallet_getbalance)
 {
     {
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->SetMinVersion(FEATURE_SAPLING);
-        pwalletMain->SetupSPKM(false);
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetMinVersion(FEATURE_SAPLING);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     BOOST_CHECK_THROW(CallRPC("getshieldbalance too many args"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("getshieldbalance invalidaddress"), std::runtime_error);
@@ -122,11 +121,11 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_getbalance)
 BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_importkey_paymentaddress)
 {
     {
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->SetMinVersion(FEATURE_SAPLING);
-        pwalletMain->SetupSPKM(false);
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetMinVersion(FEATURE_SAPLING);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     auto testAddress = [](const std::string& key) {
         UniValue ret;
@@ -153,11 +152,11 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_importkey_paymentaddress)
 BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_importexport)
 {
     {
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->SetMinVersion(FEATURE_SAPLING);
-        pwalletMain->SetupSPKM(false);
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetMinVersion(FEATURE_SAPLING);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     UniValue retValue;
     int n1 = 1000; // number of times to import/export
@@ -181,7 +180,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_importexport)
 
     // wallet should currently be empty
     std::set<libzcash::SaplingPaymentAddress> saplingAddrs;
-    pwalletMain->GetSaplingPaymentAddresses(saplingAddrs);
+    m_wallet.GetSaplingPaymentAddresses(saplingAddrs);
     BOOST_CHECK(saplingAddrs.empty());
 
     // verify import and export key
@@ -209,13 +208,13 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_importexport)
 
     // Make new addresses for the set
     for (int i=0; i<n2; i++) {
-        myaddrs.insert(KeyIO::EncodePaymentAddress(pwalletMain->GenerateNewSaplingZKey()));
+        myaddrs.insert(KeyIO::EncodePaymentAddress(m_wallet.GenerateNewSaplingZKey()));
     }
 
     // Verify number of addresses stored in wallet is n1+n2
     int numAddrs = myaddrs.size();
     BOOST_CHECK(numAddrs == n1 + n2);
-    pwalletMain->GetSaplingPaymentAddresses(saplingAddrs);
+    m_wallet.GetSaplingPaymentAddresses(saplingAddrs);
     BOOST_CHECK((int) saplingAddrs.size() == numAddrs);
 
     // Ask wallet to list addresses
@@ -237,27 +236,27 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_sapling_importexport)
 }
 
 // Check if address is of given type and spendable from our wallet.
-void CheckHaveAddr(std::unique_ptr<CWallet>& pwallet, const libzcash::PaymentAddress& addr)
+void CheckHaveAddr(CWallet& pwallet, const libzcash::PaymentAddress& addr)
 {
 
     BOOST_CHECK(IsValidPaymentAddress(addr));
     auto addr_of_type = boost::get<libzcash::SaplingPaymentAddress>(&addr);
     BOOST_ASSERT(addr_of_type != nullptr);
-    BOOST_CHECK(pwallet->HaveSpendingKeyForPaymentAddress(*addr_of_type));
+    BOOST_CHECK(pwallet.HaveSpendingKeyForPaymentAddress(*addr_of_type));
 }
 
 BOOST_AUTO_TEST_CASE(rpc_wallet_getnewshieldaddress)
 {
     {
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->SetMinVersion(FEATURE_SAPLING);
-        pwalletMain->SetupSPKM(false);
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetMinVersion(FEATURE_SAPLING);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     // No parameter defaults to sapling address
     UniValue addr = CallRPC("getnewshieldaddress");
-    CheckHaveAddr(pwalletMain, KeyIO::DecodePaymentAddress(addr.get_str()));
+    CheckHaveAddr(m_wallet, KeyIO::DecodePaymentAddress(addr.get_str()));
     // Too many arguments will throw with the help
     BOOST_CHECK_THROW(CallRPC("getnewshieldaddress many args"), std::runtime_error);
 
@@ -267,11 +266,11 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_getnewshieldaddress)
 BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_parameters)
 {
     {
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->SetMinVersion(FEATURE_SAPLING);
-        pwalletMain->SetupSPKM(false);
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetMinVersion(FEATURE_SAPLING);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     BOOST_CHECK_THROW(CallRPC("shieldsendmany"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("shieldsendmany toofewargs"), std::runtime_error);
@@ -320,7 +319,7 @@ BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_parameters)
     std::vector<char> v (2 * (ZC_MEMO_SIZE+1));     // x2 for hexadecimal string format
     std::fill(v.begin(),v.end(), 'A');
     std::string badmemo(v.begin(), v.end());
-    auto pa = pwalletMain->GenerateNewSaplingZKey();
+    auto pa = m_wallet.GenerateNewSaplingZKey();
     std::string zaddr1 = KeyIO::EncodePaymentAddress(pa);
     BOOST_CHECK_THROW(CallRPC(std::string("shieldsendmany DMKU6mc52un1MThGCsnNwAtEvncaTdAuaZ ")
                               + "[{\"address\":\"" + zaddr1 + "\", \"amount\":123.456}]"), std::runtime_error);
@@ -332,11 +331,11 @@ BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_parameters)
 BOOST_AUTO_TEST_CASE(saplingOperationTests)
 {
     {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-        pwalletMain->SetupSPKM(false);
+        LOCK2(cs_main, m_wallet.cs_wallet);
+        m_wallet.SetupSPKM(false);
     }
     auto consensusParams = Params().GetConsensus();
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     UniValue retValue;
 
@@ -344,13 +343,13 @@ BOOST_AUTO_TEST_CASE(saplingOperationTests)
     BOOST_CHECK_NO_THROW(retValue = CallRPC("getnewaddress"));
     const std::string& taddrStr = retValue.get_str();
     const CTxDestination& taddr1 = DecodeDestination(taddrStr);
-    const auto& zaddr1 = pwalletMain->GenerateNewSaplingZKey();
+    const auto& zaddr1 = m_wallet.GenerateNewSaplingZKey();
     std::string ret;
 
     // there are no utxos to spend
     {
         std::vector<SendManyRecipient> recipients = { SendManyRecipient(zaddr1, COIN, "DEADBEEF", false) };
-        SaplingOperation operation(consensusParams, 1, pwalletMain.get());
+        SaplingOperation operation(consensusParams, 1, &m_wallet);
         operation.setFromAddress(taddr1);
         auto res = operation.setRecipients(recipients)->buildAndSend(ret);
         BOOST_CHECK(!res);
@@ -360,7 +359,7 @@ BOOST_AUTO_TEST_CASE(saplingOperationTests)
     // minconf cannot be zero when sending from zaddr
     {
         std::vector<SendManyRecipient> recipients = { SendManyRecipient(zaddr1, COIN, "DEADBEEF", false) };
-        SaplingOperation operation(consensusParams, 1, pwalletMain.get());
+        SaplingOperation operation(consensusParams, 1, &m_wallet);
         operation.setFromAddress(zaddr1);
         auto res = operation.setRecipients(recipients)->setMinDepth(0)->buildAndSend(ret);
         BOOST_CHECK(!res);
@@ -370,7 +369,7 @@ BOOST_AUTO_TEST_CASE(saplingOperationTests)
     // there are no unspent notes to spend
     {
         std::vector<SendManyRecipient> recipients = { SendManyRecipient(taddr1, COIN, false) };
-        SaplingOperation operation(consensusParams, 1, pwalletMain.get());
+        SaplingOperation operation(consensusParams, 1, &m_wallet);
         operation.setFromAddress(zaddr1);
         auto res = operation.setRecipients(recipients)->buildAndSend(ret);
         BOOST_CHECK(!res);
@@ -413,18 +412,18 @@ BOOST_AUTO_TEST_CASE(saplingOperationTests)
 BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_taddr_to_sapling)
 {
     {
-        LOCK2(cs_main, pwalletMain->cs_wallet);
-        pwalletMain->SetupSPKM(false);
+        LOCK2(cs_main, m_wallet.cs_wallet);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     UniValue retValue;
 
     // add keys manually
     CTxDestination taddr;
-    pwalletMain->getNewAddress(taddr, "");
+    m_wallet.getNewAddress(taddr, "");
     std::string taddr1 = EncodeDestination(taddr);
-    auto zaddr1 = pwalletMain->GenerateNewSaplingZKey();
+    auto zaddr1 = m_wallet.GenerateNewSaplingZKey();
 
     auto consensusParams = Params().GetConsensus();
     retValue = CallRPC("getblockcount");
@@ -434,9 +433,9 @@ BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_taddr_to_sapling)
     CMutableTransaction mtx;
     mtx.vout.emplace_back(5 * COIN, GetScriptForDestination(taddr));
     // Add to wallet and get the updated wtx
-    CWalletTx wtxIn(pwalletMain.get(), MakeTransactionRef(mtx));
-    pwalletMain->LoadToWallet(wtxIn);
-    CWalletTx& wtx = pwalletMain->mapWallet.at(mtx.GetHash());
+    CWalletTx wtxIn(&m_wallet, MakeTransactionRef(mtx));
+    m_wallet.LoadToWallet(wtxIn);
+    CWalletTx& wtx = m_wallet.mapWallet.at(mtx.GetHash());
 
     // Fake-mine the transaction
     BOOST_CHECK_EQUAL(0, chainActive.Height());
@@ -452,11 +451,11 @@ BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_taddr_to_sapling)
     chainActive.SetTip(&fakeIndex);
     BOOST_CHECK(chainActive.Contains(&fakeIndex));
     BOOST_CHECK_EQUAL(1, chainActive.Height());
-    pwalletMain->BlockConnected(std::make_shared<CBlock>(block), mi->second);
-    BOOST_CHECK_MESSAGE(pwalletMain->GetAvailableBalance() > 0, "tx not confirmed");
+    m_wallet.BlockConnected(std::make_shared<CBlock>(block), mi->second);
+    BOOST_CHECK_MESSAGE(m_wallet.GetAvailableBalance() > 0, "tx not confirmed");
 
     std::vector<SendManyRecipient> recipients = { SendManyRecipient(zaddr1, 1 * COIN, "ABCD", false) };
-    SaplingOperation operation(consensusParams, nextBlockHeight, pwalletMain.get());
+    SaplingOperation operation(consensusParams, nextBlockHeight, &m_wallet);
     operation.setFromAddress(taddr);
     BOOST_CHECK(operation.setRecipients(recipients)
                          ->setMinDepth(0)
@@ -464,7 +463,7 @@ BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_taddr_to_sapling)
 
     // try from auto-selected transparent address
     std::vector<SendManyRecipient> recipients2 = { SendManyRecipient(zaddr1, 1 * COIN, "ABCD", false) };
-    SaplingOperation operation2(consensusParams, nextBlockHeight, pwalletMain.get());
+    SaplingOperation operation2(consensusParams, nextBlockHeight, &m_wallet);
     BOOST_CHECK(operation2.setSelectTransparentCoins(true)
                           ->setRecipients(recipients2)
                           ->setMinDepth(0)
@@ -487,7 +486,7 @@ BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_taddr_to_sapling)
 
     BOOST_CHECK(libzcash::AttemptSaplingOutDecryption(
             tx.sapData->vShieldedOutput[0].outCiphertext,
-            pwalletMain->GetSaplingScriptPubKeyMan()->getCommonOVK(),
+            m_wallet.GetSaplingScriptPubKeyMan()->getCommonOVK(),
             tx.sapData->vShieldedOutput[0].cv,
             tx.sapData->vShieldedOutput[0].cmu,
             tx.sapData->vShieldedOutput[0].ephemeralKey));
@@ -504,15 +503,15 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_encrypted_wallet_sapzkeys)
     int n = 100;
 
     {
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->SetMinVersion(FEATURE_SAPLING);
-        pwalletMain->SetupSPKM(false);
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetMinVersion(FEATURE_SAPLING);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     // wallet should currently be empty
     std::set<libzcash::SaplingPaymentAddress> addrs;
-    pwalletMain->GetSaplingPaymentAddresses(addrs);
+    m_wallet.GetSaplingPaymentAddresses(addrs);
     BOOST_CHECK(addrs.empty());
 
     // create keys
@@ -535,7 +534,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_encrypted_wallet_sapzkeys)
     strWalletPass = "hello";
 
     PushCurrentDirectory push_dir(gArgs.GetArg("-datadir","/tmp/thisshouldnothappen"));
-    BOOST_CHECK(pwalletMain->EncryptWallet(strWalletPass));
+    BOOST_CHECK(m_wallet.EncryptWallet(strWalletPass));
 
     // Verify we can still list the keys imported
     BOOST_CHECK_NO_THROW(retValue = CallRPC("listshieldaddresses"));
@@ -547,7 +546,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_encrypted_wallet_sapzkeys)
 
     // We can't call RPC walletpassphrase as that invokes RPCRunLater which breaks tests.
     // So we manually unlock.
-    BOOST_CHECK(pwalletMain->Unlock(strWalletPass));
+    BOOST_CHECK(m_wallet.Unlock(strWalletPass));
 
     // Now add a key
     BOOST_CHECK_NO_THROW(CallRPC("getnewshieldaddress"));
@@ -563,10 +562,10 @@ BOOST_AUTO_TEST_CASE(rpc_wallet_encrypted_wallet_sapzkeys)
 BOOST_AUTO_TEST_CASE(rpc_listshieldunspent_parameters)
 {
     {
-        LOCK(pwalletMain->cs_wallet);
-        pwalletMain->SetupSPKM(false);
+        LOCK(m_wallet.cs_wallet);
+        m_wallet.SetupSPKM(false);
     }
-    vpwallets.insert(vpwallets.begin(), pwalletMain.get());
+    vpwallets.insert(vpwallets.begin(), &m_wallet);
 
     UniValue retValue;
 

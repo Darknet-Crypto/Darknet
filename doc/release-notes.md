@@ -79,6 +79,56 @@ The `getwalletinfo` RPC method returns the name of the wallet used for the query
 
 Note that while multi-wallet is now fully supported, the RPC multi-wallet interface should be considered unstable for version 6.0.0, and there may backwards-incompatible changes in future versions.
 
+Wallets directory configuration (`-walletdir`)
+----------------------------------------------
+
+PIVX Core now has more flexibility in where the wallets directory can be
+located. Previously wallet database files were stored at the top level of the
+PIVX data directory. The behavior is now:
+
+- For new installations (where the data directory doesn't already exist),
+  wallets will now be stored in a new `wallets/` subdirectory inside the data
+  directory by default.
+- For existing nodes (where the data directory already exists), wallets will be
+  stored in the data directory root by default. If a `wallets/` subdirectory
+  already exists in the data directory root, then wallets will be stored in the
+  `wallets/` subdirectory by default.
+- The location of the wallets directory can be overridden by specifying a
+  `-walletdir=<path>` option where `<path>` can be an absolute path to a
+  directory or directory symlink.
+
+Care should be taken when choosing the wallets directory location, as if it
+becomes unavailable during operation, funds may be lost.
+
+External wallet files
+---------------------
+
+The `-wallet=<path>` option now accepts full paths instead of requiring wallets
+to be located in the -walletdir directory.
+
+Newly created wallet format
+---------------------------
+
+If `-wallet=<path>` is specified with a path that does not exist, it will now
+create a wallet directory at the specified location (containing a wallet.dat
+data file, a db.log file, and database/log.?????????? files) instead of just
+creating a data file at the path and storing log files in the parent
+directory. This should make backing up wallets more straightforward than
+before because the specified wallet path can just be directly archived without
+having to look in the parent directory for transaction log files.
+
+For backwards compatibility, wallet paths that are names of existing data files
+in the `-walletdir` directory will continue to be accepted and interpreted the
+same as before.
+
+Low-level RPC changes
+---------------------
+
+- When PIVX is not started with any `-wallet=<path>` options, the name of
+  the default wallet returned by `getwalletinfo` and `listwallets` RPCs is
+  now the empty string `""` instead of `"wallet.dat"`. If PIVX is started
+  with any `-wallet=<path>` options, there is no change in behavior, and the
+  name of any wallet is just its `<path>` string.
 
 Database cache memory increased
 --------------------------------

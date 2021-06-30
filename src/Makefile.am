@@ -301,6 +301,7 @@ BITCOIN_CORE_H = \
   wallet/init.h \
   wallet/wallet.h \
   wallet/walletdb.h \
+  wallet/walletutil.h \
   warnings.h \
   zpivchain.h \
   zpiv/mintpool.h \
@@ -407,6 +408,7 @@ libbitcoin_wallet_a_SOURCES = \
   destination_io.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
+  wallet/walletutil.cpp \
   zpiv/zerocoin.cpp \
   zpiv/mintpool.cpp \
   stakeinput.cpp \

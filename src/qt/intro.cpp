@@ -193,7 +193,10 @@ bool Intro::pickDataDirectory()
             }
             dataDir = intro.getDataDirectory();
             try {
-                TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir));
+                if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
+                    // If a new data directory has been created, make wallets subdirectory too
+                    TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
+                }
                 break;
             } catch (const fs::filesystem_error& e) {
                 QMessageBox::critical(0, tr("PIVX Core"),

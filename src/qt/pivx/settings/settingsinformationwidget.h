@@ -22,6 +22,7 @@ public:
     ~SettingsInformationWidget() override;
 
     void loadClientModel() override;
+    void loadWalletModel() override;
 
     void run(int type) override;
     void onError(QString error, int type) override;

@@ -21,6 +21,8 @@
 
 #ifndef WIN32
 #include <fcntl.h>
+#else
+#include <codecvt>
 #endif
 
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
@@ -704,12 +706,14 @@ bool LookupSubNet(const char* pszName, CSubNet& ret)
 #ifdef WIN32
 std::string NetworkErrorString(int err)
 {
-    char buf[256];
+    wchar_t buf[256];
     buf[0] = 0;
-    if (FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
-            NULL, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            buf, sizeof(buf), NULL)) {
-        return strprintf("%s (%d)", buf, err);
+    if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+            nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            buf, ARRAYSIZE(buf), nullptr))
+    {
+        const auto& bufConvert = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().to_bytes(buf);
+        return strprintf("%s (%d)", bufConvert, err);
     } else {
         return strprintf("Unknown error (%d)", err);
     }

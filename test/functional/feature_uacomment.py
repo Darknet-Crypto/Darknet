@@ -27,7 +27,7 @@ class UacommentTest(PivxTestFramework):
         self.assert_start_raises_init_error(0, ["-uacomment=" + 'a' * 256], expected)
 
         self.log.info("test -uacomment unsafe characters")
-        for unsafe_char in ['/', ':', '(', ')']:
+        for unsafe_char in ['/', ':', '(', ')', '₿', '🏃']:
             expected = "User Agent comment (" + unsafe_char + ") contains unsafe characters"
             self.assert_start_raises_init_error(0, ["-uacomment=" + unsafe_char], expected)
 

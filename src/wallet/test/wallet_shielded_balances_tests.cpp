@@ -49,7 +49,7 @@ CWalletTx& AddShieldedBalanceToWallet(CAmount inputAmount,
 {
 
     // Dummy wallet, used to generate the dummy transparent input key and sign it in the transaction builder
-    CWallet dummyWallet;
+    CWallet dummyWallet("dummy", CWalletDBWrapper::CreateDummy());
     dummyWallet.SetMinVersion(FEATURE_SAPLING);
     dummyWallet.SetupSPKM(false, true);
     LOCK(dummyWallet.cs_wallet);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(GetShieldedSimpleCachedCreditAndDebit)
     auto consensusParams = Params().GetConsensus();
 
     // Main wallet
-    CWallet &wallet = *pwalletMain;
+    CWallet &wallet = m_wallet;
     LOCK2(cs_main, wallet.cs_wallet);
     setupWallet(wallet);
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(VerifyShieldedToRemoteShieldedCachedBalance)
     auto consensusParams = Params().GetConsensus();
 
     // Main wallet
-    CWallet &wallet = *pwalletMain;
+    CWallet &wallet = m_wallet;
     LOCK2(cs_main, wallet.cs_wallet);
     setupWallet(wallet);
 
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(GetShieldedAvailableCredit)
     auto consensusParams = Params().GetConsensus();
 
     // Main wallet
-    CWallet &wallet = *pwalletMain;
+    CWallet &wallet = m_wallet;
     LOCK2(cs_main, wallet.cs_wallet);
     setupWallet(wallet);
 
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(GetShieldedAvailableCredit)
     std::vector<SaplingOutPoint> ops = {saplingEntries[0].op};
     uint256 anchor;
     std::vector<boost::optional<SaplingWitness>> witnesses;
-    pwalletMain->GetSaplingScriptPubKeyMan()->GetSaplingNoteWitnesses(ops, witnesses, anchor);
+    wallet.GetSaplingScriptPubKeyMan()->GetSaplingNoteWitnesses(ops, witnesses, anchor);
     SaplingSpendValues sapSpendValues{saplingEntries[0].note, anchor, *witnesses[0]};
 
     // Remote destination values

@@ -12,13 +12,13 @@
 #include "utilmoneystr.h"
 #include "validation.h"
 #include "wallet/wallet.h"
+#include "wallet/walletutil.h"
 
 std::string GetWalletHelpString(bool showDebug)
 {
     std::string strUsage = HelpMessageGroup(_("Wallet options:"));
     strUsage += HelpMessageOpt("-backuppath=<dir|file>", _("Specify custom backup path to add a copy of any wallet backup. If set as dir, every backup generates a timestamped file. If set as file, will rewrite to that file every backup."));
     strUsage += HelpMessageOpt("-createwalletbackups=<n>", strprintf(_("Number of automatic wallet backups (default: %d)"), DEFAULT_CREATEWALLETBACKUPS));
-    strUsage += HelpMessageOpt("-custombackupthreshold=<n>", strprintf(_("Number of custom location backups to retain (default: %d)"), DEFAULT_CUSTOMBACKUPTHRESHOLD));
     strUsage += HelpMessageOpt("-disablewallet", strprintf(_("Do not load the wallet and disable wallet RPC calls (default: %u)"), DEFAULT_DISABLE_WALLET));
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
     strUsage += HelpMessageOpt("-legacywallet", _("On first run, create a legacy wallet instead of a HD wallet"));
@@ -30,7 +30,8 @@ std::string GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), 1));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format") + " " + _("on startup"));
-    strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
+    strUsage += HelpMessageOpt("-wallet=<path>", _("Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to <walletdir> if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in <walletdir>.)"));
+    strUsage += HelpMessageOpt("-walletdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"));
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
         " " + _("(1 = keep tx meta data e.g. payment request information, 2 = drop tx meta data)"));
@@ -44,7 +45,6 @@ std::string GetWalletHelpString(bool showDebug)
         strUsage += HelpMessageGroup(_("Wallet debugging/testing options:"));
         strUsage += HelpMessageOpt("-dblogsize=<n>", strprintf(_("Flush database activity from memory pool to disk log every <n> megabytes (default: %u)"), DEFAULT_WALLET_DBLOGSIZE));
         strUsage += HelpMessageOpt("-flushwallet", strprintf(_("Run a thread to flush wallet periodically (default: %u)"), DEFAULT_FLUSHWALLET));
-        strUsage += HelpMessageOpt("-printcoinstake", _("Display verbose coin stake messages in the debug.log file."));
         strUsage += HelpMessageOpt("-privdb", strprintf(_("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)"), DEFAULT_WALLET_PRIVDB));
     }
 
@@ -61,7 +61,7 @@ bool WalletParameterInteraction()
         return UIError(strprintf(_("%s is not allowed in combination with enabled wallet functionality"), "-sysperms"));
     }
 
-    gArgs.SoftSetArg("-wallet", DEFAULT_WALLET_DAT);
+    gArgs.SoftSetArg("-wallet", "");
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
 
     if (gArgs.GetBoolArg("-salvagewallet", false)) {
@@ -147,50 +147,54 @@ bool WalletVerify()
         return true;
     }
 
+    if (gArgs.IsArgSet("-walletdir")) {
+        fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
+        if (!fs::exists(wallet_dir)) {
+            return UIError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.string()));
+        } else if (!fs::is_directory(wallet_dir)) {
+            return UIError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), wallet_dir.string()));
+        } else if (!wallet_dir.is_absolute()) {
+            return UIError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), wallet_dir.string()));
+        }
+    }
+
+    LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
+
     uiInterface.InitMessage(_("Verifying wallet(s)..."));
 
     // Keep track of each wallet absolute path to detect duplicates.
     std::set<fs::path> wallet_paths;
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        if (fs::path(walletFile).filename() != walletFile) {
-            return UIError(strprintf(_("Error loading wallet %s. %s parameter must only specify a filename (not a path)."), walletFile, "-wallet"));
-        }
-        if (SanitizeString(walletFile, SAFE_CHARS_FILENAME) != walletFile) {
-            return UIError(strprintf(_("Error loading wallet %s. Invalid characters in %s filename."), walletFile, "-wallet"));
-        }
+        auto opRes = VerifyWalletPath(walletFile);
+        if (!opRes) return UIError(opRes.getError());
 
-        fs::path wallet_path = fs::absolute(walletFile, GetDataDir());
-
-        if (fs::exists(wallet_path) && (!fs::is_regular_file(wallet_path) || fs::is_symlink(wallet_path))) {
-            return UIError(strprintf(_("Error loading wallet %s. %s filename must be a regular file."), walletFile, "-wallet"));
-        }
-
+        fs::path wallet_path = fs::absolute(walletFile, GetWalletDir());
         if (!wallet_paths.insert(wallet_path).second) {
             return UIError(strprintf(_("Error loading wallet %s. Duplicate %s filename specified."), walletFile, "-wallet"));
         }
 
         std::string strError;
-        if (!CWalletDB::VerifyEnvironment(walletFile, GetDataDir().string(), strError)) {
+        if (!CWalletDB::VerifyEnvironment(wallet_path, strError)) {
             return UIError(strError);
         }
 
         if (gArgs.GetBoolArg("-salvagewallet", false)) {
             // Recover readable keypairs:
-            CWallet dummyWallet;
+            CWallet dummyWallet("dummy", CWalletDBWrapper::CreateDummy());
             std::string backup_filename;
             // Even if we don't use this lock in this function, we want to preserve
             // lock order in LoadToWallet if query of chain state is needed to know
             // tx status. If lock can't be taken, tx confirmation status may be not
             // reliable.
             LOCK(cs_main);
-            if (!CWalletDB::Recover(walletFile, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
+            if (!CWalletDB::Recover(wallet_path, (void *)&dummyWallet, CWalletDB::RecoverKeysOnlyFilter, backup_filename)) {
                 return false;
             }
         }
 
         std::string strWarning;
-        bool dbV = CWalletDB::VerifyDatabaseFile(walletFile, GetDataDir().string(), strWarning, strError);
+        bool dbV = CWalletDB::VerifyDatabaseFile(wallet_path, strWarning, strError);
         if (!strWarning.empty()) {
             UIWarning(strWarning);
         }
@@ -210,9 +214,15 @@ bool InitLoadWallet()
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        // automatic backups
+        // create/load wallet
+        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
+        if (!pwallet) {
+            return false;
+        }
+
+        // automatic backup
         std::string strWarning, strError;
-        if(!AutoBackupWallet(walletFile, strWarning, strError)) {
+        if (!AutoBackupWallet(*pwallet, strWarning, strError)) {
             if (!strWarning.empty()) {
                 UIWarning(strprintf("%s: %s", walletFile, strWarning));
             }
@@ -221,10 +231,7 @@ bool InitLoadWallet()
             }
         }
 
-        CWallet * const pwallet = CWallet::CreateWalletFromFile(walletFile);
-        if (!pwallet) {
-            return false;
-        }
+        // add to wallets in use
         vpwallets.emplace_back(pwallet);
     }
 
