@@ -831,7 +831,7 @@
            <number>12</number>
           </property>
           <item>
-           <widget class="QWidget" name="widget_3" native="true">
+           <widget class="QWidget" name="containerPage2" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,3">
              <property name="spacing">
               <number>0</number>
@@ -890,11 +890,11 @@
                   <property name="text">
                    <string>Add the amount per month, the months that will remain active and the recipient address</string>
                   </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
-                  </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -913,6 +913,23 @@
                 <property name="topMargin">
                  <number>0</number>
                 </property>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_4">
+                  <property name="spacing">
+                   <number>10</number>
+                  </property>
+                  <item alignment="Qt::AlignBottom">
+                   <widget class="QLabel" name="labelAddress">
+                    <property name="text">
+                     <string>Address</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="lineEditAddress"/>
+                  </item>
+                 </layout>
+                </item>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_6">
                   <item>
@@ -948,23 +965,6 @@
                      <widget class="QLineEdit" name="lineEditMonths"/>
                     </item>
                    </layout>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_4">
-                  <property name="spacing">
-                   <number>10</number>
-                  </property>
-                  <item alignment="Qt::AlignBottom">
-                   <widget class="QLabel" name="labelAddress">
-                    <property name="text">
-                     <string>Address</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="lineEditAddress"/>
                   </item>
                  </layout>
                 </item>

@@ -12,7 +12,9 @@ class CreateProposalDialog;
 class QPushButton;
 }
 
+class ContactsDropdown;
 class GovernanceModel;
+class PIVXGUI;
 class SnackBar;
 class WalletModel;
 
@@ -21,7 +23,7 @@ class CreateProposalDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit CreateProposalDialog(QWidget *parent, GovernanceModel* _govModel, WalletModel* _walletModel);
+    explicit CreateProposalDialog(PIVXGUI* parent, GovernanceModel* _govModel, WalletModel* _walletModel);
     ~CreateProposalDialog() override;
 
 public Q_SLOTS:
@@ -32,6 +34,7 @@ public Q_SLOTS:
     void propAmountChanged(const QString& newText);
     void propMonthsChanged(const QString& newText);
     bool propaddressChanged(const QString& newText);
+    void onAddrListClicked();
 
 private:
     Ui::CreateProposalDialog *ui;
@@ -41,6 +44,8 @@ private:
     QPushButton* icConfirm1{nullptr};
     QPushButton* icConfirm2{nullptr};
     QPushButton* icConfirm3{nullptr};
+    ContactsDropdown* menuContacts{nullptr};
+    QAction* actAddrList{nullptr};
     int pos = 0;
 
     void loadSummary();

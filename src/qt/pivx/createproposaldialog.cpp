@@ -5,7 +5,9 @@
 #include "qt/pivx/createproposaldialog.h"
 #include "qt/pivx/forms/ui_createproposaldialog.h"
 
+#include "qt/pivx/contactsdropdown.h"
 #include "qt/pivx/governancemodel.h"
+#include "qt/pivx/pwidget.h"
 #include "qt/pivx/qtutils.h"
 #include "qt/pivx/snackbar.h"
 
@@ -21,7 +23,7 @@ void initPageIndexBtn(QPushButton* btn)
     btn->setVisible(false);
 }
 
-CreateProposalDialog::CreateProposalDialog(QWidget *parent, GovernanceModel* _govModel, WalletModel* _walletModel) :
+CreateProposalDialog::CreateProposalDialog(PIVXGUI* parent, GovernanceModel* _govModel, WalletModel* _walletModel) :
     QDialog(parent),
     ui(new Ui::CreateProposalDialog),
     govModel(_govModel),
@@ -92,7 +94,10 @@ void CreateProposalDialog::setupPageTwo()
     setCssProperty(ui->labelMessageDest, "dialog-proposal-message");
     setEditBoxStyle(ui->labelAmount, ui->lineEditAmount, "e.g 500 PIV");
     setEditBoxStyle(ui->labelMonths, ui->lineEditMonths, "e.g 2");
+
     setEditBoxStyle(ui->labelAddress, ui->lineEditAddress, "e.g D...something..");
+    setCssProperty(ui->lineEditAddress, "edit-primary-multi-book");
+    actAddrList = ui->lineEditAddress->addAction(QIcon("://ic-contact-arrow-down"), QLineEdit::TrailingPosition);
 
     ui->lineEditAmount->setValidator(new QIntValidator(1,43200, this));
     ui->lineEditMonths->setValidator(new QIntValidator(1, govModel->getPropMaxPaymentsCount(), this));
@@ -100,6 +105,7 @@ void CreateProposalDialog::setupPageTwo()
     connect(ui->lineEditAmount, &QLineEdit::textChanged, this, &CreateProposalDialog::propAmountChanged);
     connect(ui->lineEditMonths, &QLineEdit::textChanged, this, &CreateProposalDialog::propMonthsChanged);
     connect(ui->lineEditAddress, &QLineEdit::textChanged, this, &CreateProposalDialog::propaddressChanged);
+    connect(actAddrList, &QAction::triggered, this, &CreateProposalDialog::onAddrListClicked);
 }
 
 void CreateProposalDialog::setupPageThree()
@@ -284,6 +290,52 @@ void CreateProposalDialog::onBackClicked()
             break;
         }
     }
+}
+
+void CreateProposalDialog::onAddrListClicked()
+{
+    int addrSize = walletModel->getAddressTableModel()->sizeSend() +
+                       walletModel->getAddressTableModel()->sizeRecv();
+    if (addrSize == 0) {
+        inform(tr("No contacts available, you can go to the contacts screen and add some there!"));
+        return;
+    }
+
+    int rowHeight = ui->lineEditAddress->height();
+    int height = 70 * 2 + 1; // 2 rows (70 each row).
+    int width = ui->lineEditAddress->width();
+
+    if (!menuContacts) {
+        // TODO: add different row icon for contacts and own addresses.
+        // TODO: add filter/search option.
+        // TODO: fix bug that the last presented address isn't being showed.
+        menuContacts = new ContactsDropdown(
+                width,
+                height,
+                static_cast<PIVXGUI*>(parent()),
+                this
+        );
+        menuContacts->setWalletModel(walletModel, {AddressTableModel::Send, AddressTableModel::Receive});
+        connect(menuContacts, &ContactsDropdown::contactSelected, [this](QString address, QString label) {
+            ui->lineEditAddress->setText(address);
+        });
+
+    }
+
+    if (menuContacts->isVisible()) {
+        menuContacts->hide();
+        return;
+    }
+
+    menuContacts->resizeList(width, height);
+    menuContacts->setStyleSheet(this->styleSheet());
+    menuContacts->adjustSize();
+
+    QPoint pos = ui->containerPage2->rect().bottomLeft();
+    pos.setY(pos.y() + rowHeight * 2 - 20);
+    pos.setX(pos.x() + 74); // Add widget's fixed padding manually
+    menuContacts->move(pos);
+    menuContacts->show();
 }
 
 void CreateProposalDialog::inform(const QString& text)
