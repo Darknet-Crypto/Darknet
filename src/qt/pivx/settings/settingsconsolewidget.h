@@ -64,6 +64,7 @@ private:
     QCompleter *autoCompleter;
 
     void startExecutor();
+    void updateTextColors(bool isLightTheme);
 
 private Q_SLOTS:
     void on_lineEdit_returnPressed();

@@ -99,6 +99,7 @@ SettingsConsoleWidget::SettingsConsoleWidget(PIVXGUI* _window, QWidget *parent) 
     RPCSetTimerInterfaceIfUnset(rpcTimerInterface);
 
     startExecutor();
+    updateTextColors(isLightTheme());
     clear();
 }
 
@@ -157,8 +158,10 @@ bool SettingsConsoleWidget::eventFilter(QObject* obj, QEvent* event)
                     QApplication::postEvent(ui->lineEdit, new QKeyEvent(*keyevt));
                     return true;
                 }
-                if (mod == Qt::ControlModifier && key == Qt::Key_L)
+                if (mod == Qt::ControlModifier && key == Qt::Key_L) {
+                    updateTextColors(isLightTheme());
                     clear(false);
+                }
         }
     }
     return QWidget::eventFilter(obj, event);
@@ -211,9 +214,6 @@ void SettingsConsoleWidget::clear(bool clearHistory)
                 QUrl(ICON_MAPPING[i].url),
                 QImage(ICON_MAPPING[i].source));
     }
-
-    QString theme;
-    changeTheme(isLightTheme(), theme);
 
 #ifdef Q_OS_MAC
     QString clsKey = "(⌘)-L";
@@ -335,8 +335,7 @@ void SettingsConsoleWidget::scrollToEnd()
     scrollbar->setValue(scrollbar->maximum());
 }
 
-
-void SettingsConsoleWidget::changeTheme(bool isLightTheme, QString &theme)
+void SettingsConsoleWidget::updateTextColors(bool isLightTheme)
 {
     // Set default style sheet
     if (isLightTheme) {
@@ -359,6 +358,12 @@ void SettingsConsoleWidget::changeTheme(bool isLightTheme, QString &theme)
                 "b { color: #FFFFFF; } ");
     }
     updateStyle(ui->messagesWidget);
+}
+
+void SettingsConsoleWidget::changeTheme(bool isLightTheme, QString &theme)
+{
+    updateTextColors(isLightTheme);
+    clear(false);
 }
 
 void SettingsConsoleWidget::onCommandsClicked()
