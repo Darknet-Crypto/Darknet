@@ -332,7 +332,7 @@ void TopBar::onBtnReceiveClicked()
         showHideOp(true);
         ReceiveDialog *receiveDialog = new ReceiveDialog(window);
         receiveDialog->updateQr(addressStr);
-        if (openDialogWithOpaqueBackground(receiveDialog, window)) {
+        if (openDialogWithOpaqueBackground(receiveDialog, window, Qt::Popup)) {
             inform(tr("Address Copied"));
         }
         receiveDialog->deleteLater();

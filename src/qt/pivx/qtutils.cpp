@@ -19,6 +19,9 @@ Qt::Modifier SHORT_KEY
     = Qt::ALT;
 #endif
 
+// forward declaration
+bool openDialogWithOpaqueBackgroundImpl(QDialog* widget, PIVXGUI* gui, double posX, int posY, Qt::WindowType windowFlags);
+
 // Open dialog at the bottom
 bool openDialog(QDialog* widget, QWidget* gui)
 {
@@ -58,7 +61,22 @@ void openDialogFullScreen(QWidget* parent, QWidget* dialog)
 
 bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX, int posY)
 {
-    widget->setWindowFlags(Qt::CustomizeWindowHint);
+    return openDialogWithOpaqueBackgroundImpl(widget, gui, posX, posY, Qt::CustomizeWindowHint);
+}
+
+bool openDialogWithOpaqueBackground(QDialog* widget, PIVXGUI* gui, double posX)
+{
+    return openDialogWithOpaqueBackgroundY(widget, gui, posX, 5);
+}
+
+bool openDialogWithOpaqueBackground(QDialog* widget, PIVXGUI* gui, Qt::WindowType windowFlags, double posX)
+{
+    return openDialogWithOpaqueBackgroundImpl(widget, gui, posX, 5, windowFlags);
+}
+
+bool openDialogWithOpaqueBackgroundImpl(QDialog* widget, PIVXGUI* gui, double posX, int posY, Qt::WindowType windowFlags)
+{
+    widget->setWindowFlags(windowFlags);
     widget->setAttribute(Qt::WA_TranslucentBackground, true);
     QPropertyAnimation* animation = new QPropertyAnimation(widget, "pos");
     animation->setDuration(300);
@@ -71,11 +89,6 @@ bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX,
     bool res = widget->exec();
     gui->showHide(false);
     return res;
-}
-
-bool openDialogWithOpaqueBackground(QDialog* widget, PIVXGUI* gui, double posX)
-{
-    return openDialogWithOpaqueBackgroundY(widget, gui, posX, 5);
 }
 
 bool openDialogWithOpaqueBackgroundFullScreen(QDialog* widget, PIVXGUI* gui)

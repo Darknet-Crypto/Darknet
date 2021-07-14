@@ -37,6 +37,7 @@ void closeDialog(QDialog* widget, PIVXGUI* gui);
 void openDialogFullScreen(QWidget* parent, QWidget* dialog);
 bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX = 3, int posY = 5);
 bool openDialogWithOpaqueBackground(QDialog* widget, PIVXGUI* gui, double posX = 3);
+bool openDialogWithOpaqueBackground(QDialog* widget, PIVXGUI* gui, Qt::WindowType windowFlags, double posX = 3);
 bool openDialogWithOpaqueBackgroundFullScreen(QDialog* widget, PIVXGUI* gui);
 
 //
