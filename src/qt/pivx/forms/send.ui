@@ -255,7 +255,7 @@ padding-top:2px;
              <string notr="true">margin-left:8px;</string>
             </property>
             <property name="text">
-             <string>PIVX address or contact label</string>
+             <string>Receiving address</string>
             </property>
            </widget>
           </item>
