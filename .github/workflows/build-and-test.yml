@@ -328,8 +328,8 @@ jobs:
             functional_tests: false
             no_depends: 1
             goal: deploy
-            cc: $(brew --prefix llvm)/bin/clang
-            cxx: $(brew --prefix llvm)/bin/clang++
+            cc: clang
+            cxx: clang++
             BITCOIN_CONFIG: "--enable-zmq --enable-gui --enable-reduce-exports --enable-werror"
 
     steps:

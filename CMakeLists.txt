@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
 # Search for and use ccache if available to speed up build times
 find_program(CCACHE_PROGRAM ccache)
@@ -148,6 +148,9 @@ set(LEVELDB_BUILD_BENCHMARKS OFF CACHE BOOL "Build LevelDB's benchmarks" FORCE)
 set(LEVELDB_INSTALL OFF CACHE BOOL "Install LevelDB's header and library" FORCE)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/leveldb)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/src/chiabls)
+FetchContent_GetProperties(relic)
+
 file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
 file(GLOB CRYPTO_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/crypto/*.h)
 file(GLOB PRIMITIVE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/src/primitives/*.h)
@@ -238,6 +241,9 @@ target_include_directories(SERVER_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/helpers/memenv
     ${CMAKE_CURRENT_SOURCE_DIR}/src/rust/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/chiabls/src
+    ${relic_SOURCE_DIR}/include
+    ${relic_BINARY_DIR}/include
     ${ZMQ_INCLUDE_DIR} ${LIBEVENT_INCLUDE_DIR} ${BerkeleyDB_INCLUDE_DIRS}
     )
 
@@ -399,6 +405,9 @@ target_include_directories(COMMON_A PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/secp256k1/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
         ${CMAKE_CURRENT_SOURCE_DIR}/src/univalue/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/chiabls/src
+        ${relic_SOURCE_DIR}/include
+        ${relic_BINARY_DIR}/include
         ${BerkeleyDB_INCLUDE_DIRS}
         )
 
@@ -476,7 +485,7 @@ if($ENV{target} MATCHES "Windows")
     list(APPEND pivx-cli_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/pivx-cli-res.rc)
 endif()
 add_executable(pivx-cli ${pivx-cli_SOURCES})
-add_dependencies(pivx-cli libunivalue libzcashrust)
+add_dependencies(pivx-cli libunivalue libzcashrust bls)
 target_link_libraries(pivx-cli
         CLI_A
         univalue
@@ -484,6 +493,7 @@ target_link_libraries(pivx-cli
         BITCOIN_CRYPTO_A
         SAPLING_A
         rustzcash
+        bls
         ${Boost_LIBRARIES} ${LIBEVENT_LIB} ${sodium_LIBRARY_RELEASE} -ldl pthread
         )
 if($ENV{target} MATCHES "Windows")
@@ -498,7 +508,7 @@ if($ENV{target} MATCHES "Windows")
     list(APPEND pivx-tx_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/pivx-tx-res.rc)
 endif()
 add_executable(pivx-tx ${pivx-tx_SOURCES})
-add_dependencies(pivx-tx libunivalue libsecp256k1 libzcashrust)
+add_dependencies(pivx-tx libunivalue libsecp256k1 libzcashrust bls)
 target_link_libraries(pivx-tx
         univalue
         COMMON_A
@@ -506,6 +516,7 @@ target_link_libraries(pivx-tx
         UTIL_A
         BITCOIN_CRYPTO_A
         secp256k1
+        bls
         SAPLING_A
         rustzcash
         ${Boost_LIBRARIES} ${LIBEVENT_LIB} ${sodium_LIBRARY_RELEASE} ${GMP_LIBRARY} -ldl pthread
@@ -522,7 +533,7 @@ if($ENV{target} MATCHES "Windows")
     list(APPEND pivxd_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/pivxd-res.rc)
 endif()
 add_executable(pivxd ${pivxd_SOURCES} ${BitcoinHeaders})
-add_dependencies(pivxd libunivalue libsecp256k1 libzcashrust leveldb crc32c)
+add_dependencies(pivxd libunivalue libsecp256k1 libzcashrust leveldb crc32c bls)
 target_include_directories(pivxd PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb
         ${CMAKE_CURRENT_SOURCE_DIR}/src/leveldb/include
@@ -542,6 +553,7 @@ target_link_libraries(pivxd
         leveldb
         crc32c
         secp256k1
+        bls
         rustzcash
         ${BerkeleyDB_LIBRARIES} ${Boost_LIBRARIES} ${LIBEVENT_LIB} ${GMP_LIBRARY} pthread
         )

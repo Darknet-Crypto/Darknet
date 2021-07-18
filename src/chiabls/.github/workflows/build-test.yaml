@@ -1,0 +1,82 @@
+name:  Build and Test C++, Javascript, and Python
+
+on: [push, pull_request]
+
+jobs:
+  build_wheels:
+    name: Build and Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+    - name: Cancel previous runs on the same branch
+      if: ${{ github.ref != 'refs/heads/main' }}
+      uses: styfle/cancel-workflow-action@0.7.0
+      with:
+        access_token: ${{ github.token }}
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      name: Install Python
+      with:
+        python-version: '3.8'
+
+    - name: Ubuntu build C++ and test with valgrind
+      if: startsWith(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update
+        sudo apt-get install valgrind -y
+        sudo apt-get install snap -y
+        sudo apt-get remove --purge cmake -y
+        sudo snap install cmake --classic
+        hash -r
+        cmake --version
+        echo "attempting to curl"
+        curl -L https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable.tar.gz | tar xz
+        echo "curl complete."
+        cd libsodium-stable
+        ls -l
+        ./configure --with-pic="yes"
+        make
+        sudo make install
+        cd ..
+        echo "Setting libsodium to static compile."
+        export CIBUILDWHEEL=1
+        mkdir -p build
+        cd build
+        cmake ../
+        cmake --build . -- -j 6
+        echo "Running ./src/runtest"
+        ./src/runtest
+        valgrind --leak-check=full --show-leak-kinds=all --errors-for-leak-kinds=all  ./src/runtest
+
+    - name: Mac OS build C++ and test
+      if: startsWith(matrix.os, 'macos')
+      run: |
+        ls -l
+        export MACOSX_DEPLOYMENT_TARGET=10.14
+        mkdir -p build
+        ls -l build
+        cd build
+        cmake ../
+        cmake --build . -- -j 6
+        echo "Running ./src/runtest"
+        ./src/runtest
+
+    - name: Test pure python implementation
+      run: |
+        python python-impl/impl-test.py
+        
+    - name: Install emsdk
+      uses: mymindstorm/setup-emsdk@v9
+      
+    - name: Test javascript bindings
+      run: |
+        emcc -v
+        sh emsdk_build.sh
+        sh js_test.sh

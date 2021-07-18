@@ -1,4 +1,4 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.14)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(Boost_USE_STATIC_LIBS ON)
@@ -148,7 +148,7 @@ set(BITCOIN_TESTS
 
 set(test_test_pivx_SOURCES ${BITCOIN_TEST_SUITE} ${BITCOIN_TESTS} ${JSON_TEST_FILES})
 add_executable(test_pivx ${test_test_pivx_SOURCES} ${BitcoinHeaders})
-add_dependencies(test_pivx genHeaders libunivalue libsecp256k1 libzcashrust leveldb crc32c)
+add_dependencies(test_pivx genHeaders libunivalue libsecp256k1 libzcashrust leveldb crc32c bls)
 target_include_directories(test_pivx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src/leveldb
         ${CMAKE_SOURCE_DIR}/src/leveldb/include
@@ -169,6 +169,7 @@ target_link_libraries(test_pivx PRIVATE
         crc32c
         secp256k1
         rustzcash
+        bls
         ${BerkeleyDB_LIBRARIES} ${Boost_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${LIBEVENT_LIB} ${GMP_LIBRARY} pthread
         )
 if(ZMQ_FOUND)

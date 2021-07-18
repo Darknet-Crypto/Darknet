@@ -40,14 +40,14 @@ if [ -z "${COMMIT_RANGE}" ]; then
 fi
 
 showdiff() {
-  if ! git diff -U0 "${COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes.md" ":(exclude)doc/release-notes/" ":(exclude)build-aux/snap/local/patches/"; then
+  if ! git diff -U0 "${COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)src/chiabls" ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes.md" ":(exclude)doc/release-notes/" ":(exclude)build-aux/snap/local/patches/"; then
     echo "Failed to get a diff"
     exit 1
   fi
 }
 
 showcodediff() {
-  if ! git diff -U0 "${COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes.md" ":(exclude)doc/release-notes/" ":(exclude)build-aux/snap/local/patches/"; then
+  if ! git diff -U0 "${COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/chiabls" ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes.md" ":(exclude)doc/release-notes/" ":(exclude)build-aux/snap/local/patches/"; then
     echo "Failed to get a diff"
     exit 1
   fi
