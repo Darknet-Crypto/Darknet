@@ -30,7 +30,7 @@ private:
     std::string strInvalid;
 
     // Functions used inside UpdateValid()/IsWellFormed - setting strInvalid
-    bool IsHeavilyDownvoted(bool fNewRules);
+    bool IsHeavilyDownvoted();
     bool IsExpired(int nCurrentHeight);
     bool CheckStartEnd();
     bool CheckAmount(const CAmount& nTotalBudget);
