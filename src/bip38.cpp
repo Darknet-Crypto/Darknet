@@ -15,6 +15,26 @@
 #include <secp256k1.h>
 #include <string>
 
+static bool Base58ToHex(const std::string& base58_str, std::string& hex_str)
+{
+    // Base58 decoding
+    // it must be 39 bytes - and another 4 bytes for base58 checksum
+    size_t key_size = 39 + 4;
+    std::vector<unsigned char> vchKey;
+    if (!DecodeBase58(base58_str.c_str(), vchKey, key_size) || vchKey.size() != key_size) {
+        return false;
+    }
+    // Hex enconding
+    std::stringstream ss;
+    ss << std::hex;
+    for (unsigned int i = 0; i < vchKey.size(); i++) {
+        const unsigned char* c = vchKey.data() + i;
+        ss << std::setw(2) << std::setfill('0') << (int)*c;
+    }
+    hex_str = ss.str();
+    return true;
+}
+
 
 /** 39 bytes - 78 characters
  * 1) Prefix - 2 bytes - 4 chars - strKey[0..3]
@@ -149,13 +169,13 @@ std::string BIP38_Encrypt(std::string strAddress, std::string strPassphrase, uin
 
 bool BIP38_Decrypt(std::string strPassphrase, std::string strEncryptedKey, uint256& privKey, bool& fCompressed)
 {
-    std::string strKey = DecodeBase58(strEncryptedKey.c_str());
-
-    //incorrect encoding of key, it must be 39 bytes - and another 4 bytes for base58 checksum
-    if (strKey.size() != (78 + 8))
+    std::string strKey;
+    if (!Base58ToHex(strEncryptedKey, strKey)) {
+        // incorrect encoding of key
         return false;
+    }
 
-    //invalid prefix
+    // invalid prefix
     if (uint256S(ReverseEndianString(strKey.substr(0, 2))) != UINT256_ONE)
         return false;
 

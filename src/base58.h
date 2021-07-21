@@ -43,12 +43,6 @@ std::string EncodeBase58(const std::vector<unsigned char>& vch);
 NODISCARD bool DecodeBase58(const char* psz, std::vector<unsigned char>& vchRet, int max_ret_len);
 
 /**
- * Decode a base58-encoded string (psz) into a string.
- * psz cannot be NULL.
- */
-std::string DecodeBase58(const char* psz, int max_ret_len = std::numeric_limits<int>::max());
-
-/**
  * Decode a base58-encoded string (str) into a byte vector (vchRet).
  * return true if decoding is successful.
  */
