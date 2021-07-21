@@ -398,18 +398,17 @@ bool CZerocoinDB::EraseAccChecksum(const uint32_t& nChecksum, const libzerocoin:
     return Erase(std::make_pair(LZC_ACCUMCS, std::make_pair(nChecksum, denom)));
 }
 
-bool CZerocoinDB::WipeAccChecksums()
+bool CZerocoinDB::ReadAll(std::map<std::pair<uint32_t, libzerocoin::CoinDenomination>, int>& mapCheckpoints)
 {
     std::unique_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->Seek(std::make_pair(LZC_ACCUMCS, (uint32_t) 0));
-    std::set<uint32_t> setDelete;
+    pcursor->Seek(std::make_pair(LZC_ACCUMCS, std::make_pair((uint32_t) 0, libzerocoin::CoinDenomination::ZQ_ERROR)));
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
-        std::pair<char, uint32_t> key;
+        std::pair<char, std::pair<uint32_t, libzerocoin::CoinDenomination>> key;
         if (pcursor->GetKey(key) && key.first == LZC_ACCUMCS) {
-            uint32_t acs;
-            if (pcursor->GetValue(acs)) {
-                setDelete.insert(acs);
+            int height;
+            if (pcursor->GetValue(height)) {
+                mapCheckpoints[key.second] = height;
                 pcursor->Next();
             } else {
                 return error("%s : failed to read value", __func__);
@@ -419,13 +418,36 @@ bool CZerocoinDB::WipeAccChecksums()
         }
     }
 
-    for (auto& acs : setDelete) {
-        if (!Erase(std::make_pair(LZC_ACCUMCS, acs)))
-            LogPrintf("%s: error failed to acc checksum %s\n", __func__, acs);
+    LogPrintf("%s: Total acc checksum records: %d\n", __func__, mapCheckpoints.size());
+    return true;
+}
+
+void CZerocoinDB::WipeAccChecksums()
+{
+    std::unique_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->Seek(std::make_pair(LZC_ACCUMCS, std::make_pair((uint32_t) 0, libzerocoin::CoinDenomination::ZQ_ERROR)));
+    std::set<std::pair<char, std::pair<uint32_t, libzerocoin::CoinDenomination>>> setDelete;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        std::pair<char, std::pair<uint32_t, libzerocoin::CoinDenomination>> key;
+        if (pcursor->GetKey(key) && key.first == LZC_ACCUMCS) {
+            setDelete.insert(key);
+        } else {
+            break;
+        }
+        pcursor->Next();
     }
 
-    LogPrintf("%s: AccChecksum database removed.\n", __func__);
-    return true;
+    int deleted = 0;
+    for (const auto& k : setDelete) {
+        if (!Erase(k)) {
+            LogPrintf("%s: failed to delete acc checksum %d-%d\n", __func__, k.second.first, k.second.second);
+        } else {
+            deleted++;
+        }
+    }
+
+    LogPrintf("%s: % entries to delete. % entries deleted\n", __func__, setDelete.size(), deleted);
 }
 
 namespace {
@@ -527,4 +549,53 @@ bool CCoinsViewDB::Upgrade() {
     }
     db.WriteBatch(batch);
     return true;
+}
+
+Optional<int> AccumulatorCache::Get(uint32_t checksum, libzerocoin::CoinDenomination denom)
+{
+    const auto& p = std::make_pair(checksum, denom);
+
+    // First check the map in-memory.
+    const auto it = mapCheckpoints.find(p);
+    if (it != mapCheckpoints.end()) {
+        return Optional<int>(it->second);
+    }
+
+    // Not found. Check disk.
+    int checksum_height = 0;
+    if (db->ReadAccChecksum(checksum, denom, checksum_height)) {
+        // save in memory and return
+        mapCheckpoints[p] = checksum_height;
+        return Optional<int>(checksum_height);
+    }
+
+    // Not found. Scan the chain.
+    return nullopt;
+}
+
+void AccumulatorCache::Set(uint32_t checksum, libzerocoin::CoinDenomination denom, int height)
+{
+    // Update memory cache
+    mapCheckpoints[std::make_pair(checksum, denom)] = height;
+}
+
+void AccumulatorCache::Erase(uint32_t checksum, libzerocoin::CoinDenomination denom)
+{
+    // Update memory cache and database
+    mapCheckpoints.erase(std::make_pair(checksum, denom));
+    db->EraseAccChecksum(checksum, denom);
+}
+
+void AccumulatorCache::Flush()
+{
+    for (const auto& it : mapCheckpoints) {
+        // Write to disk
+        db->WriteAccChecksum(it.first.first, it.first.second, it.second);
+    }
+}
+
+void AccumulatorCache::Wipe()
+{
+    mapCheckpoints.clear();
+    db->WipeAccChecksums();
 }

@@ -148,7 +148,8 @@ BITCOIN_TESTS =\
   test/util_tests.cpp \
   test/sha256compress_tests.cpp \
   test/upgrades_tests.cpp \
-  test/validation_block_tests.cpp
+  test/validation_block_tests.cpp \
+  test/zerocoindb_tests.cpp
 
 SAPLING_TESTS =\
     test/librust/libsapling_utils_tests.cpp \

@@ -89,7 +89,7 @@ bool CStakeKernel::CheckKernelHash(bool fSkipLog) const
  */
 
 // helper function for CheckProofOfStake and GetStakeKernelHash
-static bool LoadStakeInput(const CBlock& block, std::unique_ptr<CStakeInput>& stake)
+static bool LoadStakeInput(const CBlock& block, std::unique_ptr<CStakeInput>& stake, int nHeight)
 {
     // Check that this is a PoS block
     if (!block.IsProofOfStake())
@@ -98,10 +98,10 @@ static bool LoadStakeInput(const CBlock& block, std::unique_ptr<CStakeInput>& st
     // Construct the stakeinput object
     const CTxIn& txin = block.vtx[1]->vin[0];
     stake = txin.IsZerocoinSpend() ?
-            std::unique_ptr<CStakeInput>(new CLegacyZPivStake()) :
-            std::unique_ptr<CStakeInput>(CPivStake::NewPivStake(txin));
+            std::unique_ptr<CStakeInput>(CLegacyZPivStake::NewZPivStake(txin, nHeight)) :
+            std::unique_ptr<CStakeInput>(CPivStake::NewPivStake(txin, nHeight, block.nTime));
 
-    return stake && stake->InitFromTxIn(txin);
+    return stake != nullptr;
 }
 
 /*
@@ -115,9 +115,7 @@ static bool LoadStakeInput(const CBlock& block, std::unique_ptr<CStakeInput>& st
  */
 bool Stake(const CBlockIndex* pindexPrev, CStakeInput* stakeInput, unsigned int nBits, int64_t& nTimeTx)
 {
-    // Double check stake input contextual checks
-    const int nHeightTx = pindexPrev->nHeight + 1;
-    if (!stakeInput || !stakeInput->ContextCheck(nHeightTx, nTimeTx)) return false;
+    if (!stakeInput) return false;
 
     // Get the new time slot (and verify it's not the same as previous block)
     const bool fRegTest = Params().IsRegTestNet();
@@ -144,14 +142,8 @@ bool CheckProofOfStake(const CBlock& block, std::string& strError, const CBlockI
     const int nHeight = pindexPrev->nHeight + 1;
     // Initialize stake input
     std::unique_ptr<CStakeInput> stakeInput;
-    if (!LoadStakeInput(block, stakeInput)) {
+    if (!LoadStakeInput(block, stakeInput, nHeight)) {
         strError = "stake input initialization failed";
-        return false;
-    }
-
-    // Stake input contextual checks
-    if (!stakeInput->ContextCheck(nHeight, block.nTime)) {
-        strError = "stake input failing contextual checks";
         return false;
     }
 
@@ -198,7 +190,7 @@ bool GetStakeKernelHash(uint256& hashRet, const CBlock& block, const CBlockIndex
 {
     // Initialize stake input
     std::unique_ptr<CStakeInput> stakeInput;
-    if (!LoadStakeInput(block, stakeInput))
+    if (!LoadStakeInput(block, stakeInput, pindexPrev->nHeight + 1))
         return error("%s : stake input initialization failed", __func__);
 
     CStakeKernel stakeKernel(pindexPrev, stakeInput.get(), block.nBits, block.nTime);

@@ -139,6 +139,7 @@ set(BITCOIN_TESTS
         ${CMAKE_CURRENT_SOURCE_DIR}/sha256compress_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/upgrades_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/validation_block_tests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/zerocoindb_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/librust/sapling_rpc_wallet_tests.cpp
         ${CMAKE_SOURCE_DIR}/src/wallet/test/wallet_tests.cpp
         ${CMAKE_SOURCE_DIR}/src/wallet/test/crypto_tests.cpp

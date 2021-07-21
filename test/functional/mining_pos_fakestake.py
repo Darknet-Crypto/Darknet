@@ -28,6 +28,7 @@ At the beginning nodes[0] mines 50 blocks (201-250) to reach PoS activation.
   - nodes[1] spends utxos_to_spend at block 256
   - nodes[0] mines 5 more blocks (256-260) to include the spends
   - nodes[1] spams 3 blocks with height 261 --> [REJECTED]
+  - nodes[1] spams fork block with height 258 --> [REJECTED] (coinstake input spent on active chain before the split)
 --> ends at height 260
 
 ** Test_3:
@@ -69,7 +70,7 @@ class FakeStakeTest(PivxTestFramework):
         underline = "-" * len(title)
         description = "Tests the 'fake stake' scenarios.\n" \
                       "1) Stake on main chain with coinstake input spent on the same block\n" \
-                      "2) Stake on main chain with coinstake input spent on a previous block\n" \
+                      "2) Stake on main and fork chain with coinstake input spent on a previous block\n" \
                       "3) Stake on a fork chain with coinstake input spent (later) in main chain\n"
         self.log.info("\n\n%s\n%s\n%s\n", title, underline, description)
 
@@ -138,8 +139,19 @@ class FakeStakeTest(PivxTestFramework):
         assert_equal(self.nodes[1].getbalance(), 0)
 
         # nodes[1] spams 3 blocks with height 261 --> [REJECTED]
+        self.log.info("Test rejection on active chain...")
         assert_equal(self.nodes[1].getblockcount(), 260)
         self.fake_stake(list(self.utxos_to_spend))
+
+        # nodes[1] spams fork block with height 258 --> [REJECTED]
+        self.log.info("Test rejection on fork chain...")
+        assert_equal(self.nodes[1].getblockcount(), 260)
+        prevBlockHash = self.nodes[1].getblockhash(257)
+        prevModifier = self.nodes[1].getblock(prevBlockHash)['stakeModifier']
+        block = self.stake_block(1, 7, 258, prevBlockHash, prevModifier, "0",
+                                 self.get_prevouts(1, list(self.utxos_to_spend)), self.mocktime, "", [], False)
+        self.send_block_and_check_error(block, "tx inputs spent/not-available on forked chain pre-split")
+        assert_equal(self.nodes[1].getblockcount(), 260)
         self.log.info("--> Test_2 passed")
 
     # ** PoS block - cstake input spent in the future
@@ -155,6 +167,10 @@ class FakeStakeTest(PivxTestFramework):
         assert_equal(self.nodes[1].getblockcount(), 260)
         self.fake_stake(list(self.utxos_to_spend), nHeight=251)
         self.log.info("--> Test_3 passed")
+
+    def send_block_and_check_error(self, block, error_mess):
+        with self.nodes[1].assert_debug_log([error_mess]):
+            self.nodes[1].submitblock(bytes_to_hex_str(block.serialize()))
 
 
     def fake_stake(self,
@@ -224,13 +240,19 @@ class FakeStakeTest(PivxTestFramework):
 
             # Try submitblock and check result
             self.log.info("Trying to send block [%s...] with height=%d" % (block.hash[:16], nHeight))
-            var = self.nodes[1].submitblock(bytes_to_hex_str(block.serialize()))
-            sleep(1)
-            if (not fMustBeAccepted and var not in [None, "rejected"]):
-                raise AssertionError("Error, block submitted (%s) in %s chain" % (var, chainName))
-            elif (fMustBeAccepted and var != "inconclusive"):
-                raise AssertionError("Error, block not submitted (%s) in %s chain" % (var, chainName))
-            self.log.info("Done. Updating context...")
+            if not fMustBeAccepted:
+                if fDoubleSpend:
+                    reject_log = "inputs double spent in the same block"
+                elif isMainChain:
+                    reject_log = "tx inputs spent/not-available on main chain"
+                else:
+                    reject_log = "tx inputs spent on forked chain post-split"
+                self.send_block_and_check_error(block, reject_log)
+            else:
+                var = self.nodes[1].submitblock(bytes_to_hex_str(block.serialize()))
+                if (var != "inconclusive"):
+                    raise AssertionError("Error, block not submitted (%s) in %s chain" % (var, chainName))
+            self.log.info("Done.")
 
             # Sync and check block hash
             bHash = block.hash

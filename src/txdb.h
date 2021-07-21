@@ -170,8 +170,32 @@ public:
     /** Accumulators (only for zPoS IBD): [checksum, denom] --> block height **/
     bool WriteAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, const int nHeight);
     bool ReadAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, int& nHeightRet);
+    bool ReadAll(std::map<std::pair<uint32_t, libzerocoin::CoinDenomination>, int>& mapCheckpoints);
     bool EraseAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom);
-    bool WipeAccChecksums();
+    void WipeAccChecksums();
+};
+
+class AccumulatorCache
+{
+private:
+    // underlying database
+    CZerocoinDB* db{nullptr};
+    // in-memory map [checksum, denom] --> block height
+    std::map<std::pair<uint32_t, libzerocoin::CoinDenomination>, int> mapCheckpoints;
+
+public:
+    explicit AccumulatorCache(CZerocoinDB* _db) : db(_db)
+    {
+        assert(db != nullptr);
+        bool res = db->ReadAll(mapCheckpoints);
+        assert(res);
+    }
+
+    Optional<int> Get(uint32_t checksum, libzerocoin::CoinDenomination denom);
+    void Set(uint32_t checksum, libzerocoin::CoinDenomination denom, int height);
+    void Erase(uint32_t checksum, libzerocoin::CoinDenomination denom);
+    void Flush();
+    void Wipe();
 };
 
 #endif // BITCOIN_TXDB_H

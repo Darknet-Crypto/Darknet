@@ -37,6 +37,7 @@
 #include <utility>
 #include <vector>
 
+class AccumulatorCache;
 class CBlockIndex;
 class CBlockTreeDB;
 class CBudgetManager;
@@ -367,6 +368,9 @@ extern CBlockTreeDB* pblocktree;
 
 /** Global variable that points to the zerocoin database (protected by cs_main) */
 extern CZerocoinDB* zerocoinDB;
+
+/** In-memory cache for the zerocoin accumulators */
+extern std::unique_ptr<AccumulatorCache> accumulatorCache;
 
 /** Global variable that points to the spork database (protected by cs_main) */
 extern CSporkDB* pSporkDB;

@@ -16,17 +16,21 @@ private:
     uint256 hashSerial{UINT256_ZERO};
 
 public:
-    CLegacyZPivStake() : CStakeInput(nullptr) {}
+    CLegacyZPivStake(const CBlockIndex* _pindexFrom, uint32_t _nChecksum, libzerocoin::CoinDenomination _denom, const uint256& _hashSerial) :
+        CStakeInput(_pindexFrom),
+        nChecksum(_nChecksum),
+        denom(_denom),
+        hashSerial(_hashSerial)
+    {}
 
-    explicit CLegacyZPivStake(const libzerocoin::CoinSpend& spend);
-    bool InitFromTxIn(const CTxIn& txin) override;
+    static CLegacyZPivStake* NewZPivStake(const CTxIn& txin, int nHeight);
+
     bool IsZPIV() const override { return true; }
     uint32_t GetChecksum() const { return nChecksum; }
     const CBlockIndex* GetIndexFrom() const override;
     CAmount GetValue() const override;
     CDataStream GetUniqueness() const override;
     bool GetTxOutFrom(CTxOut& out) const override { return false; /* not available */ }
-    virtual bool ContextCheck(int nHeight, uint32_t nTime) override;
 };
 
 #endif //PIVX_LEGACY_ZPOS_H
