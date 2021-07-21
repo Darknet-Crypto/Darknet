@@ -312,7 +312,8 @@ public:
         }
 
         bool operator<(const ListCoinsKey& key2) const {
-            return this->address < key2.address;
+            return this->address < key2.address ||
+                    (this->address == key2.address && this->stakerAddress < key2.stakerAddress);
         }
     };
 

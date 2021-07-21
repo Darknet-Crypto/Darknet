@@ -780,7 +780,14 @@ void CoinControlDialog::updateView()
 
             // address
             itemWalletAddress->setText(COLUMN_ADDRESS, sWalletAddress);
-            itemWalletAddress->setToolTip(COLUMN_ADDRESS, sWalletAddress);
+            if (stakerAddress != nullopt) {
+                itemWalletAddress->setIcon(COLUMN_CONFIRMATIONS, QIcon("://ic-check-cold-staking-off"));
+                QString label = tr("Delegated to %1").arg(*stakerAddress);
+                itemWalletAddress->setToolTip(COLUMN_ADDRESS, label);
+                itemWalletAddress->setToolTip(COLUMN_CONFIRMATIONS, label);
+            } else {
+                itemWalletAddress->setToolTip(COLUMN_ADDRESS, sWalletAddress);
+            }
         }
 
         CAmount nSum = 0;
