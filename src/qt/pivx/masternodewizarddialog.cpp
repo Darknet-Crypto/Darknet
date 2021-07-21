@@ -9,7 +9,6 @@
 #include "clientmodel.h"
 #include "key_io.h"
 #include "optionsmodel.h"
-#include "pairresult.h"
 #include "qt/pivx/mnmodel.h"
 #include "qt/pivx/guitransactionsutils.h"
 #include "qt/pivx/qtutils.h"
@@ -221,18 +220,16 @@ bool MasterNodeWizardDialog::createMN()
     // If not found create a new collateral tx
     if (!walletModel->getMNCollateralCandidate(collateralOut)) {
         // New receive address
-        Destination dest;
-        PairResult r = walletModel->getNewAddress(dest, alias);
-
-        if (!r.result) {
+        auto r = walletModel->getNewAddress(alias);
+        if (!r) {
             // generate address fail
-            inform(tr(r.status->c_str()));
+            inform(tr(r.getError().c_str()));
             return false;
         }
 
         // const QString& addr, const QString& label, const CAmount& amount, const QString& message
         SendCoinsRecipient sendCoinsRecipient(
-                QString::fromStdString(dest.ToString()),
+                QString::fromStdString(r.getObjResult()->ToString()),
                 QString::fromStdString(alias),
                 clientModel->getMNCollateralRequiredAmount(),
                 "");

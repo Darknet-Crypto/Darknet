@@ -187,7 +187,6 @@ BITCOIN_CORE_H = \
   evo/evonotificationinterface.h \
   evo/providertx.h \
   evo/specialtx.h \
-  pairresult.h \
   addressbook.h \
   wallet/db.h \
   flatfile.h \

@@ -56,7 +56,7 @@ public:
         return *this;
     }
 
-    std::string ToString()
+    std::string ToString() const
     {
         if (!IsValidDestination(dest)) {
             // Invalid address

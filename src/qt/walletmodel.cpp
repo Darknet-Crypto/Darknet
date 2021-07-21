@@ -470,8 +470,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 Destination ownerAdd;
                 if (rcp.ownerAddress.isEmpty()) {
                     // Create new internal owner address
-                    if (!getNewAddress(ownerAdd).result)
-                        return CannotCreateInternalAddress;
+                    auto res = getNewAddress();
+                    if (!res) return CannotCreateInternalAddress;
+                    ownerAdd = *res.getObjResult();
                 } else {
                     ownerAdd = Destination(DecodeDestination(rcp.ownerAddress.toStdString()), false);
                 }
@@ -921,27 +922,25 @@ int64_t WalletModel::getKeyCreationTime(const libzcash::SaplingPaymentAddress& a
     return 0;
 }
 
-PairResult WalletModel::getNewAddress(Destination& ret, std::string label) const
+CallResult<Destination> WalletModel::getNewAddress(const std::string& label) const
 {
-    CTxDestination dest;
-    PairResult res = wallet->getNewAddress(dest, label);
-    if (res.result) ret = Destination(dest, false);
-    return res;
+    auto res = wallet->getNewAddress(label);
+    return res ? CallResult<Destination>(Destination(*res.getObjResult(), false)) :
+           CallResult<Destination>(res.getError());
 }
 
-PairResult WalletModel::getNewStakingAddress(Destination& ret,std::string label) const
+CallResult<Destination> WalletModel::getNewStakingAddress(const std::string& label) const
 {
-    CTxDestination dest;
-    PairResult res = wallet->getNewStakingAddress(dest, label);
-    if (res.result) ret = Destination(dest, true);
-    return res;
+    auto res = wallet->getNewStakingAddress(label);
+    return res ? CallResult<Destination>(Destination(*res.getObjResult(), true)) :
+           CallResult<Destination>(res.getError());
 }
 
-PairResult WalletModel::getNewShieldedAddress(QString& shieldedAddrRet, std::string strLabel)
+CallResult<Destination> WalletModel::getNewShieldedAddress(QString& shieldedAddrRet, std::string strLabel)
 {
     shieldedAddrRet = QString::fromStdString(
             KeyIO::EncodePaymentAddress(wallet->GenerateNewSaplingZKey(strLabel)));
-    return PairResult(true);
+    return CallResult<Destination>(true, "");
 }
 
 bool WalletModel::whitelistAddressFromColdStaking(const QString &addressStr)

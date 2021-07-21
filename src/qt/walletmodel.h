@@ -17,7 +17,6 @@
 #include "key_io.h"
 #include "operationresult.h"
 #include "support/allocators/zeroafterfree.h"
-#include "pairresult.h"
 
 #include <map>
 #include <vector>
@@ -270,14 +269,14 @@ public:
     int64_t getKeyCreationTime(const CTxDestination& address);
     int64_t getKeyCreationTime(const std::string& address);
     int64_t getKeyCreationTime(const libzcash::SaplingPaymentAddress& address);
-    PairResult getNewAddress(Destination& ret, std::string label = "") const;
+    CallResult<Destination> getNewAddress(const std::string& label = "") const;
     /**
      * Return a new address used to receive for delegated cold stake purpose.
      */
-    PairResult getNewStakingAddress(Destination& ret, std::string label = "") const;
+    CallResult<Destination> getNewStakingAddress(const std::string& label = "") const;
 
     //! Return a new shielded address.
-    PairResult getNewShieldedAddress(QString& shieldedAddrRet, std::string strLabel = "");
+    CallResult<Destination> getNewShieldedAddress(QString& shieldedAddrRet, std::string strLabel = "");
 
     //! Return new wallet rescan reserver
     WalletRescanReserver getRescanReserver() const { return WalletRescanReserver(wallet); }

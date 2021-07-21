@@ -4,8 +4,6 @@
 
 #include "wallet/test/wallet_test_fixture.h"
 
-#include "blockassembler.h"
-#include "consensus/merkle.h"
 #include "primitives/block.h"
 #include "sapling/transaction_builder.h"
 #include "sapling/sapling_operation.h"
@@ -83,9 +81,10 @@ static SaplingOperation createOperationAndBuildTx(std::unique_ptr<CWallet>& pwal
 // Test double spend notes in the mempool and in blocks.
 BOOST_AUTO_TEST_CASE(test_in_block_and_mempool_notes_double_spend)
 {
-    CTxDestination coinbaseDest;
-    auto ret = pwalletMain->getNewAddress(coinbaseDest, "coinbase");
-    BOOST_ASSERT_MSG(ret.result, "cannot create address");
+    auto ret = pwalletMain->getNewAddress("coinbase");
+    BOOST_CHECK(ret);
+    CTxDestination coinbaseDest = *ret.getObjResult();
+    BOOST_ASSERT_MSG(ret, "cannot create address");
     BOOST_ASSERT_MSG(IsValidDestination(coinbaseDest), "invalid destination");
     BOOST_ASSERT_MSG(IsMine(*pwalletMain, coinbaseDest), "destination not from wallet");
 
@@ -132,15 +131,17 @@ BOOST_AUTO_TEST_CASE(test_in_block_and_mempool_notes_double_spend)
 
     // first generate a valid tx spending only one note
     // Create the operation and build the transaction
-    CTxDestination tDest2;
-    pwalletMain->getNewAddress(tDest2, "receiveValid");
+    auto res = pwalletMain->getNewAddress("receiveValid");
+    BOOST_CHECK(res);
+    CTxDestination tDest2 = *res.getObjResult();
     std::vector<SendManyRecipient> recipients2;
     recipients2.emplace_back(tDest2, CAmount(90 * COIN), false);
     SaplingOperation operation2 = createOperationAndBuildTx(pwalletMain, recipients2, tipHeight + 1, false);
 
     // Create a second transaction that spends the same note with a different output now
-    CTxDestination tDest3;
-    pwalletMain->getNewAddress(tDest3, "receiveInvalid");
+    res = pwalletMain->getNewAddress("receiveInvalid");
+    BOOST_CHECK(res);
+    CTxDestination tDest3 = *res.getObjResult();;
     std::vector<SendManyRecipient> recipients3;
     recipients3.emplace_back(tDest3, CAmount(5 * COIN), false);
     SaplingOperation operation3 = createOperationAndBuildTx(pwalletMain, recipients3, tipHeight + 1, false);

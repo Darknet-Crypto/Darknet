@@ -746,7 +746,7 @@ void SendWidget::onShieldCoinsClicked()
             QString strAddress;
             auto res = walletModel->getNewShieldedAddress(strAddress, "");
             // Check for generation errors
-            if (!res.result) {
+            if (!res) {
                 inform(tr("Error generating address to shield PIVs"));
                 return false;
             }

@@ -573,8 +573,9 @@ BOOST_AUTO_TEST_CASE(cached_balances_tests)
     wallet.SetLastBlockProcessed(chainActive.Tip());
 
     // Receive balance from an external source
-    CTxDestination receivingAddr;
-    BOOST_ASSERT(wallet.getNewAddress(receivingAddr, "receiving_address").result);
+    auto res = wallet.getNewAddress("receiving_address");
+    BOOST_ASSERT(res);
+    CTxDestination receivingAddr = *res.getObjResult();
     CTxOut creditOut(nCredit/2, GetScriptForDestination(receivingAddr));
     CWalletTx& wtxCredit = ReceiveBalanceWith({creditOut, creditOut},wallet);
 

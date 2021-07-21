@@ -12,7 +12,6 @@
 #include "qt/pivx/addressholder.h"
 #include "walletmodel.h"
 #include "guiutil.h"
-#include "pairresult.h"
 
 #include <QModelIndex>
 #include <QColor>
@@ -252,18 +251,17 @@ void ReceiveWidget::onNewAddressClicked()
         }
 
         QString strAddress;
-        PairResult r(false);
+        CallResult<Destination> r(false, "");
         if (!shieldedMode) {
-            Destination address;
-            r = walletModel->getNewAddress(address, "");
-            strAddress = QString::fromStdString(address.ToString());
+            r = walletModel->getNewAddress("");
+            if (r) strAddress = QString::fromStdString(r.getObjResult()->ToString());
         } else {
             r = walletModel->getNewShieldedAddress(strAddress, "");
         }
 
         // Check validity
-        if (!r.result) {
-            inform(r.status->c_str());
+        if (!r) {
+            inform(r.getError().c_str());
             return;
         }
 

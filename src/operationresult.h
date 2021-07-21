@@ -19,6 +19,7 @@ public:
     OperationResult(bool _res) : m_res(_res) { }
 
     std::string getError() const { return (m_error ? *m_error : ""); }
+    bool getResult() const { return m_res; }
     explicit operator bool() const { return m_res; }
 };
 
@@ -26,5 +27,19 @@ inline OperationResult errorOut(const std::string& errorStr)
 {
     return OperationResult(false, errorStr);
 }
+
+
+template <class T>
+class CallResult : public OperationResult {
+private:
+    Optional<T> m_obj_res{nullopt};
+public:
+    CallResult(bool _res, const std::string& _error) : OperationResult(_res, _error) { }
+    CallResult(bool _res, T _obj) : OperationResult(_res), m_obj_res(_obj) { }
+    CallResult(T _obj) : OperationResult(true), m_obj_res(_obj) { }
+    CallResult(const std::string& error) : OperationResult(false, error) { }
+    const Optional<T>& getObjResult() const { return m_obj_res; }
+};
+
 
 #endif //OPERATIONRESULT_H

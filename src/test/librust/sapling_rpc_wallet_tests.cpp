@@ -421,8 +421,9 @@ BOOST_AUTO_TEST_CASE(rpc_shieldsendmany_taddr_to_sapling)
     UniValue retValue;
 
     // add keys manually
-    CTxDestination taddr;
-    pwalletMain->getNewAddress(taddr, "");
+    auto res = pwalletMain->getNewAddress("");
+    BOOST_CHECK(res);
+    CTxDestination taddr = *res.getObjResult();
     std::string taddr1 = EncodeDestination(taddr);
     auto zaddr1 = pwalletMain->GenerateNewSaplingZKey();
 
