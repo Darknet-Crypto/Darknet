@@ -1160,7 +1160,7 @@ if test x$use_pkgconfig = xyes; then
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
         fi
-        PKG_CHECK_MODULES([SODIUM], [libsodium],, [AC_MSG_ERROR(libsodium not found.)])
+        PKG_CHECK_MODULES([SODIUM], [libsodium], [have_sodium=yes], [AC_MSG_ERROR(libsodium not found.)])
       fi
 
       if test "x$use_zmq" = "xyes"; then
@@ -1182,7 +1182,7 @@ else
     if test x$TARGET_OS != xwindows; then
       AC_CHECK_LIB([event_pthreads],[main],EVENT_PTHREADS_LIBS=-levent_pthreads,AC_MSG_ERROR(libevent_pthreads missing))
     fi
-    AC_CHECK_HEADER([sodium/core.h],, AC_MSG_ERROR(libsodium headers missing),)
+    AC_CHECK_HEADER([sodium/core.h], [have_sodium=yes], AC_MSG_ERROR(libsodium headers missing),)
     AC_CHECK_LIB([sodium],[main],SODIUM_LIBS=-lsodium,AC_MSG_ERROR(libsodium missing))
   fi
 
@@ -1215,6 +1215,31 @@ else
     BITCOIN_QT_CHECK([AC_CHECK_LIB([Qt5Charts], [main],[CHARTS_LIBS=-lQt5Charts], [have_qtcharts=no])])
     BITCOIN_QT_CHECK([AC_CHECK_HEADER([QtCharts/qchartview.h],, have_qtcharts=no)])
   fi
+fi
+
+dnl check for supported sodium library version
+if test x$have_sodium != xno; then
+  AC_MSG_CHECKING([whether libsodium library version is supported])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      #include <sodium.h>
+    ]], [[
+      #if SODIUM_LIBRARY_VERSION_MAJOR <= 10
+      // Everything is okay
+      #elif SODIUM_LIBRARY_VERSION_MAJOR == 10
+        #if SODIUM_LIBRARY_VERSION_MINOR == 0
+        // Everything is okay
+        #else
+        #  error libsodium library minor version is unsupported
+        #endif
+      #else
+      #  error libsodium library major version is unsupported
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+    ],[
+    AC_MSG_RESULT(no)
+    AC_MSG_ERROR([libsodium library version > 10.1 is unsupported.])
+  ])
 fi
 
 dnl gmp check

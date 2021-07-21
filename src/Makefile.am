@@ -168,6 +168,7 @@ BITCOIN_CORE_H = \
   compat/cpuid.h \
   compat/endian.h \
   compat/sanity.h \
+  sapling/sodium_sanity.h \
   compressor.h \
   consensus/consensus.h \
   consensus/merkle.h \
@@ -540,6 +541,7 @@ libbitcoin_util_a_SOURCES = \
   clientversion.cpp \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
+  sapling/sodium_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
   interfaces/handler.cpp \

@@ -406,6 +406,7 @@ set(UTIL_SOURCES
         ./src/compat/strnlen.cpp
         ./src/compat/glibc_sanity.cpp
         ./src/compat/glibcxx_sanity.cpp
+        ./src/sapling/sodium_sanity.cpp
         ./src/chainparamsbase.cpp
         ./src/clientversion.cpp
         ./src/fs.cpp

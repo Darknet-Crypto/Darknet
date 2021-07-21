@@ -72,13 +72,13 @@ jobs:
         config:
           - name: Linux
             os: ubuntu-18.04
-            packages: python3-zmq qttools5-dev qtbase5-dev qttools5-dev-tools libqt5svg5-dev libqt5charts5-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev libgmp-dev libsodium-dev cargo
+            packages: python3-zmq qttools5-dev qtbase5-dev qttools5-dev-tools libqt5svg5-dev libqt5charts5-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev libgmp-dev cargo
             cc: gcc
             cxx: g++
 
           - name: macOS
             os: macos-10.15
-            packages: python3 autoconf automake berkeley-db4 libtool boost miniupnpc libnatpmp pkg-config qt5 zmq libevent qrencode gmp libsodium rust
+            packages: python3 autoconf automake berkeley-db4 libtool boost miniupnpc libnatpmp pkg-config qt5 zmq libevent qrencode gmp rust
             cc: $(brew --prefix llvm)/bin/clang
             cxx: $(brew --prefix llvm)/bin/clang++
 
@@ -92,10 +92,16 @@ jobs:
             sudo apt-add-repository "ppa:ondrej/php" -y
             sudo apt-get --yes update
             sudo apt-get install --no-install-recommends --no-upgrade -qq "$APT_BASE" ${{ matrix.config.packages }}
+            sudo dpkg --remove --force-depends libsodium-dev
           fi
           if [[ ${{ matrix.config.os }} = macos* ]]; then
             brew install "$APT_BASE" ${{ matrix.config.packages }}
+            brew uninstall --ignore-dependencies libsodium
           fi
+
+          echo "Installing libsodium.."
+          sudo ./contrib/install_sodium.sh `pwd`
+          echo "libsodium install finished.."
 
       - name: Prepare ccache timestamp
         id: ccache_cache_timestamp
@@ -117,8 +123,8 @@ jobs:
           CC=${{ matrix.config.cc }}
           CXX=${{ matrix.config.cxx }}
           if [[ ${{ matrix.config.os }} = macos* ]]; then
-            export CPPFLAGS="-I/usr/local/Cellar/gmp/6.2.1/include"
-            export LDFLAGS="-L/usr/local/Cellar/gmp/6.2.1/lib"
+            export CPPFLAGS="-I/usr/local/Cellar/gmp/6.2.1/include -I/usr/local/include"
+            export LDFLAGS="-L/usr/local/Cellar/gmp/6.2.1/lib -L/usr/local/lib"
           fi
           export CC
           export CXX
@@ -302,7 +308,16 @@ jobs:
           - name: x86_64 Linux  [GOAL:install]  [bionic]  [no depends only system libs]
             os: ubuntu-18.04
             host: x86_64-unknown-linux-gnu
-            apt_get: python3-zmq qtbase5-dev qttools5-dev-tools libqt5svg5-dev libqt5charts5-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libnatpmp-dev libzmq3-dev libqrencode-dev libgmp-dev libsodium-dev cargo
+            apt_get: python3-zmq qtbase5-dev qttools5-dev-tools libqt5svg5-dev libqt5charts5-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libnatpmp-dev libzmq3-dev libqrencode-dev libgmp-dev cargo
+            unit_tests: true
+            no_depends: 1
+            goal: install
+            BITCOIN_CONFIG: "--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER"
+
+          - name: x86_64 Linux  [GOAL:install]  [focal]  [no depends only system libs]
+            os: ubuntu-20.04
+            host: x86_64-unknown-linux-gnu
+            apt_get: python3-zmq qtbase5-dev qttools5-dev-tools libqt5svg5-dev libqt5charts5-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libsodium1.0.17-dev libzmq3-dev libqrencode-dev libgmp-dev cargo
             unit_tests: true
             no_depends: 1
             goal: install
@@ -322,7 +337,7 @@ jobs:
           - name: macOS 10.15 [GOAL:deploy] [native macOS using syslibs no unit or functional tests]
             os: macos-10.15
             host: x86_64-apple-darwin19.6.0
-            brew_install: autoconf automake ccache berkeley-db4 libtool boost miniupnpc pkg-config python3 qt5 zmq libevent qrencode gmp libsodium rust librsvg
+            brew_install: autoconf automake ccache berkeley-db4 libtool boost miniupnpc pkg-config python3 qt5 zmq libevent qrencode gmp rust librsvg
             unit_tests: false
             functional_tests: false
             no_depends: 1
@@ -339,12 +354,28 @@ jobs:
         run: |
           if [[ ${{ matrix.config.os }} = ubuntu* ]]; then
             sudo apt-add-repository "ppa:ondrej/php" -y
+            sudo apt-add-repository "ppa:fuzzbawls/libsodium1.0.17" -y
             sudo apt-get --yes update
             sudo apt-get install --no-install-recommends --no-upgrade -qq "$APT_BASE" ${{ matrix.config.apt_get }}
           fi
           if [[ ${{ matrix.config.os }} = macos* ]]; then
             brew install ${{ matrix.config.brew_install }}
             pip3 install ds_store mac_alias
+          fi
+
+          if [ "${{ matrix.config.no_depends }}" = 1 ]; then
+            if [ "${{ matrix.config.os }}" != "ubuntu-20.04" ] && "${{ matrix.config.os }}" != "macos-10.15" ]; then
+                sudo dpkg --remove --force-depends libsodium-dev
+            fi
+
+            if [[ ${{ matrix.config.os }} = macos* ]]; then
+                brew install "$APT_BASE" ${{ matrix.config.packages }}
+                brew uninstall --ignore-dependencies libsodium
+            fi
+
+            echo "Installing libsodium.."
+            sudo ./contrib/install_sodium.sh `pwd`
+            echo "libsodium install finished.."
           fi
 
       - name: depends cache files

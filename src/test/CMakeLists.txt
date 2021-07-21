@@ -102,6 +102,7 @@ set(BITCOIN_TESTS
         ${CMAKE_CURRENT_SOURCE_DIR}/hash_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/key_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/dbwrapper_tests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/libsodium_consensus_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/main_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/mempool_tests.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/merkle_tests.cpp
