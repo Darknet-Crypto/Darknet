@@ -214,7 +214,7 @@ std::string ProRegPL::MakeSignString() const
 {
     std::ostringstream ss;
 
-    ss << HexStr(scriptPayout.begin(), scriptPayout.end()) << "|";
+    ss << HexStr(scriptPayout) << "|";
     ss << strprintf("%d", nOperatorReward) << "|";
     ss << EncodeDestination(keyIDOwner) << "|";
     ss << EncodeDestination(keyIDVoting) << "|";

@@ -16,8 +16,8 @@ static UniValue TxShieldedSpendsToJSON(const CTransaction& tx) {
             obj.pushKV("anchor", spendDesc.anchor.GetHex());
             obj.pushKV("nullifier", spendDesc.nullifier.GetHex());
             obj.pushKV("rk", spendDesc.rk.GetHex());
-            obj.pushKV("proof", HexStr(spendDesc.zkproof.begin(), spendDesc.zkproof.end()));
-            obj.pushKV("spendAuthSig", HexStr(spendDesc.spendAuthSig.begin(), spendDesc.spendAuthSig.end()));
+            obj.pushKV("proof", HexStr(spendDesc.zkproof));
+            obj.pushKV("spendAuthSig", HexStr(spendDesc.spendAuthSig));
             vdesc.push_back(obj);
         }
     }
@@ -32,9 +32,9 @@ static UniValue TxShieldedOutputsToJSON(const CTransaction& tx) {
             obj.pushKV("cv", outputDesc.cv.GetHex());
             obj.pushKV("cmu", outputDesc.cmu.GetHex());
             obj.pushKV("ephemeralKey", outputDesc.ephemeralKey.GetHex());
-            obj.pushKV("encCiphertext", HexStr(outputDesc.encCiphertext.begin(), outputDesc.encCiphertext.end()));
-            obj.pushKV("outCiphertext", HexStr(outputDesc.outCiphertext.begin(), outputDesc.outCiphertext.end()));
-            obj.pushKV("proof", HexStr(outputDesc.zkproof.begin(), outputDesc.zkproof.end()));
+            obj.pushKV("encCiphertext", HexStr(outputDesc.encCiphertext));
+            obj.pushKV("outCiphertext", HexStr(outputDesc.outCiphertext));
+            obj.pushKV("proof", HexStr(outputDesc.zkproof));
             vdesc.push_back(obj);
         }
     }
@@ -50,7 +50,7 @@ void TxSaplingToJSON(const CTransaction& tx, UniValue& entry) {
         UniValue voutputdesc = TxShieldedOutputsToJSON(tx);
         entry.pushKV("vShieldOutput", voutputdesc);
         if (tx.sapData->hasBindingSig()) {
-            entry.pushKV("bindingSig", HexStr(tx.sapData->bindingSig.begin(), tx.sapData->bindingSig.end()));
+            entry.pushKV("bindingSig", HexStr(tx.sapData->bindingSig));
         }
     }
 }

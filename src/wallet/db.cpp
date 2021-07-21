@@ -49,7 +49,7 @@ void CheckUniqueFileid(const CDBEnv& env, const std::string& filename, Db& db)
             const char* item_filename = nullptr;
             item.second->get_dbname(&item_filename, nullptr);
             throw std::runtime_error(strprintf("CDB: Can't open database %s (duplicates fileid %s from %s)", filename,
-                HexStr(std::begin(item_fileid), std::end(item_fileid)),
+                HexStr(std::vector<u_int8_t>(std::begin(item_fileid), std::end(item_fileid))),
                 item_filename ? item_filename : "(unknown database)"));
         }
     }

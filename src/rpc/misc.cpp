@@ -238,7 +238,7 @@ public:
         CPubKey vchPubKey;
         obj.pushKV("isscript", false);
         if (pwallet && pwallet->GetPubKey(keyID, vchPubKey)) {
-            obj.pushKV("pubkey", HexStr(vchPubKey));
+            obj.pushKV("pubkey", HexStr(vchPubKey.Raw()));
             obj.pushKV("iscompressed", vchPubKey.IsCompressed());
         }
         return obj;
@@ -254,7 +254,7 @@ public:
             int nRequired;
             ExtractDestinations(subscript, whichType, addresses, nRequired);
             obj.pushKV("script", GetTxnOutputType(whichType));
-            obj.pushKV("hex", HexStr(subscript.begin(), subscript.end()));
+            obj.pushKV("hex", HexStr(subscript));
             UniValue a(UniValue::VARR);
             for (const CTxDestination& addr : addresses)
                 a.push_back(EncodeDestination(addr));
@@ -354,7 +354,7 @@ public:
     UniValue operator()(const CTxDestination &dest) const {
         UniValue ret(UniValue::VOBJ);
         CScript scriptPubKey = GetScriptForDestination(dest);
-        ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
+        ret.pushKV("scriptPubKey", HexStr(scriptPubKey));
 
 #ifdef ENABLE_WALLET
         isminetype mine = pwallet ? IsMine(*pwallet, dest) : ISMINE_NO;
@@ -538,7 +538,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(innerID));
-    result.pushKV("redeemScript", HexStr(inner.begin(), inner.end()));
+    result.pushKV("redeemScript", HexStr(inner));
 
     return result;
 }

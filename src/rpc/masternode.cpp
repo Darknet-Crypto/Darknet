@@ -377,7 +377,7 @@ void SerializeMNB(UniValue& statusObjRet, const CMasternodeBroadcast& mnb, const
         successful++;
         CDataStream ssMnb(SER_NETWORK, PROTOCOL_VERSION);
         ssMnb << mnb;
-        statusObjRet.pushKV("hex", HexStr(ssMnb.begin(), ssMnb.end()));
+        statusObjRet.pushKV("hex", HexStr(ssMnb));
     } else {
         failed++;
     }

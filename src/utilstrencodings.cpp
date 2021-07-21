@@ -528,6 +528,19 @@ std::string Capitalize(std::string str)
     return str;
 }
 
+std::string HexStr(const Span<const uint8_t> s)
+{
+    std::string rv;
+    static constexpr char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                                         '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    rv.reserve(s.size() * 2);
+    for (uint8_t v: s) {
+        rv.push_back(hexmap[v >> 4]);
+        rv.push_back(hexmap[v & 15]);
+    }
+    return rv;
+}
+
 // Based on http://www.zedwood.com/article/cpp-is-valid-utf8-string-function
 bool IsValidUTF8(const std::string& str)
 {

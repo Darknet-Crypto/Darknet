@@ -249,7 +249,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         if (meta->HasKeyOrigin()) {
             ret.pushKV("hdkeypath", meta->key_origin.pathToString());
             ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
-            ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint, meta->key_origin.fingerprint + 4));
+            ret.pushKV("hdmasterfingerprint", HexStr(Span<unsigned char>(meta->key_origin.fingerprint, 4)));
         }
     }
 
@@ -575,6 +575,11 @@ UniValue getnewshieldaddress(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     return KeyIO::EncodePaymentAddress(pwallet->GenerateNewSaplingZKey());
+}
+
+static inline std::string HexStrTrimmed(std::array<unsigned char, ZC_MEMO_SIZE> vch)
+{
+    return HexStr(std::vector<unsigned char>(vch.begin(), FindFirstNonZero(vch.rbegin(), vch.rend()).base()));
 }
 
 UniValue listshieldunspent(const JSONRPCRequest& request)
@@ -1531,12 +1536,12 @@ UniValue viewshieldtransaction(const JSONRPCRequest& request)
         // empty memo
         if (!static_cast<bool>(optMemo)) {
             const std::array<unsigned char, 1> memo {0xF6};
-            entry.pushKV("memo", HexStr(memo.begin(), memo.end()));
+            entry.pushKV("memo", HexStr(memo));
             return;
         }
         const auto& memo = *optMemo;
         auto end = FindFirstNonZero(memo.rbegin(), memo.rend());
-        entry.pushKV("memo", HexStr(memo.begin(), end.base()));
+        entry.pushKV("memo", HexStr(std::vector<unsigned char>(memo.begin(), end.base())));
         // If the leading byte is 0xF4 or lower, the memo field should be interpreted as a
         // UTF-8-encoded text string.
         if (memo[0] <= 0xf4) {
@@ -3829,14 +3834,14 @@ UniValue listunspent(const JSONRPCRequest& request)
                 entry.pushKV("label", pwallet->GetNameForAddressBookEntry(address));
             }
         }
-        entry.pushKV("scriptPubKey", HexStr(pk.begin(), pk.end()));
+        entry.pushKV("scriptPubKey", HexStr(pk));
         if (pk.IsPayToScriptHash()) {
             CTxDestination address;
             if (ExtractDestination(pk, address)) {
                 const CScriptID& hash = boost::get<CScriptID>(address);
                 CScript redeemScript;
                 if (pwallet->GetCScript(hash, redeemScript))
-                    entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
+                    entry.pushKV("redeemScript", HexStr(redeemScript));
             }
         }
         entry.pushKV("amount", ValueFromAmount(nValue));

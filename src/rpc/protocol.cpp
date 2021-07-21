@@ -12,9 +12,7 @@
 #include "util/system.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
-#include "version.h"
 
-#include <stdint.h>
 #include <fstream>
 
 
@@ -81,7 +79,7 @@ bool GenerateAuthCookie(std::string *cookie_out)
     const size_t COOKIE_SIZE = 32;
     unsigned char rand_pwd[COOKIE_SIZE];
     GetRandBytes(rand_pwd, COOKIE_SIZE);
-    std::string cookie = COOKIEAUTH_USER + ":" + HexStr(rand_pwd, rand_pwd+COOKIE_SIZE);
+    std::string cookie = COOKIEAUTH_USER + ":" + HexStr(Span<unsigned char>(rand_pwd, COOKIE_SIZE));
 
     /** the umask determines what permissions are used to create this file -
      * these are set to 077 in init.cpp unless overridden with -sysperms.

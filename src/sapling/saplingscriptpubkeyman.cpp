@@ -617,7 +617,7 @@ Optional<std::string> SaplingScriptPubKeyMan::GetOutPointMemo(const CWalletTx& t
         if (IsValidUTF8(memoStr)) return memoStr;
     }
     // non UTF-8 memo. Return as hex encoded raw memo.
-    return HexStr(memo.begin(), end.base());
+    return HexStr(std::vector<unsigned char>(memo.begin(), end.base()));
 }
 
 Optional<std::pair<
