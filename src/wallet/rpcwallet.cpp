@@ -2077,8 +2077,8 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
     // Tally
     CAmount nAmount = 0;
-    for (std::map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it) {
-        const CWalletTx& wtx = (*it).second;
+    for (const auto& entry : pwallet->mapWallet) {
+        const CWalletTx& wtx = entry.second;
         if (wtx.IsCoinBase() || !IsFinalTx(wtx.tx, nBlockHeight))
             continue;
 
@@ -2139,8 +2139,8 @@ UniValue getreceivedbylabel(const JSONRPCRequest& request)
 
     // Tally
     CAmount nAmount = 0;
-    for (std::map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it) {
-        const CWalletTx& wtx = (*it).second;
+    for (const auto& entry : pwallet->mapWallet) {
+        const CWalletTx& wtx = entry.second;
         if (wtx.IsCoinBase() || !IsFinalTx(wtx.tx, nBlockHeight))
             continue;
 
@@ -2547,8 +2547,8 @@ static UniValue ListReceived(CWallet* const pwallet, const UniValue& params, boo
 
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
-    for (std::map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it) {
-        const CWalletTx& wtx = (*it).second;
+    for (const auto& entry : pwallet->mapWallet) {
+        const CWalletTx& wtx = entry.second;
 
         if (!IsFinalTx(wtx.tx, nBlockHeight)) {
             continue;
@@ -2894,10 +2894,9 @@ UniValue listcoldutxos(const JSONRPCRequest& request)
         fExcludeWhitelisted = request.params[0].get_bool();
     UniValue results(UniValue::VARR);
 
-    for (std::map<uint256, CWalletTx>::const_iterator it =
-            pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); ++it) {
-        const uint256& wtxid = it->first;
-        const CWalletTx* pcoin = &(*it).second;
+    for (const auto& entry : pwallet->mapWallet) {
+        const uint256& wtxid = entry.first;
+        const CWalletTx* pcoin = &entry.second;
         if (!CheckFinalTx(pcoin->tx) || !pcoin->IsTrusted())
             continue;
 
@@ -3202,8 +3201,8 @@ UniValue listsinceblock(const JSONRPCRequest& request)
 
     UniValue transactions(UniValue::VARR);
 
-    for (std::map<uint256, CWalletTx>::iterator it = pwallet->mapWallet.begin(); it != pwallet->mapWallet.end(); it++) {
-        CWalletTx tx = (*it).second;
+    for (const auto& entry : pwallet->mapWallet) {
+        const CWalletTx& tx = entry.second;
 
         if (depth == -1 || tx.GetDepthInMainChain() < depth)
             ListTransactions(pwallet, tx, 0, true, transactions, filter);

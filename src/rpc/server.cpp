@@ -24,7 +24,6 @@
 #include <boost/thread.hpp>
 
 #include <memory> // for unique_ptr
-#include <univalue.h>
 #include <unordered_map>
 
 static bool fRPCRunning = false;

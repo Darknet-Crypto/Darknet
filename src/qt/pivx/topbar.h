@@ -51,7 +51,7 @@ public Q_SLOTS:
     void setNumBlocks(int count);
     void setStakingStatusActive(bool fActive);
     void updateStakingStatus();
-    void updateHDState(const bool& upgraded, const QString& upgradeError);
+    void updateHDState(const bool upgraded, const QString& upgradeError);
     void showUpgradeDialog(const QString& message);
 
 Q_SIGNALS:

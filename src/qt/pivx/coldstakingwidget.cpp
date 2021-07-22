@@ -228,7 +228,7 @@ void ColdStakingWidget::loadWalletModel()
 
 }
 
-void ColdStakingWidget::onTxArrived(const QString& hash, const bool& isCoinStake, const bool& isCSAnyType)
+void ColdStakingWidget::onTxArrived(const QString& hash, const bool isCoinStake, const bool isCSAnyType)
 {
     if (isCSAnyType) {
         tryRefreshDelegations();
@@ -732,7 +732,7 @@ void ColdStakingWidget::onLabelClicked()
     );
 }
 
-void ColdStakingWidget::onLabelClicked(QString dialogTitle, const QModelIndex &index, const bool& isMyColdStakingAddresses)
+void ColdStakingWidget::onLabelClicked(QString dialogTitle, const QModelIndex &index, const bool isMyColdStakingAddresses)
 {
     if (walletModel && !isShowingDialog) {
         isShowingDialog = true;

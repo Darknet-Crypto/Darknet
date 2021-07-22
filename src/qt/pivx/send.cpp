@@ -421,7 +421,7 @@ void SendWidget::ProcessSend(QList<SendCoinsRecipient>& recipients, bool hasShie
         }
     }
 
-    auto ptrUnlockedContext = MakeUnique<WalletModel::UnlockContext>(walletModel->requestUnlock());
+    auto ptrUnlockedContext = std::make_unique<WalletModel::UnlockContext>(walletModel->requestUnlock());
     if (!ptrUnlockedContext->isValid()) {
         // Unlock wallet was cancelled
         inform(tr("Cannot send, wallet locked"));

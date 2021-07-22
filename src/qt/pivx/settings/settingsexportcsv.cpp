@@ -55,7 +55,7 @@ SettingsExportCSV::SettingsExportCSV(PIVXGUI* _window, QWidget *parent) :
     connect(ui->pushButtonAddressDocuments, &QPushButton::clicked, [this](){selectFileOutput(false);});
 }
 
-void SettingsExportCSV::selectFileOutput(const bool& isTxExport)
+void SettingsExportCSV::selectFileOutput(const bool isTxExport)
 {
     QString filename = GUIUtil::getSaveFileName(this,
                                         isTxExport ? tr("Export CSV") : tr("Export Address List"), QString(),

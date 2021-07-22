@@ -13,7 +13,6 @@
 #include "bitcoinunits.h"
 #include "guiutil.h"
 
-#include "amount.h"
 #include "init.h"
 #include "mapport.h"
 #include "net.h"

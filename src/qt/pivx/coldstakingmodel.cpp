@@ -72,7 +72,7 @@ void ColdStakingModel::refresh()
     }
 }
 
-bool ColdStakingModel::parseCSDelegation(const CTxOut& out, CSDelegation& ret, const QString& txId, const int& utxoIndex)
+bool ColdStakingModel::parseCSDelegation(const CTxOut& out, CSDelegation& ret, const QString& txId, const int utxoIndex)
 {
     txnouttype type;
     std::vector<CTxDestination> addresses;

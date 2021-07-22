@@ -127,7 +127,7 @@ void CBigNum::setvch(const std::vector<unsigned char>& vch)
     if (vch2.size() > 0) {
         sign = vch2[vch2.size()-1] & 0x80;
         vch2[vch2.size()-1] = vch2[vch2.size()-1] & 0x7f;
-        mpz_import(bn, vch2.size(), -1, 1, 0, 0, &vch2[0]);
+        mpz_import(bn, vch2.size(), -1, 1, 0, 0, vch2.data());
         if (sign)
             mpz_neg(bn, bn);
     }
@@ -145,7 +145,7 @@ std::vector<unsigned char> CBigNum::getvch() const
     if (size <= 0)
         return std::vector<unsigned char>();
     std::vector<unsigned char> v(size + 1);
-    mpz_export(&v[0], &size, -1, 1, 0, 0, bn);
+    mpz_export(v.data(), &size, -1, 1, 0, 0, bn);
     if (v[v.size()-2] & 0x80) {
         if (mpz_sgn(bn)<0) {
             v[v.size()-1] = 0x80;

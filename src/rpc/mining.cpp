@@ -119,7 +119,7 @@ UniValue generate(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
     } else {
         // Coinbase key
-        reservekey = MakeUnique<CReserveKey>(pwallet);
+        reservekey = std::make_unique<CReserveKey>(pwallet);
         CPubKey pubkey;
         if (!reservekey->GetReservedKey(pubkey)) throw JSONRPCError(RPC_INTERNAL_ERROR, "Error: Cannot get key from keypool");
         coinbaseScript = GetScriptForDestination(pubkey.GetID());

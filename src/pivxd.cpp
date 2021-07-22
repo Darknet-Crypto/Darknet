@@ -106,7 +106,7 @@ bool AppInit(int argc, char* argv[])
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
                 fprintf(stderr, "Error: Command line contains unexpected token '%s', see pivxd -h for a list of options.\n", argv[i]);
-                exit(EXIT_FAILURE);
+                return false;
             }
         }
 
@@ -117,15 +117,15 @@ bool AppInit(int argc, char* argv[])
         InitParameterInteraction();
         if (!AppInitBasicSetup()) {
             // UIError will have been called with detailed error, which ends up on console
-            exit(1);
+            return false;
         }
         if (!AppInitParameterInteraction()) {
             // UIError will have been called with detailed error, which ends up on console
-            exit(1);
+            return false;
         }
         if (!AppInitSanityChecks()) {
             // UIError will have been called with detailed error, which ends up on console
-            exit(1);
+            return false;
         }
 
 #ifndef WIN32

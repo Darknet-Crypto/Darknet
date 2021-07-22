@@ -55,7 +55,6 @@ class PeerLogicValidation;
 class EvoNotificationInterface;
 struct TestingSetup: public BasicTestingSetup
 {
-    CCoinsViewDB *pcoinsdbview;
     boost::thread_group threadGroup;
     CConnman* connman;
     EvoNotificationInterface* pEvoNotificationInterface;

@@ -35,12 +35,9 @@ static const CAmount MIN_COLDSTAKING_AMOUNT = 1 * COIN;
 static const int DEFAULT_MAX_REORG_DEPTH = 100;
 
 /** Flags for nSequence and nLockTime locks */
-enum {
-    /* Interpret sequence numbers as relative lock-time constraints. */
-    LOCKTIME_VERIFY_SEQUENCE = (1 << 0),
-
-    /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
-    LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
-};
+/** Interpret sequence numbers as relative lock-time constraints. */
+static constexpr unsigned int LOCKTIME_VERIFY_SEQUENCE = (1 << 0);
+/** Use GetMedianTimePast() instead of nTime for end point timestamp. */
+static constexpr unsigned int LOCKTIME_MEDIAN_TIME_PAST = (1 << 1);
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

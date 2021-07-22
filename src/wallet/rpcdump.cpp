@@ -559,8 +559,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     // sort time/key pairs
     std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
-    for (std::map<CKeyID, int64_t>::const_iterator it = mapKeyBirth.begin(); it != mapKeyBirth.end(); it++) {
-        vKeyBirth.emplace_back(it->second, it->first);
+    for (const auto& entry : mapKeyBirth) {
+        vKeyBirth.emplace_back(entry.second, entry.first);
     }
     mapKeyBirth.clear();
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
@@ -665,8 +665,8 @@ static UniValue processImport(CWallet* const pwallet, const UniValue& data, cons
         const std::string& strRedeemScript = data.exists("redeemscript") ? data["redeemscript"].get_str() : "";
         const UniValue& pubKeys = data.exists("pubkeys") ? data["pubkeys"].get_array() : UniValue();
         const UniValue& keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
-        const bool& internal = data.exists("internal") ? data["internal"].get_bool() : false;
-        const bool& watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
+        const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
+        const bool watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
         const std::string& label = data.exists("label") && !internal ? data["label"].get_str() : "";
 
         bool isScript = scriptPubKey.getType() == UniValue::VSTR;

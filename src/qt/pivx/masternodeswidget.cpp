@@ -259,7 +259,7 @@ void MasterNodesWidget::onStartAllClicked(int type)
     if (isLoading) {
         inform(tr("Background task is being executed, please wait"));
     } else {
-        std::unique_ptr<WalletModel::UnlockContext> pctx = MakeUnique<WalletModel::UnlockContext>(walletModel->requestUnlock());
+        std::unique_ptr<WalletModel::UnlockContext> pctx = std::make_unique<WalletModel::UnlockContext>(walletModel->requestUnlock());
         if (!pctx->isValid()) {
             warn(tr("Start ALL masternodes failed"), tr("Wallet unlock cancelled"));
             return;

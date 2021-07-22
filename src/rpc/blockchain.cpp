@@ -727,6 +727,7 @@ static void ApplyStats(CCoinsStats &stats, CHashWriter& ss, const uint256& hash,
 static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
 {
     std::unique_ptr<CCoinsViewCursor> pcursor(view->Cursor());
+    assert(pcursor);
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = pcursor->GetBestBlock();
@@ -787,7 +788,7 @@ UniValue gettxoutsetinfo(const JSONRPCRequest& request)
 
     CCoinsStats stats;
     FlushStateToDisk();
-    if (GetUTXOStats(pcoinsTip, stats)) {
+    if (GetUTXOStats(pcoinsTip.get(), stats)) {
         ret.pushKV("height", (int64_t)stats.nHeight);
         ret.pushKV("bestblock", stats.hashBlock.GetHex());
         ret.pushKV("transactions", (int64_t)stats.nTransactions);
@@ -852,7 +853,7 @@ UniValue gettxout(const JSONRPCRequest& request)
     Coin coin;
     if (fMempool) {
         LOCK(mempool.cs);
-        CCoinsViewMemPool view(pcoinsTip, mempool);
+        CCoinsViewMemPool view(pcoinsTip.get(), mempool);
         if (!view.GetCoin(out, coin) || mempool.isSpent(out)) {// TODO: filtering spent coins should be done by the CCoinsViewMemPool
             return NullUniValue;
         }
@@ -864,6 +865,7 @@ UniValue gettxout(const JSONRPCRequest& request)
 
     BlockMap::iterator it = mapBlockIndex.find(pcoinsTip->GetBestBlock());
     CBlockIndex* pindex = it->second;
+    assert(pindex != nullptr);
     ret.pushKV("bestblock", pindex->GetBlockHash().GetHex());
     if (coin.nHeight == MEMPOOL_HEIGHT) {
         ret.pushKV("confirmations", 0);
@@ -902,7 +904,7 @@ UniValue verifychain(const JSONRPCRequest& request)
     if (request.params.size() > 0)
         nCheckDepth = request.params[0].get_int();
 
-    return CVerifyDB().VerifyDB(pcoinsTip, nCheckLevel, nCheckDepth);
+    return CVerifyDB().VerifyDB(pcoinsTip.get(), nCheckLevel, nCheckDepth);
 }
 
 /** Implementation of IsSuperMajority with better feedback */

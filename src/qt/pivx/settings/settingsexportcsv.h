@@ -23,7 +23,7 @@ public:
     ~SettingsExportCSV();
 
 private Q_SLOTS:
-    void selectFileOutput(const bool& isTxExport);
+    void selectFileOutput(const bool isTxExport);
     void exportTxes(const QString& filename);
     void exportAddrs(const QString& filename);
 

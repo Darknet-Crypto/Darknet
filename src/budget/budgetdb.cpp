@@ -75,7 +75,7 @@ CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& objToLoad, bool fDryRun)
 
     // read data and checksum from file
     try {
-        filein.read((char*)&vchData[0], dataSize);
+        filein.read((char*)vchData.data(), dataSize);
         filein >> hashIn;
     } catch (const std::exception& e) {
         error("%s : Deserialize or I/O error - %s", __func__, e.what());

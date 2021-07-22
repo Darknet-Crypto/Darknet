@@ -18,7 +18,6 @@
 #include "script/sign.h"
 #include "scheduler.h"
 #include "spork.h"
-#include "util/system.h"
 #include "utilmoneystr.h"
 #include "wallet/fees.h"
 #include "zpivchain.h"
@@ -895,13 +894,12 @@ int64_t CWallet::IncOrderPosNext(CWalletDB* pwalletdb)
     return nRet;
 }
 
-bool CWallet::IsKeyUsed(const CPubKey& vchPubKey) {
+bool CWallet::IsKeyUsed(const CPubKey& vchPubKey) const
+{
     if (vchPubKey.IsValid()) {
-        CScript scriptPubKey = GetScriptForDestination(vchPubKey.GetID());
-        for (std::map<uint256, CWalletTx>::iterator it = mapWallet.begin();
-             it != mapWallet.end() && vchPubKey.IsValid();
-             ++it) {
-            const CWalletTx& wtx = (*it).second;
+        const CScript& scriptPubKey = GetScriptForDestination(vchPubKey.GetID());
+        for (const auto& entry : mapWallet) {
+            const CWalletTx& wtx = entry.second;
             for (const CTxOut& txout : wtx.tx->vout)
                 if (txout.scriptPubKey == scriptPubKey)
                     return true;
@@ -1740,7 +1738,7 @@ CAmount CWalletTx::GetLockedCredit() const
     return nCredit;
 }
 
-CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
+CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool fUseCache) const
 {
     if (IsInMainChainImmature()) {
         return GetCachableAmount(IMMATURE_CREDIT, ISMINE_WATCH_ONLY, !fUseCache);
@@ -1749,7 +1747,7 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
+CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool fUseCache) const
 {
     return GetAvailableCredit(fUseCache, ISMINE_WATCH_ONLY);
 }
@@ -1824,7 +1822,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
     }
 }
 
-bool CWallet::Upgrade(std::string& error, const int& prevVersion)
+bool CWallet::Upgrade(std::string& error, const int prevVersion)
 {
     LOCK2(cs_wallet, cs_KeyStore);
 
@@ -2514,7 +2512,6 @@ CWallet::OutputAvailabilityResult CWallet::CheckOutputAvailability(
 
     // Check if we should include zero value utxo
     if (output.nValue <= 0) return res;
-
     if (fCoinsSelected && coinControl && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(wtxid, outIndex)))
         return res;
 
@@ -2550,9 +2547,9 @@ bool CWallet::AvailableCoins(std::vector<COutput>* pCoins,      // --> populates
     {
         LOCK(cs_wallet);
         CAmount nTotal = 0;
-        for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
-            const uint256& wtxid = it->first;
-            const CWalletTx* pcoin = &(*it).second;
+        for (const auto& entry : mapWallet) {
+            const uint256& wtxid = entry.first;
+            const CWalletTx* pcoin = &entry.second;
 
             // Check if the tx is selectable
             int nDepth = 0;
@@ -3616,7 +3613,7 @@ void CWallet::KeepKey(int64_t nIndex)
     m_spk_man->KeepDestination(nIndex);
 }
 
-void CWallet::ReturnKey(int64_t nIndex, const bool& internal, const bool& staking)
+void CWallet::ReturnKey(int64_t nIndex, const bool internal, const bool staking)
 {
     // Return to key pool
     CTxDestination address; // This is not needed for now.
@@ -3874,9 +3871,9 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const
     mapKeyBirth.clear();
 
     // get birth times for keys with metadata
-    for (std::map<CKeyID, CKeyMetadata>::const_iterator it = mapKeyMetadata.begin(); it != mapKeyMetadata.end(); it++)
-        if (it->second.nCreateTime)
-            mapKeyBirth[it->first] = it->second.nCreateTime;
+    for (const auto& entry : mapKeyMetadata) {
+        if (entry.second.nCreateTime) mapKeyBirth[entry.first] = entry.second.nCreateTime;
+    }
 
     // map in which we'll infer heights of other keys
     CBlockIndex* pindexMax = chainActive[std::max(0, chainActive.Height() - 144)]; // the tip can be reorganised; use a 144-block safety margin
@@ -3895,9 +3892,9 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const
 
     // find first block that affects those keys, if there are any left
     std::vector<CKeyID> vAffected;
-    for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); it++) {
+    for (const auto& entry : mapWallet) {
         // iterate over all wallet transactions...
-        const CWalletTx& wtx = (*it).second;
+        const CWalletTx &wtx = entry.second;
         BlockMap::const_iterator blit = mapBlockIndex.find(wtx.m_confirm.hashBlock);
         if (blit != mapBlockIndex.end() && chainActive.Contains(blit->second)) {
             // ... which are already in a block
@@ -3917,8 +3914,8 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const
     }
 
     // Extract block timestamps for those keys
-    for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
-        mapKeyBirth[it->first] = it->second->GetBlockTime() - TIMESTAMP_WINDOW; // block times can be 2h off
+    for (const auto& entry : mapKeyFirstBlock)
+        mapKeyBirth[entry.first] = entry.second->GetBlockTime() - TIMESTAMP_WINDOW; // block times can be 2h off
 }
 
 bool CWallet::AddDestData(const CTxDestination& dest, const std::string& key, const std::string& value)
@@ -3972,10 +3969,10 @@ void CWallet::AutoCombineDust(CConnman* connman)
             AvailableCoinsByAddress(true, nAutoCombineThreshold, false);
 
     //coins are sectioned by address. This combination code only wants to combine inputs that belong to the same address
-    for (std::map<CTxDestination, std::vector<COutput> >::iterator it = mapCoinsByAddress.begin(); it != mapCoinsByAddress.end(); it++) {
+    for (const auto& entry : mapCoinsByAddress) {
         std::vector<COutput> vCoins, vRewardCoins;
         bool maxSize = false;
-        vCoins = it->second;
+        vCoins = entry.second;
 
         // We don't want the tx to be refused for being too large
         // we use 50 bytes as a base tx size (2 output: 2*34 + overhead: 10 -> 90 to be certain)
@@ -4014,7 +4011,7 @@ void CWallet::AutoCombineDust(CConnman* connman)
             continue;
 
         std::vector<CRecipient> vecSend;
-        CScript scriptPubKey = GetScriptForDestination(it->first);
+        const CScript& scriptPubKey = GetScriptForDestination(entry.first);
         vecSend.emplace_back(scriptPubKey, nTotalRewardsValue, false);
 
         //Send change to same address

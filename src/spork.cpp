@@ -5,8 +5,6 @@
 
 #include "spork.h"
 
-#include "messagesigner.h"
-#include "net.h"
 #include "netmessagemaker.h"
 #include "net_processing.h"
 #include "sporkdb.h"

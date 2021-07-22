@@ -20,7 +20,7 @@ bool ScriptPubKeyMan::SetupGeneration(bool newKeypool, bool force, bool memOnly)
     return true;
 }
 
-bool ScriptPubKeyMan::Upgrade(const int& prev_version, std::string& error)
+bool ScriptPubKeyMan::Upgrade(const int prev_version, std::string& error)
 {
     LOCK(wallet->cs_KeyStore);
     error = "";

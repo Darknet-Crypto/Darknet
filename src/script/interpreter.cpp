@@ -7,13 +7,11 @@
 #include "interpreter.h"
 
 #include "consensus/upgrades.h"
-#include "primitives/transaction.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
 #include "pubkey.h"
 #include "script/script.h"
-#include "uint256.h"
 
 
 typedef std::vector<unsigned char> valtype;

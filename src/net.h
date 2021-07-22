@@ -355,7 +355,7 @@ private:
     /** Services this instance cares about */
     ServiceFlags nRelevantServices{NODE_NONE};
 
-    CSemaphore *semOutbound{nullptr};
+    std::unique_ptr<CSemaphore> semOutbound;
     int nMaxConnections{0};
     int nMaxOutbound{0};
     int nMaxFeeler{0};
@@ -570,7 +570,7 @@ public:
     bool fRelayTxes; //protected by cs_filter
     CSemaphoreGrant grantOutbound;
     RecursiveMutex cs_filter;
-    CBloomFilter* pfilter;
+    std::unique_ptr<CBloomFilter> pfilter;
     std::atomic<int> nRefCount;
     const NodeId id;
 
@@ -631,12 +631,10 @@ public:
 
     CNode(NodeId id, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn, SOCKET hSocketIn, const CAddress& addrIn, uint64_t nKeyedNetGroupIn, uint64_t nLocalHostNonceIn, const std::string& addrNameIn = "", bool fInboundIn = false);
     ~CNode();
+    CNode(const CNode&) = delete;
+    CNode& operator=(const CNode&) = delete;
 
 private:
-    CNode(const CNode&);
-    void operator=(const CNode&);
-
-
     const uint64_t nLocalHostNonce;
     // Services offered to this peer
     const ServiceFlags nLocalServices;

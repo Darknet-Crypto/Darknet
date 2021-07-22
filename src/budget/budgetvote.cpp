@@ -5,8 +5,8 @@
 
 #include "budget/budgetvote.h"
 
-#include "streams.h"
 #include "net.h"
+#include "streams.h"
 
 CBudgetVote::CBudgetVote() :
         CSignedMessage(),

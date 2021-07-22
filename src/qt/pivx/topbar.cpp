@@ -544,7 +544,7 @@ void TopBar::showUpgradeDialog(const QString& message)
 {
     QString title = tr("Wallet Upgrade");
     if (ask(title, message)) {
-        std::unique_ptr<WalletModel::UnlockContext> pctx = MakeUnique<WalletModel::UnlockContext>(walletModel->requestUnlock());
+        std::unique_ptr<WalletModel::UnlockContext> pctx = std::make_unique<WalletModel::UnlockContext>(walletModel->requestUnlock());
         if (!pctx->isValid()) {
             warn(tr("Upgrade Wallet"), tr("Wallet unlock cancelled"));
             return;
@@ -702,7 +702,7 @@ void TopBar::expandSync()
     }
 }
 
-void TopBar::updateHDState(const bool& upgraded, const QString& upgradeError)
+void TopBar::updateHDState(const bool upgraded, const QString& upgradeError)
 {
     if (upgraded) {
         ui->pushButtonHDUpgrade->setVisible(false);

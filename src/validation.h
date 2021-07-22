@@ -40,6 +40,7 @@
 class CBlockIndex;
 class CBlockTreeDB;
 class CBudgetManager;
+class CCoinsViewDB;
 class CZerocoinDB;
 class CSporkDB;
 class CBloomFilter;
@@ -359,17 +360,20 @@ bool ReconsiderBlock(CValidationState& state, CBlockIndex* pindex);
 /** The currently-connected chain of blocks (protected by cs_main). */
 extern CChain chainActive;
 
+/** Global variable that points to the coins database (protected by cs_main) */
+extern std::unique_ptr<CCoinsViewDB> pcoinsdbview;
+
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
-extern CCoinsViewCache* pcoinsTip;
+extern std::unique_ptr<CCoinsViewCache> pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
-extern CBlockTreeDB* pblocktree;
+extern std::unique_ptr<CBlockTreeDB> pblocktree;
 
 /** Global variable that points to the zerocoin database (protected by cs_main) */
-extern CZerocoinDB* zerocoinDB;
+extern std::unique_ptr<CZerocoinDB> zerocoinDB;
 
 /** Global variable that points to the spork database (protected by cs_main) */
-extern CSporkDB* pSporkDB;
+extern std::unique_ptr<CSporkDB> pSporkDB;
 
 /**
  * Return a reliable pointer (in mapBlockIndex) to the chain's tip index

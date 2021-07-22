@@ -183,8 +183,7 @@ public:
     // Writes do not need similar protection, as failure to write is handled by the caller.
 };
 
-static CCoinsViewDB* pcoinsdbview = NULL;
-static CCoinsViewErrorCatcher* pcoinscatcher = NULL;
+static std::unique_ptr<CCoinsViewErrorCatcher> pcoinscatcher;
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
 static boost::thread_group threadGroup;
@@ -287,18 +286,12 @@ void PrepareShutdown()
             //record that client took the proper shutdown procedure
             pblocktree->WriteFlag("shutdown", true);
         }
-        delete pcoinsTip;
-        pcoinsTip = NULL;
-        delete pcoinscatcher;
-        pcoinscatcher = NULL;
-        delete pcoinsdbview;
-        pcoinsdbview = NULL;
-        delete pblocktree;
-        pblocktree = NULL;
-        delete zerocoinDB;
-        zerocoinDB = NULL;
-        delete pSporkDB;
-        pSporkDB = NULL;
+        pcoinsTip.reset();
+        pcoinscatcher.reset();
+        pcoinsdbview.reset();
+        pblocktree.reset();
+        zerocoinDB.reset();
+        pSporkDB.reset();
         deterministicMNManager.reset();
         evoDb.reset();
     }
@@ -1128,13 +1121,7 @@ bool AppInitParameterInteraction()
 
     setvbuf(stdout, NULL, _IOLBF, 0); /// ***TODO*** do we still need this after -printtoconsole is gone?
 
-    RegisterAllCoreRPCCommands(tableRPC);
-
-    // Staking needs a CWallet instance, so make sure wallet is enabled
-#ifdef ENABLE_WALLET
-    // Register wallet RPC commands
-    RegisterWalletRPCCommands(tableRPC);
-#else
+#ifndef ENABLE_WALLET
     if (gArgs.SoftSetBoolArg("-staking", false))
         LogPrintf("AppInit2 : parameter interaction: wallet functionality not enabled -> setting -staking=0\n");
 #endif
@@ -1300,6 +1287,14 @@ bool AppInitMain()
     // Initialize Sapling circuit parameters
     LoadSaplingParams();
 
+    /* Register RPC commands regardless of -server setting so they will be
+     * available in the GUI RPC console even if external calls are disabled.
+     */
+    RegisterAllCoreRPCCommands(tableRPC);
+#ifdef ENABLE_WALLET
+    RegisterWalletRPCCommands(tableRPC);
+#endif
+
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
      * that the server is there and will be ready later).  Warmup mode will
@@ -1360,7 +1355,7 @@ bool AppInitMain()
     // need to reindex later.
 
     assert(!g_connman);
-    g_connman = MakeUnique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
+    g_connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()));
     CConnman& connman = *g_connman;
 
     peerLogic.reset(new PeerLogicValidation(&connman));
@@ -1543,23 +1538,19 @@ bool AppInitMain()
 
             try {
                 UnloadBlockIndex();
-                delete pcoinsTip;
-                delete pcoinsdbview;
-                delete pcoinscatcher;
-                delete pblocktree;
-                delete zerocoinDB;
-                delete pSporkDB;
+                pcoinsTip.reset();
+                pcoinsdbview.reset();
+                pcoinscatcher.reset();
+                pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
 
                 //PIVX specific: zerocoin and spork DB's
-                zerocoinDB = new CZerocoinDB(0, false, fReindex);
-                pSporkDB = new CSporkDB(0, false, false);
+                zerocoinDB.reset(new CZerocoinDB(0, false, fReindex));
+                pSporkDB.reset(new CSporkDB(0, false, false));
 
                 deterministicMNManager.reset();
                 evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReindex));
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-
-                pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReset);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);
@@ -1608,8 +1599,8 @@ bool AppInitMain()
                 // At this point we're either in reindex or we've loaded a useful
                 // block tree into mapBlockIndex!
 
-                pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState);
-                pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
+                pcoinsdbview.reset(new CCoinsViewDB(nCoinDBCache, false, fReset || fReindexChainState));
+                pcoinscatcher.reset(new CCoinsViewErrorCatcher(pcoinsdbview.get()));
 
                 // If necessary, upgrade from older database format.
                 // This is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
@@ -1621,13 +1612,13 @@ bool AppInitMain()
                 }
 
                 // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!ReplayBlocks(chainparams, pcoinsdbview)) {
+                if (!ReplayBlocks(chainparams, pcoinsdbview.get())) {
                     strLoadError = strprintf(_("Unable to replay blocks. You will need to rebuild the database using %s."), "-reindex");
                     break;
                 }
 
                 // The on-disk coinsdb is now in a good state, create the cache
-                pcoinsTip = new CCoinsViewCache(pcoinscatcher);
+                pcoinsTip.reset(new CCoinsViewCache(pcoinscatcher.get()));
 
                 bool is_coinsview_empty = fReset || fReindexChainState || pcoinsTip->GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
@@ -1677,7 +1668,7 @@ bool AppInitMain()
                         }
                     }
 
-                    if (!CVerifyDB().VerifyDB(pcoinsdbview, gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                    if (!CVerifyDB().VerifyDB(pcoinsdbview.get(), gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
                             gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
                         strLoadError = _("Corrupted block database detected");
                         break;
@@ -1783,12 +1774,20 @@ bool AppInitMain()
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
 
-    int nChainHeight = WITH_LOCK(cs_main, return chainActive.Height(); );
+    int chain_active_height;
+
+    //// debug print
+    {
+        LOCK(cs_main);
+        chain_active_height = chainActive.Height();
+        LogPrintf("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
+    }
+    LogPrintf("chainActive.Height() = %d\n", chain_active_height);
 
     // Update money supply
     if (!fReindex && !fReindexChainState) {
         uiInterface.InitMessage(_("Calculating money supply..."));
-        MoneySupply.Update(pcoinsTip->GetTotalAmount(), nChainHeight);
+        MoneySupply.Update(pcoinsTip->GetTotalAmount(), chain_active_height);
     }
 
 
@@ -1796,7 +1795,7 @@ bool AppInitMain()
 
     uiInterface.InitMessage(_("Loading masternode cache..."));
 
-    mnodeman.SetBestHeight(nChainHeight);
+    mnodeman.SetBestHeight(chain_active_height);
     LoadBlockHashesCache(mnodeman);
     CMasternodeDB mndb;
     CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
@@ -1809,8 +1808,8 @@ bool AppInitMain()
     uiInterface.InitMessage(_("Loading budget cache..."));
 
     CBudgetDB budgetdb;
-    const bool fDryRun = (nChainHeight <= 0);
-    if (!fDryRun) g_budgetman.SetBestHeight(nChainHeight);
+    const bool fDryRun = (chain_active_height <= 0);
+    if (!fDryRun) g_budgetman.SetBestHeight(chain_active_height);
     CBudgetDB::ReadResult readResult2 = budgetdb.Read(g_budgetman, fDryRun);
 
     if (readResult2 == CBudgetDB::FileError)
@@ -1921,10 +1920,6 @@ bool AppInitMain()
     if (!strErrors.str().empty())
         return UIError(strErrors.str());
 
-    //// debug print
-    LogPrintf("mapBlockIndex.size() = %u\n", mapBlockIndex.size());
-    LogPrintf("chainActive.Height() = %d\n", chainActive.Height());
-
 #ifdef ENABLE_WALLET
     {
         int idx = 0;
@@ -1953,7 +1948,7 @@ bool AppInitMain()
     connOptions.nMaxConnections = nMaxConnections;
     connOptions.nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, connOptions.nMaxConnections);
     connOptions.nMaxFeeler = 1;
-    connOptions.nBestHeight = chainActive.Height();
+    connOptions.nBestHeight = chain_active_height;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_msgproc = peerLogic.get();
     connOptions.nSendBufferMaxSize = 1000*gArgs.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);

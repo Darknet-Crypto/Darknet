@@ -69,7 +69,7 @@ private Q_SLOTS:
     void onCopyOwnerClicked();
     void onAddressCopyClicked();
     void onAddressEditClicked();
-    void onTxArrived(const QString& hash, const bool& isCoinStake, const bool& isCSAnyType);
+    void onTxArrived(const QString& hash, const bool isCoinStake, const bool isCSAnyType);
     void onContactsClicked(bool ownerAdd);
     void clearAll();
     void onLabelClicked();
@@ -121,7 +121,7 @@ private:
     void onContactsClicked();
     void tryRefreshDelegations();
     bool refreshDelegations();
-    void onLabelClicked(QString dialogTitle, const QModelIndex &index, const bool& isMyColdStakingAddresses);
+    void onLabelClicked(QString dialogTitle, const QModelIndex &index, const bool isMyColdStakingAddresses);
     void updateStakingTotalLabel();
     void sortAddresses();
     void setCoinControlPayAmounts();
