@@ -20,7 +20,6 @@
 #include "primitives/transaction.h"
 #include "spork.h"
 #include "timedata.h"
-#include "txmempool.h"
 #include "util/system.h"
 #include "validation.h"
 #include "validationinterface.h"

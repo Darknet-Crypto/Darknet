@@ -173,7 +173,7 @@ public:
     unsigned int nChainTx{0};
 
     //! Verification status of this block. See enum BlockStatus
-    unsigned int nStatus{0};
+    uint32_t nStatus{0};
 
     // proof-of-stake specific fields
     // char vector holding the stake modifier bytes. It is empty for PoW blocks.
@@ -191,12 +191,12 @@ public:
    Optional<CAmount> nChainSaplingValue{nullopt};
 
     //! block header
-    int nVersion{0};
+    int32_t nVersion{0};
     uint256 hashMerkleRoot{};
     uint256 hashFinalSaplingRoot{};
-    unsigned int nTime{0};
-    unsigned int nBits{0};
-    unsigned int nNonce{0};
+    uint32_t nTime{0};
+    uint32_t nBits{0};
+    uint32_t nNonce{0};
     uint256 nAccumulatorCheckpoint{};
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.

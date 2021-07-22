@@ -5,7 +5,6 @@
 
 #include "key.h"
 
-#include "uint256.h"
 #include "crypto/common.h"
 #include "crypto/hmac_sha512.h"
 #include "random.h"

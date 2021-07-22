@@ -4,10 +4,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifdef HAVE_CONFIG_H
-#include "config/pivx-config.h"
-#endif
-
 #include "netaddress.h"
 #include "hash.h"
 #include "utilstrencodings.h"

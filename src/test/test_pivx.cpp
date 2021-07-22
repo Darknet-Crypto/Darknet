@@ -20,7 +20,7 @@
 #include "script/sigcache.h"
 #include "sporkdb.h"
 #include "txmempool.h"
-#include "txdb.h"
+#include "util/memory.h"
 #include "validation.h"
 
 #include <boost/test/unit_test.hpp>
@@ -83,7 +83,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
 
         // Register EvoNotificationInterface
-        g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
+        g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
         connman = g_connman.get();
         pEvoNotificationInterface = new EvoNotificationInterface(*connman);
         RegisterValidationInterface(pEvoNotificationInterface);
@@ -91,11 +91,11 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         // Ideally we'd move all the RPC tests to the functional testing framework
         // instead of unit tests, but for now we need these here.
         RegisterAllCoreRPCCommands(tableRPC);
-        zerocoinDB = new CZerocoinDB(0, true);
-        pSporkDB = new CSporkDB(0, true);
-        pblocktree = new CBlockTreeDB(1 << 20, true);
-        pcoinsdbview = new CCoinsViewDB(1 << 23, true);
-        pcoinsTip = new CCoinsViewCache(pcoinsdbview);
+        zerocoinDB.reset(new CZerocoinDB(0, true));
+        pSporkDB.reset(new CSporkDB(0, true));
+        pblocktree.reset(new CBlockTreeDB(1 << 20, true));
+        pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
+        pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
         if (!LoadGenesisBlock()) {
             throw std::runtime_error("Error initializing block database");
         }
@@ -121,11 +121,11 @@ TestingSetup::~TestingSetup()
         peerLogic.reset();
         UnloadBlockIndex();
         delete pEvoNotificationInterface;
-        delete pcoinsTip;
-        delete pcoinsdbview;
-        delete pblocktree;
-        delete zerocoinDB;
-        delete pSporkDB;
+        pcoinsTip.reset();
+        pcoinsdbview.reset();
+        pblocktree.reset();
+        zerocoinDB.reset();
+        pSporkDB.reset();
 }
 
 // Test chain only available on regtest

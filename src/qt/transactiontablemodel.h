@@ -83,7 +83,7 @@ public:
     bool processingQueuedTransactions() const { return fProcessingQueuedTransactions; }
 
 Q_SIGNALS:
-    void txArrived(const QString& hash, const bool& isCoinStake, const bool& isCSAnyType);
+    void txArrived(const QString& hash, const bool isCoinStake, const bool isCSAnyType);
 
 private:
     // Listeners

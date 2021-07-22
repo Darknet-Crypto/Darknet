@@ -37,7 +37,7 @@ private:
 
 public:
     mutable RecursiveMutex cs_db;
-    DbEnv *dbenv;
+    std::unique_ptr<DbEnv> dbenv;
     std::map<std::string, int> mapFileUseCount;
     std::map<std::string, Db*> mapDb;
 
@@ -158,6 +158,9 @@ public:
     explicit CDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool fFlushOnCloseIn=true);
     ~CDB() { Close(); }
 
+    CDB(const CDB&) = delete;
+    CDB& operator=(const CDB&) = delete;
+
     void Flush();
     void Close();
     static bool Recover(const std::string& filename, void *callbackDataIn, bool (*recoverKVcallback)(void* callbackData, CDataStream ssKey, CDataStream ssValue), std::string& out_backup_filename);
@@ -169,10 +172,6 @@ public:
     static bool VerifyEnvironment(const std::string& walletFile, const fs::path& dataDir, std::string& errorStr);
     /* verifies the database file */
     static bool VerifyDatabaseFile(const std::string& walletFile, const fs::path& dataDir, std::string& warningStr, std::string& errorStr, CDBEnv::recoverFunc_type recoverFunc);
-
-private:
-    CDB(const CDB&);
-    void operator=(const CDB&);
 
 public:
     template <typename K, typename T>

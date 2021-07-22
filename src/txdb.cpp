@@ -383,17 +383,17 @@ bool CZerocoinDB::EraseCoinSpend(const CBigNum& bnSerial)
 static const char LZC_ACCUMCS = 'A';
 //static const char LZC_MAPSUPPLY = 'M'; // TODO: add removal for LZC_MAPSUPPLY key-value if is found in db
 
-bool CZerocoinDB::WriteAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, const int nHeight)
+bool CZerocoinDB::WriteAccChecksum(const uint32_t nChecksum, const libzerocoin::CoinDenomination denom, const int nHeight)
 {
     return Write(std::make_pair(LZC_ACCUMCS, std::make_pair(nChecksum, denom)), nHeight);
 }
 
-bool CZerocoinDB::ReadAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, int& nHeightRet)
+bool CZerocoinDB::ReadAccChecksum(const uint32_t nChecksum, const libzerocoin::CoinDenomination denom, int& nHeightRet)
 {
     return Read(std::make_pair(LZC_ACCUMCS, std::make_pair(nChecksum, denom)), nHeightRet);
 }
 
-bool CZerocoinDB::EraseAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom)
+bool CZerocoinDB::EraseAccChecksum(const uint32_t nChecksum, const libzerocoin::CoinDenomination denom)
 {
     return Erase(std::make_pair(LZC_ACCUMCS, std::make_pair(nChecksum, denom)));
 }

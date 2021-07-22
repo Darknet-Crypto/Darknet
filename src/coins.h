@@ -300,6 +300,11 @@ protected:
 public:
     CCoinsViewCache(CCoinsView *baseIn);
 
+    /**
+     * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     */
+    CCoinsViewCache(const CCoinsViewCache &) = delete;
+
     // Sapling methods
     bool GetSaplingAnchorAt(const uint256 &rt, SaplingMerkleTree &tree) const override;
     bool GetNullifier(const uint256 &nullifier) const override;
@@ -431,10 +436,6 @@ private:
             Tree &tree
     );
 
-    /**
-      * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
-      */
-    CCoinsViewCache(const CCoinsViewCache &);
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.

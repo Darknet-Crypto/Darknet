@@ -799,7 +799,7 @@ static void NotifySSTChanged(WalletModel* walletmodel, const CAmount stakeSplitT
     Q_EMIT walletmodel->notifySSTChanged(val);
 }
 
-static void NotifyWalletBacked(WalletModel* model, const bool& fSuccess, const std::string& filename)
+static void NotifyWalletBacked(WalletModel* model, const bool fSuccess, const std::string& filename)
 {
     std::string message;
     std::string title = "Backup ";

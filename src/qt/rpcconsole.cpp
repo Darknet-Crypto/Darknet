@@ -9,7 +9,6 @@
 
 #include "bantablemodel.h"
 #include "clientmodel.h"
-#include "guiutil.h"
 #include "peertablemodel.h"
 #include "qt/rpcexecutor.h"
 

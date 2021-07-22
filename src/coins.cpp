@@ -9,7 +9,6 @@
 #include "policy/fees.h"
 #include "invalid.h"
 #include "logging.h"
-#include "memusage.h"
 #include "random.h"
 
 #include <assert.h>
@@ -244,56 +243,58 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap& mapCoins,
                                  CAnchorsSaplingMap& mapSaplingAnchors,
                                  CNullifiersMap& mapSaplingNullifiers)
 {
-    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
-        if (it->second.flags & CCoinsCacheEntry::DIRTY) { // Ignore non-dirty entries (optimization).
-            CCoinsMap::iterator itUs = cacheCoins.find(it->first);
-            if (itUs == cacheCoins.end()) {
-                // The parent cache does not have an entry, while the child does
-                // We can ignore it if it's both FRESH and pruned in the child
-                if (!(it->second.flags & CCoinsCacheEntry::FRESH && it->second.coin.IsSpent())) {
-                    // Otherwise we will need to create it in the parent
-                    // and move the data up and mark it as dirty
-                    CCoinsCacheEntry& entry = cacheCoins[it->first];
-                    entry.coin = std::move(it->second.coin);
-                    cachedCoinsUsage += memusage::DynamicUsage(entry.coin);
-                    entry.flags = CCoinsCacheEntry::DIRTY;
-                    // We can mark it FRESH in the parent if it was FRESH in the child
-                    // Otherwise it might have just been flushed from the parent's cache
-                    // and already exist in the grandparent
-                    if (it->second.flags & CCoinsCacheEntry::FRESH)
-                        entry.flags |= CCoinsCacheEntry::FRESH;
-                }
-            } else {
-                // Assert that the child cache entry was not marked FRESH if the
-                // parent cache entry has unspent outputs. If this ever happens,
-                // it means the FRESH flag was misapplied and there is a logic
-                // error in the calling code.
-                if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coin.IsSpent())
-                    throw std::logic_error("FRESH flag misapplied to cache entry for base transaction with spendable outputs");
-
-                // Found the entry in the parent cache
-                if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coin.IsSpent()) {
-                    // The grandparent does not have an entry, and the child is
-                    // modified and being pruned. This means we can just delete
-                    // it from the parent.
-                    cachedCoinsUsage -= memusage::DynamicUsage(itUs->second.coin);
-                    cacheCoins.erase(itUs);
-                } else {
-                    // A normal modification.
-                    cachedCoinsUsage -= memusage::DynamicUsage(itUs->second.coin);
-                    itUs->second.coin = std::move(it->second.coin);
-                    cachedCoinsUsage += memusage::DynamicUsage(itUs->second.coin);
-                    itUs->second.flags |= CCoinsCacheEntry::DIRTY;
-                    // NOTE: It is possible the child has a FRESH flag here in
-                    // the event the entry we found in the parent is pruned. But
-                    // we must not copy that FRESH flag to the parent as that
-                    // pruned state likely still needs to be communicated to the
-                    // grandparent.
+    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = mapCoins.erase(it)) {
+        // Ignore non-dirty entries (optimization).
+        if (!(it->second.flags & CCoinsCacheEntry::DIRTY)) {
+            continue;
+        }
+        CCoinsMap::iterator itUs = cacheCoins.find(it->first);
+        if (itUs == cacheCoins.end()) {
+            // The parent cache does not have an entry, while the child does
+            // We can ignore it if it's both FRESH and pruned in the child
+            if (!(it->second.flags & CCoinsCacheEntry::FRESH && it->second.coin.IsSpent())) {
+                // Otherwise we will need to create it in the parent
+                // and move the data up and mark it as dirty
+                CCoinsCacheEntry& entry = cacheCoins[it->first];
+                entry.coin = std::move(it->second.coin);
+                cachedCoinsUsage += memusage::DynamicUsage(entry.coin);
+                entry.flags = CCoinsCacheEntry::DIRTY;
+                // We can mark it FRESH in the parent if it was FRESH in the child
+                // Otherwise it might have just been flushed from the parent's cache
+                // and already exist in the grandparent
+                if (it->second.flags & CCoinsCacheEntry::FRESH) {
+                    entry.flags |= CCoinsCacheEntry::FRESH;
                 }
             }
+        } else {
+            // Assert that the child cache entry was not marked FRESH if the
+            // parent cache entry has unspent outputs. If this ever happens,
+            // it means the FRESH flag was misapplied and there is a logic
+            // error in the calling code.
+            if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coin.IsSpent()) {
+                throw std::logic_error("FRESH flag misapplied to cache entry for base transaction with spendable outputs");
+            }
+
+            // Found the entry in the parent cache
+            if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coin.IsSpent()) {
+                // The grandparent does not have an entry, and the child is
+                // modified and being pruned. This means we can just delete
+                // it from the parent.
+                cachedCoinsUsage -= memusage::DynamicUsage(itUs->second.coin);
+                cacheCoins.erase(itUs);
+            } else {
+                // A normal modification.
+                cachedCoinsUsage -= memusage::DynamicUsage(itUs->second.coin);
+                itUs->second.coin = std::move(it->second.coin);
+                cachedCoinsUsage += memusage::DynamicUsage(itUs->second.coin);
+                itUs->second.flags |= CCoinsCacheEntry::DIRTY;
+                // NOTE: It is possible the child has a FRESH flag here in
+                // the event the entry we found in the parent is pruned. But
+                // we must not copy that FRESH flag to the parent as that
+                // pruned state likely still needs to be communicated to the
+                // grandparent.
+            }
         }
-        CCoinsMap::iterator itOld = it++;
-        mapCoins.erase(itOld);
     }
 
     // Sapling

@@ -8,7 +8,7 @@
 #include "zpivchain.h"
 #include "zpiv/zpivmodule.h"
 
-bool DisconnectZerocoinTx(const CTransaction& tx, CZerocoinDB* zerocoinDB)
+bool DisconnectZerocoinTx(const CTransaction& tx)
 {
     /** UNDO ZEROCOIN DATABASING
          * note we only undo zerocoin databasing in the following statement, value to and from PIVX
@@ -59,7 +59,7 @@ void DataBaseAccChecksum(const CBlockIndex* pindex, bool fWrite)
     arith_uint256 accPrev = UintToArith256(pindex->pprev->nAccumulatorCheckpoint);
     // add/remove changed checksums to/from DB
     for (int i = (int)libzerocoin::zerocoinDenomList.size()-1; i >= 0; i--) {
-        const uint32_t& nChecksum = accCurr.Get32();
+        const uint32_t nChecksum = accCurr.Get32();
         if (nChecksum != accPrev.Get32()) {
             fWrite ?
             zerocoinDB->WriteAccChecksum(nChecksum, libzerocoin::zerocoinDenomList[i], pindex->nHeight) :

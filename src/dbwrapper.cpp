@@ -4,8 +4,6 @@
 
 #include "dbwrapper.h"
 
-#include "util/system.h"
-
 #include <leveldb/cache.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>

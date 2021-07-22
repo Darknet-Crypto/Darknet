@@ -20,7 +20,6 @@
 #include "wallet/wallet.h"
 
 #include <atomic>
-#include <string>
 
 #include <boost/thread.hpp>
 

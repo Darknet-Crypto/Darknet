@@ -7,7 +7,6 @@
 #include "keystore.h"
 
 #include "crypter.h"
-#include "key.h"
 #include "script/script.h"
 #include "script/standard.h"
 #include "util/system.h"

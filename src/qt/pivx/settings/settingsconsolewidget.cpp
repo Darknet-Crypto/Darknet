@@ -9,7 +9,6 @@
 #include "qt/rpcexecutor.h"
 
 #include "clientmodel.h"
-#include "guiutil.h"
 
 #include "chainparams.h"
 #include "sapling/key_io_sapling.h"

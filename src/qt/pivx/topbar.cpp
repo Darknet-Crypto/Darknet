@@ -702,7 +702,7 @@ void TopBar::expandSync()
     }
 }
 
-void TopBar::updateHDState(const bool& upgraded, const QString& upgradeError)
+void TopBar::updateHDState(const bool upgraded, const QString& upgradeError)
 {
     if (upgraded) {
         ui->pushButtonHDUpgrade->setVisible(false);

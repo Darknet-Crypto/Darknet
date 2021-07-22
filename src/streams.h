@@ -130,8 +130,8 @@ public:
         vch.clear();
         nReadPos = 0;
     }
-    iterator insert(iterator it, const char& x = char()) { return vch.insert(it, x); }
-    void insert(iterator it, size_type n, const char& x) { vch.insert(it, n, x); }
+    iterator insert(iterator it, const char x = char()) { return vch.insert(it, x); }
+    void insert(iterator it, size_type n, const char x) { vch.insert(it, n, x); }
     value_type* data()                               { return vch.data() + nReadPos; }
     const value_type* data() const                   { return vch.data() + nReadPos; }
 
@@ -408,10 +408,6 @@ public:
 class CAutoFile
 {
 private:
-    // Disallow copies
-    CAutoFile(const CAutoFile&);
-    CAutoFile& operator=(const CAutoFile&);
-
     const int nType;
     const int nVersion;
 
@@ -427,6 +423,10 @@ public:
     {
         fclose();
     }
+
+    // Disallow copies
+    CAutoFile(const CAutoFile&) = delete;
+    CAutoFile& operator=(const CAutoFile&) = delete;
 
     void fclose()
     {
@@ -523,10 +523,6 @@ public:
 class CBufferedFile
 {
 private:
-    // Disallow copies
-    CBufferedFile(const CBufferedFile&);
-    CBufferedFile& operator=(const CBufferedFile&);
-
     const int nType;
     const int nVersion;
 
@@ -568,6 +564,10 @@ public:
     {
         fclose();
     }
+
+    // Disallow copies
+    CBufferedFile(const CBufferedFile&) = delete;
+    CBufferedFile& operator=(const CBufferedFile&) = delete;
 
     void fclose()
     {

@@ -86,7 +86,7 @@ private:
     QList<CSDelegation> cachedDelegations;
     CAmount cachedAmount;
 
-    bool parseCSDelegation(const CTxOut& out, CSDelegation& ret, const QString& txId, const int& utxoIndex);
+    bool parseCSDelegation(const CTxOut& out, CSDelegation& ret, const QString& txId, const int utxoIndex);
 };
 
 #endif // COLDSTAKINGMODEL_H
