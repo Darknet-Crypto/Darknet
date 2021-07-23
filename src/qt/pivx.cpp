@@ -683,13 +683,22 @@ int main(int argc, char* argv[])
 
     bool ret = true;
 #ifdef ENABLE_WALLET
-    // Check if at least one wallet exists or needs to be created
-    const std::string& strWalletFile = gArgs.GetArg("-wallet", "");
-    auto opRes = VerifyWalletPath(strWalletFile);
-    if (!opRes) throw std::runtime_error(opRes.getError());
-
-    if (!fs::exists(fs::absolute(strWalletFile, GetWalletDir()))) {
-        // wallet doesn't exist, popup tutorial screen.
+    // Check if at least one wallet exists, otherwise prompt tutorial
+    bool createTutorial{true};
+    const fs::path wallet_dir = GetWalletDir();
+    for (const std::string& wallet_name : gArgs.GetArgs("-wallet")) {
+        auto opRes = VerifyWalletPath(wallet_name);
+        if (!opRes) throw std::runtime_error(opRes.getError());
+        fs::path wallet_path = fs::absolute(wallet_name, wallet_dir);
+        if (!fs::is_regular_file(wallet_path)) {
+            wallet_path /= "wallet.dat";
+        }
+        if (createTutorial && fs::exists(wallet_path)) {
+            // some wallet already exists, don't create tutorial
+            createTutorial = false;
+        }
+    }
+    if (createTutorial) {
         ret = app.createTutorialScreen();
     }
 #endif
