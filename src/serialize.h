@@ -11,13 +11,13 @@
 #include <array>
 #include <assert.h>
 #include <cstring>
+#include <cstdint>
 #include <ios>
 #include <limits>
 #include <list>
 #include <map>
 #include <memory>
 #include <set>
-#include <stdint.h>
 #include <string.h>
 #include <string>
 #include <utility>
@@ -33,7 +33,11 @@
 
 class CScript;
 
-static const unsigned int MAX_SIZE = 0x02000000;
+/**
+ * The maximum size of a serialized object in bytes or number of elements
+ * (for eg vectors) when the size is encoded as CompactSize.
+ */
+static constexpr uint64_t MAX_SIZE = 0x02000000;
 
 /** Maximum amount of memory (in bytes) to allocate at once when deserializing vectors. */
 static const unsigned int MAX_VECTOR_ALLOCATE = 5000000;
@@ -308,14 +312,10 @@ inline void Unserialize(Stream& s, SporkId& sporkID)
  */
 inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
 {
-    if (nSize < 253)
-        return sizeof(unsigned char);
-    else if (nSize <= std::numeric_limits<unsigned short>::max())
-        return sizeof(unsigned char) + sizeof(unsigned short);
-    else if (nSize <= std::numeric_limits<unsigned int>::max())
-        return sizeof(unsigned char) + sizeof(unsigned int);
-    else
-        return sizeof(unsigned char) + sizeof(uint64_t);
+    if (nSize < 253)             return sizeof(unsigned char);
+    else if (nSize <= std::numeric_limits<uint16_t>::max()) return sizeof(unsigned char) + sizeof(uint16_t);
+    else if (nSize <= std::numeric_limits<unsigned int>::max())  return sizeof(unsigned char) + sizeof(unsigned int);
+    else                         return sizeof(unsigned char) + sizeof(uint64_t);
 }
 
 inline void WriteCompactSize(CSizeComputer& os, uint64_t nSize);
@@ -325,7 +325,9 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
 {
     if (nSize < 253) {
         ser_writedata8(os, nSize);
-    } else if (nSize <= std::numeric_limits<unsigned short>::max()) {
+    }
+    else if (nSize <= std::numeric_limits<uint16_t>::max())
+    {
         ser_writedata8(os, 253);
         ser_writedata16(os, nSize);
     } else if (nSize <= std::numeric_limits<unsigned int>::max()) {
@@ -338,8 +340,14 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
     return;
 }
 
-template <typename Stream>
-uint64_t ReadCompactSize(Stream& is)
+/**
+ * Decode a CompactSize-encoded variable-length integer.
+ *
+ * As these are primarily used to encode the size of vector-like serializations, by default a range
+ * check is performed. When used as a generic number encoding, range_check should be set to false.
+ */
+template<typename Stream>
+uint64_t ReadCompactSize(Stream& is, bool range_check = true)
 {
     uint8_t chSize = ser_readdata8(is);
     uint64_t nSizeRet = 0;
@@ -358,8 +366,9 @@ uint64_t ReadCompactSize(Stream& is)
         if (nSizeRet < 0x100000000ULL)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
     }
-    if (nSizeRet > (uint64_t)MAX_SIZE)
-        throw std::ios_base::failure("ReadCompactSize() : size too large");
+    if (range_check && nSizeRet > MAX_SIZE) {
+        throw std::ios_base::failure("ReadCompactSize(): size too large");
+    }
     return nSizeRet;
 }
 
@@ -493,7 +502,7 @@ static inline Wrapper<Formatter, T&> Using(T&& t) { return Wrapper<Formatter, T&
 
 #define VARINT_MODE(obj, mode) Using<VarIntFormatter<mode>>(obj)
 #define VARINT(obj) Using<VarIntFormatter<VarIntMode::DEFAULT>>(obj)
-#define COMPACTSIZE(obj) Using<CompactSizeFormatter>(obj)
+#define COMPACTSIZE(obj) Using<CompactSizeFormatter<true>>(obj)
 #define LIMITED_STRING(obj,n) Using<LimitedStringFormatter<n>>(obj)
 
 /** Serialization wrapper class for integers in VarInt format. */
@@ -556,12 +565,13 @@ struct CustomUintFormatter
 template<int Bytes> using BigEndianFormatter = CustomUintFormatter<Bytes, true>;
 
 /** Formatter for integers in CompactSize format. */
+template<bool RangeCheck>
 struct CompactSizeFormatter
 {
     template<typename Stream, typename I>
     void Unser(Stream& s, I& v)
     {
-        uint64_t n = ReadCompactSize<Stream>(s);
+        uint64_t n = ReadCompactSize<Stream>(s, RangeCheck);
         if (n < std::numeric_limits<I>::min() || n > std::numeric_limits<I>::max()) {
             throw std::ios_base::failure("CompactSize exceeds limit of type");
         }

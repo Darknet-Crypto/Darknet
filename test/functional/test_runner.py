@@ -69,7 +69,12 @@ BASE_SCRIPTS= [
     'rpc_fundrawtransaction.py',                # ~ 227 sec
     'mining_pos_coldStaking.py',                # ~ 220 sec
     'wallet_import_rescan.py',                  # ~ 204 sec
+    'rpc_bind.py --ipv4',
+    'rpc_bind.py --ipv6',
+    'rpc_bind.py --nonloopback',
     'p2p_invalid_block.py',                     # ~ 213 sec
+    'p2p_addr_relay.py',
+    'p2p_addrv2_relay.py',
     'p2p_invalid_messages.py',
     'feature_reindex.py',                       # ~ 205 sec
     'feature_logging.py',                       # ~ 195 sec
@@ -121,6 +126,7 @@ BASE_SCRIPTS= [
     'rpc_signrawtransaction.py',                # ~ 50 sec
     'rpc_decodescript.py',                      # ~ 50 sec
     'rpc_blockchain.py',                        # ~ 50 sec
+    'feature_asmap.py',
     'wallet_disable.py',                        # ~ 50 sec
     'wallet_autocombine.py',                    # ~ 49 sec
     'mining_v5_upgrade.py',                     # ~ 48 sec
@@ -182,7 +188,6 @@ EXTENDED_SCRIPTS = [
     # vv Tests less than 60s vv
     #'p2p_feefilter.py',
     'feature_abortnode.py',
-    'rpc_bind.py',
     # vv Tests less than 30s vv
     #'example_test.py',
     'feature_notifications.py',

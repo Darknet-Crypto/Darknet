@@ -59,8 +59,20 @@ std::string EncodeBase64(Span<const unsigned char> input);
 std::string EncodeBase64(const std::string& str);
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
 std::string DecodeBase32(const std::string& str);
-std::string EncodeBase32(const unsigned char* pch, size_t len);
-std::string EncodeBase32(const std::string& str);
+
+/**
+ * Base32 encode.
+ * If `pad` is true, then the output will be padded with '=' so that its length
+ * is a multiple of 8.
+ */
+std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
+
+/**
+ * Base32 encode.
+ * If `pad` is true, then the output will be padded with '=' so that its length
+ * is a multiple of 8.
+ */
+std::string EncodeBase32(const std::string& str, bool pad = true);
 
 std::string i64tostr(int64_t n);
 std::string itostr(int n);
@@ -91,6 +103,20 @@ bool ParseInt32(const std::string& str, int32_t *out);
  *   false if not the entire string could be parsed or when overflow or underflow occurred.
  */
 bool ParseInt64(const std::string& str, int64_t *out);
+
+/**
+ * Convert decimal string to unsigned 8-bit integer with strict parse error feedback.
+ * @returns true if the entire string could be parsed as valid integer,
+ *   false if not the entire string could be parsed or when overflow or underflow occurred.
+ */
+bool ParseUInt8(const std::string& str, uint8_t *out);
+
+/**
+ * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.
+ * @returns true if the entire string could be parsed as valid integer,
+ *   false if not the entire string could be parsed or when overflow or underflow occurred.
+ */
+bool ParseUInt32(const std::string& str, uint32_t *out);
 
 /**
  * Convert string to double with strict parse error feedback.

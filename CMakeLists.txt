@@ -285,6 +285,7 @@ set(BITCOIN_CRYPTO_SOURCES
         ./src/crypto/sha1.cpp
         ./src/crypto/sha256.cpp
         ./src/crypto/sha512.cpp
+        ./src/crypto/sha3.cpp
         ./src/crypto/chacha20.cpp
         ./src/crypto/hmac_sha256.cpp
         ./src/crypto/rfc6979_hmac_sha256.cpp
@@ -418,6 +419,7 @@ set(UTIL_SOURCES
         ./src/threadinterrupt.cpp
         ./src/arith_uint256.cpp
         ./src/uint256.cpp
+        ./src/util/asmap.cpp
         ./src/util/threadnames.cpp
         ./src/util/system.cpp
         ./src/utilstrencodings.cpp

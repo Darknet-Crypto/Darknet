@@ -73,12 +73,12 @@ bool DecodeBase58(const char* psz, std::vector<unsigned char>& vch, int max_ret_
 std::string DecodeBase58(const char* psz, int max_ret_len)
 {
     std::vector<unsigned char> vch;
-    DecodeBase58(psz, vch, max_ret_len);
+    if (!DecodeBase58(psz, vch, max_ret_len)) return {}; // invalid.
     std::stringstream ss;
     ss << std::hex;
 
-    for (unsigned int i = 0; i < vch.size(); i++) {
-        unsigned char* c = &vch[i];
+    for (unsigned char& i : vch) {
+        unsigned char* c = &i;
         ss << std::setw(2) << std::setfill('0') << (int)c[0];
     }
 

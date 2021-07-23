@@ -87,6 +87,18 @@ extern const char* VERACK;
  */
 extern const char* ADDR;
 /**
+ * The addrv2 message relays connection information for peers on the network just
+ * like the addr message, but is extended to allow gossiping of longer node
+ * addresses (see BIP155).
+ */
+extern const char *ADDRV2;
+/**
+ * The sendaddrv2 message signals support for receiving ADDRV2 messages (BIP155).
+ * It also implies that its sender can encode as ADDRV2 and would send ADDRV2
+ * instead of ADDR to a peer that has signaled ADDRV2 support by sending SENDADDRV2.
+ */
+extern const char *SENDADDRV2;
+/**
  * The inv message (inventory message) transmits one or more inventories of
  * objects known to the transmitting peer.
  * @see https://bitcoin.org/en/developer-reference#inv
@@ -304,15 +316,16 @@ enum ServiceFlags : uint64_t {
 /** A CService with information about it as peer */
 class CAddress : public CService
 {
-public:
-    CAddress();
-    explicit CAddress(CService ipIn, ServiceFlags nServicesIn);
+    static constexpr uint32_t TIME_INIT{100000000};
 
-    void Init();
+public:
+    CAddress() : CService{} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn) : CService{ipIn}, nServices{nServicesIn} {};
+    CAddress(CService ipIn, ServiceFlags nServicesIn, uint32_t nTimeIn) : CService{ipIn}, nServices{nServicesIn}, nTime{nTimeIn} {};
 
     SERIALIZE_METHODS(CAddress, obj)
     {
-        SER_READ(obj, obj.Init());
+        SER_READ(obj, obj.nTime = TIME_INIT);
         int nVersion = s.GetVersion();
         if (s.GetType() & SER_DISK) {
             READWRITE(nVersion);
@@ -321,44 +334,27 @@ public:
             (nVersion >= CADDR_TIME_VERSION && !(s.GetType() & SER_GETHASH))) {
             READWRITE(obj.nTime);
         }
-        READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
+        if (nVersion & ADDRV2_FORMAT) {
+            uint64_t services_tmp;
+            SER_WRITE(obj, services_tmp = obj.nServices);
+            READWRITE(Using<CompactSizeFormatter<false>>(services_tmp));
+            SER_READ(obj, obj.nServices = static_cast<ServiceFlags>(services_tmp));
+        } else {
+            READWRITE(Using<CustomUintFormatter<8>>(obj.nServices));
+        }
         READWRITEAS(CService, obj);
     }
 
-    // TODO: make private (improves encapsulation)
-public:
-    ServiceFlags nServices;
-
+    ServiceFlags nServices{NODE_NONE};
     // disk and network only
-    unsigned int nTime;
+    uint32_t nTime{TIME_INIT};
 };
 
-/** inv message data */
-class CInv
+/** getdata message types */
+enum GetDataMsg
 {
-public:
-    CInv();
-    CInv(int typeIn, const uint256& hashIn);
-
-    SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
-
-    friend bool operator<(const CInv& a, const CInv& b);
-
-    bool IsKnownType() const;
-    bool IsMasterNodeType() const;
-    std::string ToString() const;
-
-    // TODO: make private (improves encapsulation)
-public:
-    int type;
-    uint256 hash;
-
-private:
-    const char* GetCommand() const;
-};
-
-enum {
-    MSG_TX = 1,
+    UNDEFINED = 0,
+    MSG_TX,
     MSG_BLOCK,
     // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
@@ -375,7 +371,29 @@ enum {
     MSG_MASTERNODE_QUORUM,
     MSG_MASTERNODE_ANNOUNCE,
     MSG_MASTERNODE_PING,
-    MSG_DSTX
+    MSG_DSTX,
+    MSG_TYPE_MAX = MSG_DSTX
+};
+
+/** inv message data */
+class CInv
+{
+public:
+    CInv();
+    CInv(int typeIn, const uint256& hashIn);
+
+    SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
+
+    friend bool operator<(const CInv& a, const CInv& b);
+
+    bool IsMasterNodeType() const;
+    std::string GetCommand() const;
+    std::string ToString() const;
+
+    // TODO: make private (improve encapsulation)
+public:
+    int type;
+    uint256 hash;
 };
 
 #endif // BITCOIN_PROTOCOL_H

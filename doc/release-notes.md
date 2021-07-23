@@ -38,6 +38,13 @@ From PIVX Core 6.0 onwards, macOS versions earlier than 10.12 are no longer supp
 
 PIVX Core should also work on most other Unix-like systems but is not frequently tested on them.
 
+The node's known peers are persisted to disk in a file called `peers.dat`. The
+format of this file has been changed in a backwards-incompatible way in order to
+accommodate the storage of Tor v3 and other BIP155 addresses. This means that if
+the file is modified by v6.0 or newer then older versions will not be able to
+read it. Those old versions, in the event of a downgrade, will log an error
+message that deserialization has failed and will continue normal operation
+as if the file was missing, creating a new empty one. (#2411)
 
 Notable Changes
 ==============
@@ -277,6 +284,19 @@ It enforces the same rules as the legacy cold-staking opcode, but without allowi
 The new opcode takes the name of `OP_CHECKCOLDSTAKEVERIFY`, and the legacy opcode (`0xd1`) is renamed to `OP_CHECKCOLDSTAKEVERIFY_LOF` (last-output-free).
 Scripts with the old opcode are still accepted on the network (the restriction on the last-output is enforced after the script validation in this case), but the client creates new delegations with the new opcode, by default, after the upgrade enforcement.
 
+P2P and network changes
+-----------------------
+
+- The Tor onion service that is automatically created by setting the
+  `-listenonion` configuration parameter will now be created as a Tor v3 service
+  instead of Tor v2. The private key that was used for Tor v2 (if any) will be
+  left untouched in the `onion_private_key` file in the data directory (see
+  `-datadir`) and can be removed if not needed. Bitcoin Core will no longer
+  attempt to read it. The private key for the Tor v3 service will be saved in a
+  file named `onion_v3_private_key`. To use the deprecated Tor v2 service (not
+  recommended), then `onion_private_key` can be copied over
+  `onion_v3_private_key`, e.g.
+  `cp -f onion_private_key onion_v3_private_key`. (#19954)
 
 Multi-wallet support
 --------------------
@@ -531,6 +551,13 @@ The `autocombine` RPC command has been replaced with specific set/get commands (
       "threshold": n.nnn         (numeric) the auto-combine threshold amount in PIV
     }
     ```
+
+Updated settings
+----------------
+
+- Netmasks that contain 1-bits after 0-bits (the 1-bits are not contiguous on
+  the left side, e.g. 255.0.255.255) are no longer accepted. They are invalid
+  according to RFC 4632.
 
 Build system changes
 --------------------

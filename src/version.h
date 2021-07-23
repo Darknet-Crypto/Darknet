@@ -11,7 +11,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70922;
+static const int PROTOCOL_VERSION = 70923;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -42,5 +42,8 @@ static const int MEMPOOL_GD_VERSION = 60002;
 //! "filter*" commands are disabled without NODE_BLOOM after and including this version
 static const int NO_BLOOM_VERSION = 70005;
 
+
+// Make sure that none of the values above collide with
+// `ADDRV2_FORMAT`.
 
 #endif // BITCOIN_VERSION_H

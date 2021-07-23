@@ -330,7 +330,7 @@ static ProRegPL ParseProRegPLParams(const UniValue& params, unsigned int paramId
     // ip and port
     const std::string& strIpPort = params[paramIdx].get_str();
     if (!strIpPort.empty()) {
-        if (!Lookup(strIpPort.c_str(), pl.addr, Params().GetDefaultPort(), false)) {
+        if (!Lookup(strIpPort, pl.addr, Params().GetDefaultPort(), false)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid network address %s", strIpPort));
         }
     }

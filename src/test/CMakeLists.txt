@@ -28,7 +28,7 @@ function(GenerateHeaders)
     foreach(file IN LISTS ARGN)
         get_filename_component(VARNAME ${file} NAME_WE)
         set(outFile ${file}.h)
-        set(runCmd ${CMAKE_SOURCE_DIR}/contrib/devtools/gen-json-headers.sh)
+        set(runCmd ${CMAKE_SOURCE_DIR}/contrib/devtools/hexdump_util.sh)
         add_custom_command(
                 OUTPUT ${outFile}
                 COMMAND ${CMAKE_COMMAND} -E echo "namespace json_tests{" > ${outFile}
@@ -38,7 +38,6 @@ function(GenerateHeaders)
                 DEPENDS ${file}
                 COMMENT "Generating ${file}.h"
                 VERBATIM
-
         )
         list(APPEND OutputFileList ${outFile})
     endforeach()
@@ -51,6 +50,36 @@ function(GenerateHeaders)
 endfunction()
 
 GenerateHeaders(${JSON_TEST_FILES})
+
+set(RAW_TEST_FILES  ${CMAKE_CURRENT_SOURCE_DIR}/data/asmap.raw)
+
+# Generate raw files
+function(GenerateRaws)
+    set(fileList "")
+    foreach(file IN LISTS ARGN)
+        get_filename_component(filename ${file} NAME_WE)
+        set(outFile ${file}.h)
+        set(runCmd ${CMAKE_SOURCE_DIR}/contrib/devtools/hexdump_util.sh)
+        add_custom_command(
+                OUTPUT ${outFile}
+                COMMAND ${CMAKE_COMMAND} -E echo "static unsigned const char ${filename}_raw[] = {" > ${outFile}
+                COMMAND ${runCmd} ${file} ${outFile}
+                COMMAND ${CMAKE_COMMAND} -E echo "};" >> ${outFile}
+                DEPENDS ${file}
+                COMMENT "Generating raw ${file}.h"
+                VERBATIM
+        )
+        list(APPEND fileList ${outFile})
+    endforeach()
+    install(FILES ${fileList} DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/data)
+    add_custom_target(
+            genRaws ALL
+            DEPENDS ${fileList}
+            COMMENT "Processing raw files..."
+    )
+endfunction()
+
+GenerateRaws(${RAW_TEST_FILES})
 
 set(BITCOIN_TEST_SUITE
         ${CMAKE_CURRENT_SOURCE_DIR}/test_pivx.h
@@ -148,7 +177,7 @@ set(BITCOIN_TESTS
 
 set(test_test_pivx_SOURCES ${BITCOIN_TEST_SUITE} ${BITCOIN_TESTS} ${JSON_TEST_FILES})
 add_executable(test_pivx ${test_test_pivx_SOURCES} ${BitcoinHeaders})
-add_dependencies(test_pivx genHeaders libunivalue libsecp256k1 libzcashrust leveldb crc32c)
+add_dependencies(test_pivx genHeaders genRaws libunivalue libsecp256k1 libzcashrust leveldb crc32c)
 target_include_directories(test_pivx PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src/leveldb
         ${CMAKE_SOURCE_DIR}/src/leveldb/include

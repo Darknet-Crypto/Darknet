@@ -19,6 +19,8 @@ namespace NetMsgType
 const char* VERSION = "version";
 const char* VERACK = "verack";
 const char* ADDR = "addr";
+const char *ADDRV2="addrv2";
+const char *SENDADDRV2="sendaddrv2";
 const char* INV = "inv";
 const char* GETDATA = "getdata";
 const char* MERKLEBLOCK = "merkleblock";
@@ -53,26 +55,6 @@ const char* SYNCSTATUSCOUNT = "ssc";
 const char* GETMNLIST = "dseg";
 }; // namespace NetMsgType
 
-static const char* ppszTypeName[] = {
-    "ERROR", // Should never occur
-    NetMsgType::TX,
-    NetMsgType::BLOCK,
-    "filtered block", // Should never occur
-    "ix",   // deprecated
-    "txlvote", // deprecated
-    NetMsgType::SPORK,
-    NetMsgType::MNWINNER,
-    "mnodescanerr",
-    NetMsgType::BUDGETVOTE,
-    NetMsgType::BUDGETPROPOSAL,
-    NetMsgType::FINALBUDGET,
-    NetMsgType::FINALBUDGETVOTE,
-    "mnq",
-    NetMsgType::MNBROADCAST,
-    NetMsgType::MNPING,
-    "dstx"  // deprecated
-};
-
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
@@ -80,6 +62,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::VERSION,
     NetMsgType::VERACK,
     NetMsgType::ADDR,
+    NetMsgType::ADDRV2,
+    NetMsgType::SENDADDRV2,
     NetMsgType::INV,
     NetMsgType::GETDATA,
     NetMsgType::MERKLEBLOCK,
@@ -174,24 +158,6 @@ bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
     return true;
 }
 
-
-CAddress::CAddress() : CService()
-{
-    Init();
-}
-
-CAddress::CAddress(CService ipIn, ServiceFlags nServicesIn) : CService(ipIn)
-{
-    Init();
-    nServices = nServicesIn;
-}
-
-void CAddress::Init()
-{
-    nServices = NODE_NONE;
-    nTime = 100000000;
-}
-
 CInv::CInv()
 {
     type = 0;
@@ -209,24 +175,35 @@ bool operator<(const CInv& a, const CInv& b)
     return (a.type < b.type || (a.type == b.type && a.hash < b.hash));
 }
 
-bool CInv::IsKnownType() const
-{
-    return (type >= 1 && type < (int)ARRAYLEN(ppszTypeName));
-}
-
 bool CInv::IsMasterNodeType() const{
      return type > 2;
 }
 
-const char* CInv::GetCommand() const
+std::string CInv::GetCommand() const
 {
-    if (!IsKnownType()) {
-        LogPrint(BCLog::NET, "CInv::GetCommand() : type=%d unknown type", type);
-        return "UNKNOWN";
+    std::string cmd;
+    switch (type) {
+        case MSG_TX:                return cmd.append(NetMsgType::TX);
+        case MSG_BLOCK:             return cmd.append(NetMsgType::BLOCK);
+        case MSG_FILTERED_BLOCK:    return cmd.append(NetMsgType::MERKLEBLOCK);
+        case MSG_TXLOCK_REQUEST:    return cmd.append("ix");       // Deprecated
+        case MSG_TXLOCK_VOTE:       return cmd.append("txlvote");  // Deprecated
+        case MSG_SPORK:             return cmd.append(NetMsgType::SPORK);
+        case MSG_MASTERNODE_WINNER: return cmd.append(NetMsgType::MNWINNER);
+        case MSG_MASTERNODE_SCANNING_ERROR: return cmd.append("mnodescanerr"); // Deprecated
+        case MSG_BUDGET_VOTE: return cmd.append(NetMsgType::BUDGETVOTE);
+        case MSG_BUDGET_PROPOSAL: return cmd.append(NetMsgType::BUDGETPROPOSAL);
+        case MSG_BUDGET_FINALIZED: return cmd.append(NetMsgType::FINALBUDGET);
+        case MSG_BUDGET_FINALIZED_VOTE: return cmd.append(NetMsgType::FINALBUDGETVOTE);
+        case MSG_MASTERNODE_QUORUM: return cmd.append("mnq"); // Unused
+        case MSG_MASTERNODE_ANNOUNCE: return cmd.append(NetMsgType::MNBROADCAST);
+        case MSG_MASTERNODE_PING: return cmd.append(NetMsgType::MNPING);
+        case MSG_DSTX: return cmd.append("dstx"); // Deprecated
+        default:
+            throw std::out_of_range(strprintf("%s: type=%d unknown type", __func__, type));
     }
-
-    return ppszTypeName[type];
 }
+
 
 std::string CInv::ToString() const
 {
