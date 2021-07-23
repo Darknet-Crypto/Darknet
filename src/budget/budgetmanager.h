@@ -99,7 +99,7 @@ public:
 
     int ProcessBudgetVoteSync(const uint256& nProp, CNode* pfrom);
     int ProcessProposal(CBudgetProposal& proposal);
-    int ProcessFinalizedBudget(CFinalizedBudget& finalbudget);
+    int ProcessFinalizedBudget(CFinalizedBudget& finalbudget, CNode* pfrom);
 
     bool ProcessProposalVote(CBudgetVote& proposal, CNode* pfrom, CValidationState& state);
     bool ProcessFinalizedBudgetVote(CFinalizedBudgetVote& vote, CNode* pfrom, CValidationState& state);
@@ -121,7 +121,7 @@ public:
     bool IsBudgetPaymentBlock(int nBlockHeight) const;
     bool IsBudgetPaymentBlock(int nBlockHeight, int& nCountThreshold) const;
     bool AddProposal(CBudgetProposal& budgetProposal);
-    bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
+    bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget, CNode* pfrom = nullptr);
     void ForceAddFinalizedBudget(const uint256& nHash, const uint256& feeTxId, const CFinalizedBudget& finalizedBudget);
     uint256 SubmitFinalBudget();
 

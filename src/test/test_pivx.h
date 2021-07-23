@@ -93,8 +93,11 @@ struct TestChainSetup : public TestingSetup
     // Include given transactions, and, if fNoMempoolTx=true, remove transactions coming from the mempool.
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey, bool fNoMempoolTx = true);
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey);
-    CBlock CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey, bool fNoMempoolTx = true);
-    CBlock CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey);
+    CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
+                       const CScript& scriptPubKey,
+                       bool fNoMempoolTx = true,
+                       bool fTestBlockValidity = true);
+    CBlock CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey, bool fTestBlockValidity = true);
 
     std::vector<CTransaction> coinbaseTxns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions

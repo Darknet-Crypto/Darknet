@@ -166,7 +166,8 @@ public:
                                    CWallet* pwallet = nullptr,
                                    bool fProofOfStake = false,
                                    std::vector<CStakeableOutput>* availableCoins = nullptr,
-                                   bool fNoMempoolTx = false);
+                                   bool fNoMempoolTx = false,
+                                   bool fTestValidity = true);
 
 private:
     // utility functions

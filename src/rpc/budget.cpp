@@ -769,6 +769,93 @@ UniValue mnfinalbudgetsuggest(const JSONRPCRequest& request)
     return (budgetHash.IsNull()) ? NullUniValue : budgetHash.ToString();
 }
 
+UniValue createrawmnfinalbudget(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() > 4)
+        throw std::runtime_error(
+                "createrawmnfinalbudget\n"
+                "\nTry to submit the raw budget finalization\n"
+                "returns the budget hash if it was broadcasted sucessfully"
+                "\nArguments:\n"
+                "1. \"budgetname\"    (string, required) finalization name\n"
+                "2. \"blockstart\"    (numeric, required) superblock height\n"
+                "3. \"proposals\"     (string, required) A json array of json objects\n"
+                "     [\n"
+                "       {\n"
+                "         \"proposalid\":\"id\",  (string, required) The proposal id\n"
+                "         \"payee\":n,         (hex, required) The payee script\n"
+                "         \"amount\":n            (numeric, optional) The payee amount\n"
+                "       }\n"
+                "       ,...\n"
+                "     ]\n"
+                "4. \"feetxid\"    (string, optional) the transaction fee hash\n"
+                ""
+                "\nResult:\n"
+                "{\n"
+                    "\"result\"     (string) Budget suggest broadcast or error\n"
+                    "\"id\"         (string) id of the fee tx or the finalized budget\n"
+                "}\n"
+                ); // future: add examples.
+
+    if (!Params().IsRegTestNet()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "command available only for RegTest network");
+    }
+
+    // future: add inputs error checking..
+    std::string budName = request.params[0].get_str();
+    int nBlockStart = request.params[1].get_int();
+    std::vector<CTxBudgetPayment> vecTxBudgetPayments;
+    UniValue budgetVec = request.params[2].get_array();
+    for (unsigned int idx = 0; idx < budgetVec.size(); idx++) {
+        const UniValue& prop = budgetVec[idx].get_obj();
+        uint256 propId = ParseHashO(prop, "proposalid");
+        std::vector<unsigned char> scriptData(ParseHexO(prop, "payee"));
+        CScript payee = CScript(scriptData.begin(), scriptData.end());
+        CAmount amount = AmountFromValue(find_value(prop, "amount"));
+        vecTxBudgetPayments.emplace_back(propId, payee, amount);
+    }
+
+    Optional<uint256> txFeeId = nullopt;
+    if (request.params.size() > 3) {
+        txFeeId = ParseHashV(request.params[3], "parameter 4");
+    }
+
+    if (!txFeeId) {
+        CFinalizedBudget tempBudget(budName, nBlockStart, vecTxBudgetPayments, UINT256_ZERO);
+        const uint256& budgetHash = tempBudget.GetHash();
+
+        // create fee tx
+        CTransactionRef wtx;
+        CReserveKey keyChange(vpwallets[0]);
+        if (!vpwallets[0]->CreateBudgetFeeTX(wtx, budgetHash, keyChange, true)) {
+            throw std::runtime_error("Can't make collateral transaction");
+        }
+        // Send the tx to the network
+        const CWallet::CommitResult& res = vpwallets[0]->CommitTransaction(wtx, keyChange, g_connman.get());
+        UniValue ret(UniValue::VOBJ);
+        if (res.status == CWallet::CommitStatus::OK) {
+            ret.pushKV("result", "tx_fee_sent");
+            ret.pushKV("id", wtx->GetHash().ToString());
+        } else {
+            ret.pushKV("result", "error");
+        }
+        return ret;
+    }
+
+    UniValue ret(UniValue::VOBJ);
+    // Collateral tx already exists, see if it's mature enough.
+    CFinalizedBudget fb(budName, nBlockStart, vecTxBudgetPayments, *txFeeId);
+    if (g_budgetman.AddFinalizedBudget(fb)) {
+        fb.Relay();
+        ret.pushKV("result", "fin_budget_sent");
+        ret.pushKV("id", fb.GetHash().ToString());
+    } else {
+        // future: add proper error
+        ret.pushKV("result", "error");
+    }
+    return ret;
+}
+
 UniValue mnfinalbudget(const JSONRPCRequest& request)
 {
     std::string strCommand;
@@ -879,6 +966,7 @@ static const CRPCCommand commands[] =
 
     /* Not shown in help */
     { "hidden",             "mnfinalbudgetsuggest",   &mnfinalbudgetsuggest,   true,  {} },
+    { "hidden",             "createrawmnfinalbudget", &createrawmnfinalbudget,   true,  {"budgetname", "blockstart", "proposals", "feetxid"} },
 
 };
 

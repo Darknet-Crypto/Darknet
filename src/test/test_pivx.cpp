@@ -164,10 +164,18 @@ CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransacti
     return CreateAndProcessBlock(txns, scriptPubKey);
 }
 
-CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey, bool fNoMempoolTx)
+CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
+                                   const CScript& scriptPubKey,
+                                   bool fNoMempoolTx,
+                                   bool fTestBlockValidity)
 {
     std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(
-            Params(), DEFAULT_PRINTPRIORITY).CreateNewBlock(scriptPubKey, nullptr, false, nullptr, fNoMempoolTx);
+            Params(), DEFAULT_PRINTPRIORITY).CreateNewBlock(scriptPubKey,
+                                                            nullptr,       // wallet
+                                                            false,   // fProofOfStake
+                                                            nullptr, // availableCoins
+                                                            fNoMempoolTx,
+                                                            fTestBlockValidity);
     std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>(pblocktemplate->block);
 
     // Add passed-in txns:
@@ -185,10 +193,11 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     return *pblock;
 }
 
-CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey)
+CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns, const CKey& scriptKey,
+                                   bool fTestBlockValidity)
 {
     CScript scriptPubKey = CScript() <<  ToByteVector(scriptKey.GetPubKey()) << OP_CHECKSIG;
-    return CreateBlock(txns, scriptPubKey);
+    return CreateBlock(txns, scriptPubKey, fTestBlockValidity);
 }
 
 std::shared_ptr<CBlock> FinalizeBlock(std::shared_ptr<CBlock> pblock)

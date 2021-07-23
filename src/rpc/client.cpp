@@ -37,6 +37,8 @@ static const CRPCConvertParam vRPCConvertParams[] = {
     { "createrawtransaction", 0, "inputs" },
     { "createrawtransaction", 1, "outputs" },
     { "createrawtransaction", 2, "locktime" },
+    {"createrawmnfinalbudget", 1, "blockstart"},
+    {"createrawmnfinalbudget", 2, "proposals"},
     { "delegatestake", 1, "amount" },
     { "delegatestake", 3, "ext_owner" },
     { "delegatestake", 4, "include_delegated" },
