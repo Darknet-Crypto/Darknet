@@ -24,8 +24,8 @@
 #include "threadinterrupt.h"
 
 #include <atomic>
+#include <cstdint>
 #include <deque>
-#include <stdint.h>
 #include <thread>
 #include <memory>
 #include <condition_variable>
@@ -137,6 +137,7 @@ public:
         NetEventsInterface* m_msgproc = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
+        std::vector<bool> m_asmap;
     };
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
@@ -269,6 +270,8 @@ public:
     CSipHasher GetDeterministicRandomizer(uint64_t id);
 
     unsigned int GetReceiveFloodSize() const;
+
+    void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -383,7 +386,7 @@ private:
 };
 extern std::unique_ptr<CConnman> g_connman;
 void Discover();
-unsigned short GetListenPort();
+uint16_t GetListenPort();
 bool BindListenPort(const CService& bindAddr, std::string& strError, bool fWhitelisted = false);
 void CheckOffsetDisconnectedPeers(const CNetAddr& ip);
 
@@ -468,6 +471,7 @@ public:
     double dPingTime;
     double dPingWait;
     std::string addrLocal;
+    uint32_t m_mapped_as;
 };
 
 
@@ -777,7 +781,7 @@ public:
     void CloseSocketDisconnect();
     bool DisconnectOldProtocol(int nVersionIn, int nVersionRequired, std::string strLastCommand = "");
 
-    void copyStats(CNodeStats& stats);
+    void copyStats(CNodeStats& stats, const std::vector<bool>& m_asmap);
 
     ServiceFlags GetLocalServices() const
     {

@@ -11,13 +11,13 @@
 #include <array>
 #include <assert.h>
 #include <cstring>
+#include <cstdint>
 #include <ios>
 #include <limits>
 #include <list>
 #include <map>
 #include <memory>
 #include <set>
-#include <stdint.h>
 #include <string.h>
 #include <string>
 #include <utility>
@@ -308,14 +308,10 @@ inline void Unserialize(Stream& s, SporkId& sporkID)
  */
 inline unsigned int GetSizeOfCompactSize(uint64_t nSize)
 {
-    if (nSize < 253)
-        return sizeof(unsigned char);
-    else if (nSize <= std::numeric_limits<unsigned short>::max())
-        return sizeof(unsigned char) + sizeof(unsigned short);
-    else if (nSize <= std::numeric_limits<unsigned int>::max())
-        return sizeof(unsigned char) + sizeof(unsigned int);
-    else
-        return sizeof(unsigned char) + sizeof(uint64_t);
+    if (nSize < 253)             return sizeof(unsigned char);
+    else if (nSize <= std::numeric_limits<uint16_t>::max()) return sizeof(unsigned char) + sizeof(uint16_t);
+    else if (nSize <= std::numeric_limits<unsigned int>::max())  return sizeof(unsigned char) + sizeof(unsigned int);
+    else                         return sizeof(unsigned char) + sizeof(uint64_t);
 }
 
 inline void WriteCompactSize(CSizeComputer& os, uint64_t nSize);
@@ -325,7 +321,7 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
 {
     if (nSize < 253) {
         ser_writedata8(os, nSize);
-    } else if (nSize <= std::numeric_limits<unsigned short>::max()) {
+    } else if (nSize <= std::numeric_limits<uint16_t>::max()) {
         ser_writedata8(os, 253);
         ser_writedata16(os, nSize);
     } else if (nSize <= std::numeric_limits<unsigned int>::max()) {

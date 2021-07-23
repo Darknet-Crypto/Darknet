@@ -18,6 +18,7 @@
 #include "utilstrencodings.h"
 
 #include <atomic>
+#include <cstdint>
 
 #ifndef WIN32
 #include <fcntl.h>
@@ -44,7 +45,7 @@ enum Network ParseNetwork(std::string net)
     Downcase(net);
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
-    if (net == "tor" || net == "onion") return NET_TOR;
+    if (net == "tor" || net == "onion") return NET_ONION;
     return NET_UNROUTABLE;
 }
 
@@ -55,7 +56,7 @@ std::string GetNetworkName(enum Network net)
         return "ipv4";
     case NET_IPV6:
         return "ipv6";
-    case NET_TOR:
+    case NET_ONION:
         return "onion";
     default:
         return "";
@@ -617,11 +618,13 @@ static bool ConnectThroughProxy(const proxyType &proxy, const std::string strDes
         ProxyCredentials random_auth;
         static std::atomic_int counter;
         random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket))
+        if (!Socks5(strDest, (uint16_t)port, &random_auth, hSocket)) {
             return false;
+        }
     } else {
-        if (!Socks5(strDest, (unsigned short)port, 0, hSocket))
+        if (!Socks5(strDest, (uint16_t)port, 0, hSocket)) {
             return false;
+        }
     }
 
     hSocketRet = hSocket;

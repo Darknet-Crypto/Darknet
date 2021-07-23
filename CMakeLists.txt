@@ -418,6 +418,7 @@ set(UTIL_SOURCES
         ./src/threadinterrupt.cpp
         ./src/arith_uint256.cpp
         ./src/uint256.cpp
+        ./src/util/asmap.cpp
         ./src/util/threadnames.cpp
         ./src/util/system.cpp
         ./src/utilstrencodings.cpp
