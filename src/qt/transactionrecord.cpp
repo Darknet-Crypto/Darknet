@@ -7,6 +7,7 @@
 #include "transactionrecord.h"
 
 #include "key_io.h"
+#include "budget/budgetproposal.h"
 #include "sapling/key_io_sapling.h"
 #include "wallet/wallet.h"
 
@@ -330,10 +331,21 @@ bool TransactionRecord::decomposeDebitTransaction(const CWallet* wallet, const C
             sub.address = getValueOrReturnEmpty(wtx.mapValue, "to");
             if (sub.address.empty() && txout.scriptPubKey.StartsWithOpcode(OP_RETURN)) {
                 sub.type = TransactionRecord::SendToNobody;
-                // Burned PIVs, op_return could be for a proposal/budget fee or another sort of data stored there.
+                // Burned PIVs, op_return could be for a kind of data stored there. For now, support UTF8 comments.
                 std::string comment = wtx.GetComment();
-                if (IsValidUTF8(comment)) {
+                if (!comment.empty() && IsValidUTF8(comment)) {
                     sub.address = comment;
+                }
+                // Check if this is a budget proposal fee (future: encapsulate functionality inside wallet/governanceModel)
+                std::string prop = getValueOrReturnEmpty(wtx.mapValue, "proposal");
+                if (!prop.empty()) {
+                    const std::vector<unsigned char> vec = ParseHex(prop);
+                    if (!vec.empty()) {
+                        CDataStream ss(vec, SER_DISK, CLIENT_VERSION);
+                        CBudgetProposal proposal;
+                        ss >> proposal;
+                        sub.address = "Proposal: " + proposal.GetName();
+                    }
                 }
                 // future: could expand this to support base64 or hex encoded messages
             }

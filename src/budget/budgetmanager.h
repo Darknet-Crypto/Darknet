@@ -113,6 +113,9 @@ public:
     // finds the proposal with the given name, with highest net yes count.
     const CBudgetProposal* FindProposalByName(const std::string& strProposalName) const;
 
+    // Returns true if there is at least one proposal stored.
+    bool HasAnyProposal() const { return WITH_LOCK(cs_proposals, return !mapProposals.empty()); }
+
     static CAmount GetTotalBudget(int nHeight);
     std::vector<CBudgetProposal> GetBudget();
     std::vector<CBudgetProposal*> GetAllProposals();

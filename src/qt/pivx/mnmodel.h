@@ -15,11 +15,13 @@ class MNModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit MNModel(QObject *parent, WalletModel* _model);
+    explicit MNModel(QObject *parent);
     ~MNModel() override {
         nodes.clear();
         collateralTxAccepted.clear();
     }
+    void init();
+    void setWalletModel(WalletModel* _model) { walletModel = _model; };
 
     enum ColumnIndex {
         ALIAS = 0,  /**< User specified MN alias */

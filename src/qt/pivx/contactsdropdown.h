@@ -28,7 +28,9 @@ class ContactsDropdown : public PWidget
 {
     Q_OBJECT
 public:
-    explicit ContactsDropdown(int minWidth, int minHeight, PWidget *parent = nullptr);
+    explicit ContactsDropdown(int minWidth, int minHeight, PWidget* parent = nullptr);
+    ContactsDropdown(int minWidth, int minHeight, PIVXGUI* _window = nullptr,
+                     QWidget* parent = nullptr);
 
     void resizeList(int minWidth, int mintHeight);
     void setWalletModel(WalletModel* _model, const QStringList& type);
@@ -42,6 +44,7 @@ private:
     AddressFilterProxyModel *filter = nullptr;
     QListView *list;
     QFrame *frameList;
+    void init(int minWidth, int minHeight);
 private Q_SLOTS:
     void handleClick(const QModelIndex &index);
 };

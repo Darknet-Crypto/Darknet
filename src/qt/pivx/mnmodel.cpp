@@ -8,13 +8,12 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "net.h"        // for validateMasternodeIP
-#include "sync.h"
 #include "uint256.h"
 #include "wallet/wallet.h"
 
-MNModel::MNModel(QObject *parent, WalletModel* _model) :
-    QAbstractTableModel(parent),
-    walletModel(_model)
+MNModel::MNModel(QObject *parent) : QAbstractTableModel(parent) {}
+
+void MNModel::init()
 {
     updateMNList();
 }

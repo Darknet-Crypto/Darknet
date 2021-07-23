@@ -6,6 +6,7 @@
 
 #include "walletmodel.h"
 
+#include "budget/budgetproposal.h"
 #include "init.h"   // for ShutdownRequested()
 #include "interfaces/handler.h"
 #include "sapling/key_io_sapling.h"
@@ -28,6 +29,14 @@
 #include <QSet>
 #include <QTimer>
 
+// Util function
+template <typename T>
+static std::string toHexStr(const T& obj)
+{
+    CDataStream ss(SER_DISK, CLIENT_VERSION);
+    ss << obj;
+    return HexStr(ss.begin(), ss.end());
+}
 
 WalletModel::WalletModel(CWallet* wallet, OptionsModel* optionsModel, QObject* parent) : QObject(parent), wallet(wallet), walletWrapper(*wallet),
                                                                                          optionsModel(optionsModel),
@@ -40,7 +49,11 @@ WalletModel::WalletModel(CWallet* wallet, OptionsModel* optionsModel, QObject* p
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
+}
 
+void WalletModel::init()
+{
+    transactionTableModel->init();
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
     connect(pollTimer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
@@ -641,6 +654,27 @@ OperationResult WalletModel::PrepareShieldedTransaction(WalletModelTransaction* 
     txRef = MakeTransactionRef(operation.getFinalTx());
     modelTransaction->setTransactionFee(operation.getFee()); // in the future, fee will be dynamically calculated.
     return operationResult;
+}
+
+OperationResult WalletModel::createAndSendProposalFeeTx(CBudgetProposal& proposal)
+{
+    CTransactionRef wtx;
+    const uint256& nHash = proposal.GetHash();
+    CReserveKey keyChange(wallet);
+    if (!wallet->CreateBudgetFeeTX(wtx, nHash, keyChange, false)) { // 50 PIV collateral for proposal
+        return {false ,"Error making fee transaction for proposal. Please check your wallet balance."};
+    }
+
+    // send the tx to the network
+    mapValue_t extraValues;
+    extraValues.emplace("proposal", toHexStr(proposal));
+    const CWallet::CommitResult& res = wallet->CommitTransaction(wtx, &keyChange, g_connman.get(), &extraValues);
+    if (res.status != CWallet::CommitStatus::OK) {
+        return {false, strprintf("Cannot commit proposal fee transaction: %s", res.ToString())};
+    }
+    // Everything went fine, set the fee tx hash
+    proposal.SetFeeTxHash(wtx->GetHash());
+    return {true};
 }
 
 const CWalletTx* WalletModel::getTx(uint256 id)

@@ -31,7 +31,6 @@ private:
 
     // Functions used inside UpdateValid()/IsWellFormed - setting strInvalid
     bool IsHeavilyDownvoted(bool fNewRules);
-    bool IsExpired(int nCurrentHeight);
     bool CheckStartEnd();
     bool CheckAmount(const CAmount& nTotalBudget);
     bool CheckAddress();
@@ -71,6 +70,7 @@ public:
 
     bool IsEstablished() const;
     bool IsPassing(int nBlockStartBudget, int nBlockEndBudget, int mnCount) const;
+    bool IsExpired(int nCurrentHeight);
 
     std::string GetName() const { return strProposalName; }
     std::string GetURL() const { return strURL; }
@@ -86,12 +86,14 @@ public:
     double GetRatio() const;
     int GetVoteCount(CBudgetVote::VoteDirection vd) const;
     std::vector<uint256> GetVotesHashes() const;
+    std::map<COutPoint, CBudgetVote> GetVotes() const { return mapVotes; }
     int GetYeas() const { return GetVoteCount(CBudgetVote::VOTE_YES); }
     int GetNays() const { return GetVoteCount(CBudgetVote::VOTE_NO); }
-    int GetAbstains() const { return GetVoteCount(CBudgetVote::VOTE_ABSTAIN); };
+    int GetAbstains() const { return GetVoteCount(CBudgetVote::VOTE_ABSTAIN); }
     CAmount GetAmount() const { return nAmount; }
     void SetAllotted(CAmount nAllottedIn) { nAllotted = nAllottedIn; }
     CAmount GetAllotted() const { return nAllotted; }
+    void SetFeeTxHash(const uint256& txid) { nFeeTXHash = txid; }
 
     uint256 GetHash() const
     {
@@ -123,6 +125,11 @@ public:
     bool ParseBroadcast(CDataStream& broadcast);
     CDataStream GetBroadcast() const;
     void Relay();
+
+    inline bool operator==(const CBudgetProposal& other) const
+    {
+        return GetHash() == other.GetHash();
+    }
 
     // compare proposals by proposal hash
     inline bool operator>(const CBudgetProposal& other) const

@@ -145,6 +145,11 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/addresseswidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/defaultdialog.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/coldstakingwidget.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/mnselectiondialog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/proposalcard.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/votedialog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/createproposaldialog.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/governancewidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/settings/settingsbackupwallet.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/settings/settingsbittoolwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/settings/settingsconsolewidget.cpp
@@ -159,6 +164,7 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/settings/settingswidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/welcomecontentwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pivx/splash.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pivx/governancemodel.cpp
         )
 
 execute_process(

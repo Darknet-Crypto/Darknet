@@ -217,6 +217,7 @@ BITCOIN_CORE_H = \
   budget/budgetvote.h \
   budget/finalizedbudget.h \
   budget/finalizedbudgetvote.h \
+  budget/budgetutil.h \
   mapport.h \
   memusage.h \
   masternode.h \
@@ -492,6 +493,7 @@ libbitcoin_common_a_SOURCES = \
   budget/budgetvote.cpp \
   budget/finalizedbudget.cpp \
   budget/finalizedbudgetvote.cpp \
+  budget/budgetutil.cpp \
   chainparams.cpp \
   consensus/upgrades.cpp \
   coins.cpp \

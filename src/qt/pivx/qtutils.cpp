@@ -56,7 +56,7 @@ void openDialogFullScreen(QWidget* parent, QWidget* dialog)
     dialog->resize(parent->width(), parent->height());
 }
 
-bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX, int posY)
+bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX, int posY, bool hideOpaqueBackground)
 {
     widget->setWindowFlags(Qt::CustomizeWindowHint);
     widget->setAttribute(Qt::WA_TranslucentBackground, true);
@@ -69,7 +69,7 @@ bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX,
     animation->start(QAbstractAnimation::DeleteWhenStopped);
     widget->activateWindow();
     bool res = widget->exec();
-    gui->showHide(false);
+    if (hideOpaqueBackground) gui->showHide(false);
     return res;
 }
 
@@ -238,7 +238,7 @@ QColor getRowColor(bool isLightTheme, bool isHovered, bool isSelected)
     }
 }
 
-void initComboBox(QComboBox* combo, QLineEdit* lineEdit, QString cssClass)
+void initComboBox(QComboBox* combo, QLineEdit* lineEdit, QString cssClass, bool setView)
 {
     setCssProperty(combo, std::move(cssClass));
     combo->setEditable(true);
@@ -248,7 +248,7 @@ void initComboBox(QComboBox* combo, QLineEdit* lineEdit, QString cssClass)
         combo->setLineEdit(lineEdit);
     }
     combo->setStyleSheet("selection-background-color:transparent;");
-    combo->setView(new QListView());
+    if (setView) combo->setView(new QListView());
 }
 
 void fillAddressSortControls(SortEdit* seType, SortEdit* seOrder, QComboBox* boxType, QComboBox* boxOrder)
@@ -337,6 +337,7 @@ void setCssProperty(std::initializer_list<QWidget*> args, const QString& value)
 
 void setCssProperty(QWidget* wid, const QString& value, bool forceUpdate)
 {
+    if (wid->property("cssClass") == value) return;
     wid->setProperty("cssClass", value);
     forceUpdateStyle(wid, forceUpdate);
 }

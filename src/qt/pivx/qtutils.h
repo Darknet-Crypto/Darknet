@@ -35,7 +35,7 @@ extern Qt::Modifier SHORT_KEY;
 bool openDialog(QDialog* widget, QWidget* gui);
 void closeDialog(QDialog* widget, PIVXGUI* gui);
 void openDialogFullScreen(QWidget* parent, QWidget* dialog);
-bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX = 3, int posY = 5);
+bool openDialogWithOpaqueBackgroundY(QDialog* widget, PIVXGUI* gui, double posX = 3, int posY = 5, bool hideOpaqueBackground = true);
 bool openDialogWithOpaqueBackground(QDialog* widget, PIVXGUI* gui, double posX = 3);
 bool openDialogWithOpaqueBackgroundFullScreen(QDialog* widget, PIVXGUI* gui);
 
@@ -58,7 +58,7 @@ void setupSettings(QSettings* settings);
 bool isLightTheme();
 void setTheme(bool isLight);
 
-void initComboBox(QComboBox* combo, QLineEdit* lineEdit = nullptr, QString cssClass = "btn-combo");
+void initComboBox(QComboBox* combo, QLineEdit* lineEdit = nullptr, QString cssClass = "btn-combo", bool setView = true);
 void fillAddressSortControls(SortEdit* seType, SortEdit* seOrder, QComboBox* boxType, QComboBox* boxOrder);
 void initCssEditLine(QLineEdit* edit, bool isDialog = false);
 void setCssEditLine(QLineEdit* edit, bool isValid, bool forceUpdate = false);

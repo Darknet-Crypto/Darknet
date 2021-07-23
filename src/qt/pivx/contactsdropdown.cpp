@@ -14,7 +14,7 @@
 #include "addresstablemodel.h"
 
 #define DECORATION_SIZE 70
-#define NUM_ITEMS 3
+#define NUM_ITEMS 2
 
 class ContViewHolder : public FurListRow<QWidget*>
 {
@@ -48,12 +48,20 @@ public:
     ContactDropdownRow* row = nullptr;
 };
 
-ContactsDropdown::ContactsDropdown(int minWidth, int minHeight, PWidget *parent) :
-   PWidget(parent)
+ContactsDropdown::ContactsDropdown(int minWidth, int minHeight, PIVXGUI* _window, QWidget* _parent) : PWidget(_window, _parent)
 {
+    this->setStyleSheet(_window->styleSheet());
+    init(minWidth, minHeight);
+}
 
+ContactsDropdown::ContactsDropdown(int minWidth, int minHeight, PWidget* parent) : PWidget(parent)
+{
     this->setStyleSheet(parent->styleSheet());
+    init(minWidth, minHeight);
+}
 
+void ContactsDropdown::init(int minWidth, int minHeight)
+{
     delegate = new FurAbstractListItemDelegate(
                 DECORATION_SIZE,
                 new ContViewHolder(isLightTheme()),

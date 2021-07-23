@@ -23,6 +23,8 @@
 #include "winshutdownmonitor.h"
 
 #ifdef ENABLE_WALLET
+#include "qt/pivx/governancemodel.h"
+#include "qt/pivx/mnmodel.h"
 #include "paymentserver.h"
 #include "walletmodel.h"
 #include "interfaces/wallet.h"
@@ -40,8 +42,6 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
-
-#include <stdint.h>
 
 #include <QApplication>
 #include <QDebug>
@@ -236,6 +236,8 @@ private:
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer{nullptr};
     WalletModel* walletModel{nullptr};
+    GovernanceModel* govModel{nullptr};
+    MNModel* mnModel{nullptr};
 #endif
     int returnValue{0};
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
@@ -488,13 +490,21 @@ void BitcoinApplication::initializeResult(int retval)
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET
+        mnModel = new MNModel(this);
+        govModel = new GovernanceModel(clientModel, mnModel);
         // TODO: Expose secondary wallets
         if (!vpwallets.empty()) {
             walletModel = new WalletModel(vpwallets[0], optionsModel);
             walletModel->setClientModel(clientModel);
+            mnModel->setWalletModel(walletModel);
+            govModel->setWalletModel(walletModel);
+            walletModel->init();
+            mnModel->init();
 
+            window->setGovModel(govModel);
             window->addWallet(PIVXGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(PIVXGUI::DEFAULT_WALLET);
+            window->setMNModel(mnModel);
         }
 #endif
 
