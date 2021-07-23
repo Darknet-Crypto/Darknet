@@ -7,6 +7,7 @@
 #include "primitives/transaction.h"
 #include "sapling/sapling_validation.h"
 #include "test/librust/utiltest.h"
+#include "util/blockstatecatcher.h"
 #include "wallet/test/wallet_test_fixture.h"
 
 #include <boost/test/unit_test.hpp>
@@ -97,10 +98,11 @@ void CheckBlockZcRejection(std::shared_ptr<CBlock>& pblock, int nHeight, CMutabl
 {
     pblock->vtx.emplace_back(MakeTransactionRef(mtx));
     BOOST_CHECK(SolveBlock(pblock, nHeight));
-    CValidationState state;
-    BOOST_CHECK(!ProcessNewBlock(state, pblock, nullptr));
-    BOOST_CHECK(!state.IsValid());
-    BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-blk-with-zc");
+    BlockStateCatcher stateCatcher(pblock->GetHash());
+    stateCatcher.registerEvent();
+    BOOST_CHECK(!ProcessNewBlock(pblock, nullptr));
+    BOOST_CHECK(stateCatcher.found && !stateCatcher.state.IsValid());
+    BOOST_CHECK_EQUAL(stateCatcher.state.GetRejectReason(), "bad-blk-with-zc");
 }
 
 void CheckMempoolZcRejection(CMutableTransaction& mtx)

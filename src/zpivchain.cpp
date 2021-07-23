@@ -13,6 +13,31 @@
 // 6 comes from OPCODE (1) + vch.size() (1) + BIGNUM size (4)
 #define SCRIPT_OFFSET 6
 
+static bool IsTransactionInChain(const uint256& txId, int& nHeightTx, CTransactionRef& tx)
+{
+    uint256 hashBlock;
+    if (!GetTransaction(txId, tx, hashBlock, true))
+        return false;
+
+    if (hashBlock.IsNull() || !mapBlockIndex.count(hashBlock)) {
+        return false;
+    }
+
+    CBlockIndex* pindex = mapBlockIndex[hashBlock];
+    if (!chainActive.Contains(pindex)) {
+        return false;
+    }
+
+    nHeightTx = pindex->nHeight;
+    return true;
+}
+
+static bool IsTransactionInChain(const uint256& txId, int& nHeightTx)
+{
+    CTransactionRef tx;
+    return IsTransactionInChain(txId, nHeightTx, tx);
+}
+
 bool IsSerialInBlockchain(const CBigNum& bnSerial, int& nHeightTx)
 {
     uint256 txHash;

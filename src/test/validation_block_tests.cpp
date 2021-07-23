@@ -11,6 +11,7 @@
 #include "pow.h"
 #include "random.h"
 #include "test/test_pivx.h"
+#include "util/blockstatecatcher.h"
 #include "validation.h"
 #include "validationinterface.h"
 
@@ -116,9 +117,8 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         BuildChain(Params().GenesisBlock().GetHash(), 100, 15, 10, 500, blocks);
     }
 
-    CValidationState state;
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK_MESSAGE(ProcessNewBlock(state, std::make_shared<CBlock>(Params().GenesisBlock()), nullptr), "Error: genesis not connected");
+    BOOST_CHECK_MESSAGE(ProcessNewBlock(std::make_shared<CBlock>(Params().GenesisBlock()), nullptr), "Error: genesis not connected");
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -132,21 +132,23 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     boost::thread_group threads;
     for (int i = 0; i < 10; i++) {
         threads.create_thread([&blocks]() {
-            CValidationState state;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[GetRand(blocks.size() - 1)];
-                ProcessNewBlock(state, block, nullptr);
+                ProcessNewBlock(block, nullptr);
             }
 
+            BlockStateCatcher sc(UINT256_ZERO);
+            sc.registerEvent();
             // to make sure that eventually we process the full chain - do it here
             for (const auto& block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = ProcessNewBlock(state, block, nullptr);
+                    sc.setBlockHash(block->GetHash());
+                    bool processed = ProcessNewBlock(block, nullptr);
                     // Future to do: "prevblk-not-found" here is the only valid reason to not check processed flag.
-                    if (state.GetRejectReason() == "duplicate" ||
-                        state.GetRejectReason() == "prevblk-not-found" ||
-                        state.GetRejectReason() == "bad-prevblk") continue;
-                    ASSERT_WITH_MSG(!processed,  ("Error: " + state.GetRejectReason()).c_str());
+                    std::string stateReason = sc.state.GetRejectReason();
+                    if (sc.found && (stateReason == "duplicate" || stateReason == "prevblk-not-found" ||
+                        stateReason == "bad-prevblk" || stateReason == "blk-out-of-order")) continue;
+                    ASSERT_WITH_MSG(processed,  ("Error: " + sc.state.GetRejectReason()).c_str());
                 }
             }
         });

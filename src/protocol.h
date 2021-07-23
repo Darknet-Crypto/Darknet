@@ -202,13 +202,6 @@ extern const char* FILTERADD;
  */
 extern const char* FILTERCLEAR;
 /**
- * The reject message informs the receiving node that one of its previous
- * messages has been rejected.
- * @since protocol version 70002 as described by BIP61.
- * @see https://bitcoin.org/en/developer-reference#reject
- */
-extern const char* REJECT;
-/**
  * Indicates that a node prefers to receive new block announcements via a
  * "headers" message rather than an "inv".
  * @since protocol version 70012 as described by BIP130.
@@ -274,6 +267,9 @@ extern const char* SYNCSTATUSCOUNT;
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string>& getAllNetMessageTypes();
 
+/* Get a vector of all tier two valid message types (see above) */
+const std::vector<std::string>& getTierTwoNetMessageTypes();
+
 /** nServices flags */
 enum ServiceFlags : uint64_t {
     // Nothing
@@ -333,32 +329,11 @@ public:
     unsigned int nTime;
 };
 
-/** inv message data */
-class CInv
+/** getdata message types */
+enum GetDataMsg
 {
-public:
-    CInv();
-    CInv(int typeIn, const uint256& hashIn);
-
-    SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
-
-    friend bool operator<(const CInv& a, const CInv& b);
-
-    bool IsKnownType() const;
-    bool IsMasterNodeType() const;
-    std::string ToString() const;
-
-    // TODO: make private (improves encapsulation)
-public:
-    int type;
-    uint256 hash;
-
-private:
-    const char* GetCommand() const;
-};
-
-enum {
-    MSG_TX = 1,
+    UNDEFINED = 0,
+    MSG_TX,
     MSG_BLOCK,
     // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
@@ -375,7 +350,30 @@ enum {
     MSG_MASTERNODE_QUORUM,
     MSG_MASTERNODE_ANNOUNCE,
     MSG_MASTERNODE_PING,
-    MSG_DSTX
+    MSG_DSTX,
+    MSG_TYPE_MAX = MSG_DSTX
+};
+
+/** inv message data */
+class CInv
+{
+public:
+    CInv();
+    CInv(int typeIn, const uint256& hashIn);
+
+    SERIALIZE_METHODS(CInv, obj) { READWRITE(obj.type, obj.hash); }
+
+    friend bool operator<(const CInv& a, const CInv& b);
+
+    bool IsMasterNodeType() const;
+    std::string ToString() const;
+
+    // TODO: make private (improve encapsulation)
+    int type;
+    uint256 hash;
+
+private:
+    std::string GetCommand() const;
 };
 
 #endif // BITCOIN_PROTOCOL_H

@@ -31,7 +31,6 @@
 
 #include <algorithm>
 #include <boost/thread.hpp>
-#include <queue>
 
 // Unconfirmed transactions in the memory pool often depend on other
 // transactions in the memory pool. When we select transactions from the
@@ -269,7 +268,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 // are final.
 bool BlockAssembler::TestPackageFinality(const CTxMemPool::setEntries& package)
 {
-    for (const CTxMemPool::txiter it : package) {
+    for (const CTxMemPool::txiter& it : package) {
         if (!IsFinalTx(it->GetSharedTx(), nHeight))
             return false;
     }
@@ -298,7 +297,7 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 void BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
                                             indexed_modified_transaction_set& mapModifiedTx)
 {
-    for (const CTxMemPool::txiter it : alreadyAdded) {
+    for (const CTxMemPool::txiter& it : alreadyAdded) {
         CTxMemPool::setEntries descendants;
         mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
@@ -457,22 +456,22 @@ void BlockAssembler::addPackageTxs()
         SortForBlock(ancestors, iter, sortedEntries);
 
         for (size_t i = 0; i < sortedEntries.size(); ++i) {
-            CTxMemPool::txiter& iter = sortedEntries[i];
-            if (iter->IsShielded()) {
+            CTxMemPool::txiter& iterSortedEntries = sortedEntries[i];
+            if (iterSortedEntries->IsShielded()) {
                 // Don't add SHIELD transactions if in maintenance (SPORK_20)
                 if (sporkManager.IsSporkActive(SPORK_20_SAPLING_MAINTENANCE)) {
                     break;
                 }
                 // Don't add SHIELD transactions if there's no reserved space left in the block
-                if (nSizeShielded + iter->GetTxSize() > MAX_BLOCK_SHIELDED_TXES_SIZE) {
+                if (nSizeShielded + iterSortedEntries->GetTxSize() > MAX_BLOCK_SHIELDED_TXES_SIZE) {
                     break;
                 }
                 // Update cumulative size of SHIELD transactions in this block
-                nSizeShielded += iter->GetTxSize();
+                nSizeShielded += iterSortedEntries->GetTxSize();
             }
-            AddToBlock(iter);
+            AddToBlock(iterSortedEntries);
             // Erase from the modified set, if present
-            mapModifiedTx.erase(iter);
+            mapModifiedTx.erase(iterSortedEntries);
         }
 
         // Update transactions that depend on each of these

@@ -12,7 +12,6 @@
 
 #include "amount.h"
 #include "blockassembler.h"
-#include "consensus/tx_verify.h" // needed in case of no ENABLE_WALLET
 #include "consensus/params.h"
 #include "masternode-sync.h"
 #include "net.h"
@@ -20,12 +19,12 @@
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "timedata.h"
+#include "util/blockstatecatcher.h"
 #include "util/system.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
-#include "validationinterface.h"
 #include "invalid.h"
 #include "policy/policy.h"
 
@@ -79,8 +78,10 @@ bool ProcessBlockFound(const std::shared_ptr<const CBlock>& pblock, CWallet& wal
         reservekey->KeepKey();
 
     // Process this block the same as if we had received it from another node
-    CValidationState state;
-    if (!ProcessNewBlock(state, pblock, nullptr)) {
+    BlockStateCatcher sc(pblock->GetHash());
+    sc.registerEvent();
+    bool res = ProcessNewBlock(pblock, nullptr);
+    if (!res || sc.stateErrorFound()) {
         return error("PIVXMiner : ProcessNewBlock, block not accepted");
     }
 

@@ -11,6 +11,7 @@
 #include "miner.h"
 #include "pubkey.h"
 #include "uint256.h"
+#include "util/blockstatecatcher.h"
 #include "util/system.h"
 #include "validation.h"
 #include "wallet/wallet.h"
@@ -213,10 +214,11 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             txFirst.emplace_back(pblock->vtx[0]);
         pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
         pblock->nNonce = blockinfo[i].nonce;
-        CValidationState state;
-        BOOST_CHECK(ProcessNewBlock(state, pblock, nullptr));
-        BOOST_CHECK(state.IsValid());
+        BlockStateCatcher stateCatcher(pblock->GetHash());
+        stateCatcher.registerEvent();
+        BOOST_CHECK(ProcessNewBlock(pblock, nullptr));
         SyncWithValidationInterfaceQueue();
+        BOOST_CHECK(stateCatcher.found && stateCatcher.state.IsValid());
         pblock->hashPrevBlock = pblock->GetHash();
     }
 

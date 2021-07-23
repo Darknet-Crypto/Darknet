@@ -39,7 +39,6 @@ from .messages import (
     msg_mempool,
     msg_ping,
     msg_pong,
-    msg_reject,
     msg_sendcmpct,
     msg_sendheaders,
     msg_tx,
@@ -72,7 +71,6 @@ MESSAGEMAP = {
     b"mempool": msg_mempool,
     b"ping": msg_ping,
     b"pong": msg_pong,
-    b"reject": msg_reject,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
     b"tx": msg_tx,
@@ -330,7 +328,6 @@ class P2PInterface(P2PConnection):
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
     def on_pong(self, message): pass
-    def on_reject(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
     def on_tx(self, message): pass

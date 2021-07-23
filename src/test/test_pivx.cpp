@@ -153,8 +153,7 @@ TestChainSetup::TestChainSetup(int blockCount) : TestingSetup(CBaseChainParams::
 CBlock TestChainSetup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey, bool fNoMempoolTx)
 {
     CBlock block = CreateBlock(txns, scriptPubKey, fNoMempoolTx);
-    CValidationState state;
-    ProcessNewBlock(state, std::make_shared<const CBlock>(block), nullptr);
+    ProcessNewBlock(std::make_shared<const CBlock>(block), nullptr);
     return block;
 }
 

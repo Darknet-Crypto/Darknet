@@ -14,6 +14,7 @@
 #include "miner.h"
 #include "net.h"
 #include "rpc/server.h"
+#include "util/blockstatecatcher.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
 #include "wallet/rpcwallet.h"
@@ -34,6 +35,8 @@ UniValue generateBlocks(const Consensus::Params& consensus,
 {
     UniValue blockHashes(UniValue::VARR);
 
+    BlockStateCatcher sc(UINT256_ZERO);
+    sc.registerEvent();
     while (nHeight < nHeightEnd && !ShutdownRequested()) {
 
         // Get available coins
@@ -53,8 +56,9 @@ UniValue generateBlocks(const Consensus::Params& consensus,
             if (!SolveBlock(pblock, nHeight + 1)) continue;
         }
 
-        CValidationState state;
-        if (!ProcessNewBlock(state, pblock, nullptr))
+        sc.setBlockHash(pblock->GetHash());
+        bool res = ProcessNewBlock(pblock, nullptr);
+        if (!res || sc.stateErrorFound())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
 
         ++nHeight;
@@ -723,25 +727,6 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 }
 #endif // ENABLE_MINING_RPC
 
-class submitblock_StateCatcher : public CValidationInterface
-{
-public:
-    uint256 hash;
-    bool found;
-    CValidationState state;
-
-    submitblock_StateCatcher(const uint256& hashIn) : hash(hashIn), found(false), state(){};
-
-protected:
-    virtual void BlockChecked(const CBlock& block, const CValidationState& stateIn)
-    {
-        if (block.GetHash() != hash)
-            return;
-        found = true;
-        state = stateIn;
-    };
-};
-
 UniValue submitblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -788,11 +773,9 @@ UniValue submitblock(const JSONRPCRequest& request)
         }
     }
 
-    CValidationState state;
-    submitblock_StateCatcher sc(block.GetHash());
-    RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, blockptr, nullptr);
-    UnregisterValidationInterface(&sc);
+    BlockStateCatcher sc(block.GetHash());
+    sc.registerEvent();
+    bool fAccepted = ProcessNewBlock(blockptr, nullptr);
     if (fBlockPresent) {
         if (fAccepted && !sc.found)
             return "duplicate-inconclusive";
@@ -801,9 +784,8 @@ UniValue submitblock(const JSONRPCRequest& request)
     if (fAccepted) {
         if (!sc.found)
             return "inconclusive";
-        state = sc.state;
     }
-    return BIP22ValidationResult(state);
+    return BIP22ValidationResult(sc.state);
 }
 
 UniValue estimatefee(const JSONRPCRequest& request)

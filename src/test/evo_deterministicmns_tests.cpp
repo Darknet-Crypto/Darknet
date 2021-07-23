@@ -401,7 +401,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
         CValidationState state;
         BOOST_CHECK(!ProcessSpecialTxsInBlock(block, &indexFake, state, true));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-protx-dup-owner-key");
-        ProcessNewBlock(state, std::make_shared<const CBlock>(block), nullptr);
+        ProcessNewBlock(std::make_shared<const CBlock>(block), nullptr); // todo: move to check reject reason
         BOOST_CHECK_EQUAL(chainActive.Height(), nHeight);   // bad block not connected
     }
     // Block with two ProReg txes using same operator key
@@ -418,7 +418,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
         CValidationState state;
         BOOST_CHECK(!ProcessSpecialTxsInBlock(block, &indexFake, state, true));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-protx-dup-operator-key");
-        ProcessNewBlock(state, std::make_shared<const CBlock>(block), nullptr);
+        ProcessNewBlock(std::make_shared<const CBlock>(block), nullptr); // todo: move to check reject reason
         BOOST_CHECK_EQUAL(chainActive.Height(), nHeight);   // bad block not connected
     }
     // Block with two ProReg txes using ip address
@@ -432,7 +432,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
         CValidationState state;
         BOOST_CHECK(!ProcessSpecialTxsInBlock(block, &indexFake, state, true));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-protx-dup-IP-address");
-        ProcessNewBlock(state, std::make_shared<const CBlock>(block), nullptr);
+        ProcessNewBlock(std::make_shared<const CBlock>(block), nullptr); // todo: move to check reject reason
         BOOST_CHECK_EQUAL(chainActive.Height(), nHeight);   // bad block not connected
     }
 
@@ -501,8 +501,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
                    GetScriptForDestination(coinbaseKey.GetPubKey().GetID())));
     pblock->vtx[0] = MakeTransactionRef(invalidCoinbaseTx);
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
-    CValidationState state;
-    ProcessNewBlock(state, pblock, nullptr);
+    ProcessNewBlock(pblock, nullptr);
     // block not connected
     chainTip = WITH_LOCK(cs_main, return chainActive.Tip());
     BOOST_CHECK(chainTip->nHeight == nHeight);
@@ -610,7 +609,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
         CValidationState state;
         BOOST_CHECK(!ProcessSpecialTxsInBlock(block, &indexFake, state, true));
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-protx-dup-addr");
-        ProcessNewBlock(state, std::make_shared<const CBlock>(block), nullptr);
+        ProcessNewBlock(std::make_shared<const CBlock>(block), nullptr); // todo: move to ProcessBlockAndCheckRejectionReason.
         BOOST_CHECK_EQUAL(chainActive.Height(), nHeight);   // bad block not connected
     }
 
@@ -684,7 +683,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
 
     // ProUpReg: Try to change the voting key of a masternode that doesn't exist
     {
-        const CKey& votingKey = GetRandomKey();
         auto tx = CreateProUpRegTx(utxos, GetRandHash(), GetRandomKey(), GetRandomKey(), GetRandomKey(), GenerateRandomAddress(), coinbaseKey);
 
         CValidationState state;
@@ -728,7 +726,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
         BOOST_CHECK_MESSAGE(!ProcessSpecialTxsInBlock(block, &indexFake, state, true),
                             "Accepted block with duplicate operator key in ProUpReg txes");
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-protx-dup-operator-key");
-        ProcessNewBlock(state, std::make_shared<const CBlock>(block), nullptr);
+        ProcessNewBlock(std::make_shared<const CBlock>(block), nullptr);
         BOOST_CHECK_EQUAL(chainActive.Height(), nHeight);   // bad block not connected
     }
 
@@ -748,7 +746,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChain400Setup)
         BOOST_CHECK_MESSAGE(!ProcessSpecialTxsInBlock(block, &indexFake, state, true),
                             "Accepted block with duplicate operator key in ProReg+ProUpReg txes");
         BOOST_CHECK_EQUAL(state.GetRejectReason(), "bad-protx-dup-operator-key");
-        ProcessNewBlock(state, std::make_shared<const CBlock>(block), nullptr);
+        ProcessNewBlock(std::make_shared<const CBlock>(block), nullptr);
         BOOST_CHECK_EQUAL(chainActive.Height(), nHeight);   // bad block not connected
     }
 
